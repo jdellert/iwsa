@@ -1,5 +1,7 @@
 package de.jdellert.iwsa.distance;
 
-public abstract class PhoneticStringDistance {
+import de.jdellert.iwsa.sequence.PhoneticString;
 
+public abstract class PhoneticStringDistance {
+	public abstract double normalizedDistance(PhoneticString str1, PhoneticString str2);
 }

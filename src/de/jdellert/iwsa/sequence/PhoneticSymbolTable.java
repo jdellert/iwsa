@@ -6,7 +6,8 @@ import java.util.TreeMap;
 
 /**
  * Symbol table for mapping IPA segments to integers for efficient internal
- * representation.
+ * representation. The first two integers are always used for special symbols: 0
+ * ~ #: the word boundary symbol 1 ~ -: the gap symbol
  * 
  * @author jdellert
  *
@@ -17,10 +18,17 @@ public class PhoneticSymbolTable {
 	private Map<String, Integer> symbolToID;
 
 	public PhoneticSymbolTable(Collection<String> symbols) {
-		this.idToSymbol = symbols.toArray(new String[symbols.size()]);
+		this.idToSymbol = new String[symbols.size() + 2];
 		this.symbolToID = new TreeMap<String, Integer>();
-		for (int symbolID = 0; symbolID < idToSymbol.length; symbolID++) {
-			symbolToID.put(idToSymbol[symbolID], symbolID);
+		idToSymbol[0] = "#";
+		idToSymbol[1] = "-";
+		symbolToID.put("#", 0);
+		symbolToID.put("-", 1);
+		int nextID = 2;
+		for (String symbol : symbols) {
+			idToSymbol[nextID] = symbol;
+			symbolToID.put(symbol, nextID);
+			nextID++;
 		}
 	}
 

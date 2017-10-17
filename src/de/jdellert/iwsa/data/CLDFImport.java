@@ -20,7 +20,7 @@ import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
  */
 
 public class CLDFImport {
-	public static LexicalDatabase loadDatabase(String fileName) throws IOException {
+	public static LexicalDatabase loadDatabase(String fileName, boolean ignoreTokenization) throws IOException {
 
 		List<String> langCodePerLine = new ArrayList<String>();
 		Set<String> langCodes = new TreeSet<String>();
@@ -76,9 +76,15 @@ public class CLDFImport {
 			conceptNamePerLine.add(conceptName);
 			conceptNames.add(conceptName);
 
-			String[] tokenizedIPA = tokens[ipaColumnIdx].split(" ");
+			String[] tokenizedIPA = null;
+			if (ignoreTokenization) {
+				tokenizedIPA = tokens[ipaColumnIdx].replaceAll(" ", "").split("");
+			} else {
+				tokenizedIPA = tokens[ipaColumnIdx].split(" ");
+			}
 			tokenizedIpaPerLine.add(tokenizedIPA);
 			for (String ipaToken : tokenizedIPA) {
+
 				usedIpaTokens.add(ipaToken);
 			}
 		}
