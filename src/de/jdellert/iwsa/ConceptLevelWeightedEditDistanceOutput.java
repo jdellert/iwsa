@@ -43,13 +43,6 @@ public class ConceptLevelWeightedEditDistanceOutput {
 				}
 				System.err.println(" done. Aligned " + numPairs + " form pairs, of which " + numCognatePairs + " look like cognates (normalized edit distance < 0.35)");
 				
-				for (int hinFormID : database.lookupFormIDs("hin", "Haus::N")) {
-					for (int benFormID : database.lookupFormIDs("ben", "Haus::N")) {
-						PhoneticStringAlignment alignment = LevenshteinAlignmentAlgorithm.constructAlignment(database.getForm(hinFormID), database.getForm(benFormID));
-						System.err.println(alignment.alignmentScore + "\t" + alignment.normalizedAlignmentScore);
-						System.err.println(alignment.toString(symbolTable));
-					}
-				}
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

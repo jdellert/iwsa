@@ -137,10 +137,23 @@ public class LexicalDatabase {
 		return langCodes[langID];
 	}
 
-	public String getAnnotation(String fieldID, int formID) {
-		List<String> annotationsPerForm = annotations.get(fieldID);
+	public String getAnnotation(String field, int formID) {
+		List<String> annotationsPerForm = annotations.get(field);
 		if (annotationsPerForm == null)
 			return "?";
 		return annotationsPerForm.get(formID);
+	}
+
+	public void addAnnotation(int formID, String field, String value) {
+		List<String> annotationsPerForm = annotations.get(field);
+		if (annotationsPerForm == null) {
+			annotationsPerForm = new ArrayList<String>(formToLang.size());
+			annotations.put(field, annotationsPerForm);
+		}
+		String unknown = "?";
+		while (annotationsPerForm.size() <= formID) {
+			annotationsPerForm.add(unknown);
+		}
+		annotationsPerForm.set(formID, value);
 	}
 }

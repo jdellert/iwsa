@@ -6,7 +6,10 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 import de.jdellert.iwsa.sequence.PhoneticString;
@@ -35,6 +38,9 @@ public class CLDFImport {
 		int conceptNameColumnIdx = -1;
 		int ipaColumnIdx = -1;
 
+		List<Map<String, String>> annotationsPerLine = new ArrayList<Map<String, String>>();
+		Map<Integer, String> annotationColumns = new TreeMap<Integer, String>();
+
 		BufferedReader r = new BufferedReader(new FileReader(new File(fileName)));
 		String line = r.readLine();
 		String[] tokens = line.split("\t");
@@ -49,6 +55,8 @@ public class CLDFImport {
 			case "IPA":
 				ipaColumnIdx = columnIdx;
 				break;
+			default:
+				annotationColumns.put(columnIdx, tokens[columnIdx]);
 			}
 		}
 		// TODO: load other column names, store content of these columns as annotations
@@ -84,9 +92,14 @@ public class CLDFImport {
 			}
 			tokenizedIpaPerLine.add(tokenizedIPA);
 			for (String ipaToken : tokenizedIPA) {
-
 				usedIpaTokens.add(ipaToken);
 			}
+
+			Map<String, String> annotations = new TreeMap<String, String>();
+			for (Entry<Integer, String> columnAnnotation : annotationColumns.entrySet()) {
+				annotations.put(columnAnnotation.getValue(), tokens[columnAnnotation.getKey()]);
+			}
+			annotationsPerLine.add(annotations);
 		}
 		r.close();
 
@@ -100,8 +113,11 @@ public class CLDFImport {
 		LexicalDatabase database = new LexicalDatabase(symbolTable, langCodesArray, conceptNamesArray,
 				langCodePerLine.size());
 		for (int lineNumber = 0; lineNumber < langCodePerLine.size(); lineNumber++) {
-			database.addForm(langCodePerLine.get(lineNumber), conceptNamePerLine.get(lineNumber),
+			int formID = database.addForm(langCodePerLine.get(lineNumber), conceptNamePerLine.get(lineNumber),
 					new PhoneticString(symbolTable.encode(tokenizedIpaPerLine.get(lineNumber))));
+			for (Entry<String, String> annotation : annotationsPerLine.get(lineNumber).entrySet()) {
+				database.addAnnotation(formID, annotation.getKey(), annotation.getValue());
+			}
 		}
 		System.out.println("done.");
 

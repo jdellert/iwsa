@@ -33,8 +33,8 @@ public class ConceptLevelEditDistanceOutput {
 								PhoneticStringAlignment alignment = LevenshteinAlignmentAlgorithm.constructAlignment(lang1Form, lang2Form);
 								System.out.print(database.getConceptName(conceptID) + "\t");
 								System.out.print(database.getLanguageCode(lang1ID) + "\t" + database.getLanguageCode(lang2ID) + "\t");
-								System.out.print(database.getAnnotation("orth", lang1FormID) + "\t" + lang1Form.toString(symbolTable) + "\t");
-								System.out.print(database.getAnnotation("orth", lang2FormID) + "\t" + lang2Form.toString(symbolTable) + "\t");
+								System.out.print(database.getAnnotation("Word_Form", lang1FormID) + "\t" + database.getAnnotation("Word_Form", lang2FormID) + "\t");
+								System.out.print(lang1Form.toString(symbolTable) + "\t" + lang2Form.toString(symbolTable) + "\t");
 								System.out.println(alignment.alignmentScore + "\t" + alignment.normalizedAlignmentScore);
 							}
 						}
