@@ -33,8 +33,8 @@ public class LevenshteinAlignmentAlgorithm {
 	}
 
 	public static PhoneticStringAlignment constructAlignment(PhoneticString str1, PhoneticString str2) {
-		int m = str1.getLength();
-		int n = str2.getLength();
+		int m = str1.getLength() + 1;
+		int n = str2.getLength() + 1;
 
 		int[][] mtx = new int[m][n];
 		int[][] aSubst = new int[m][n];
@@ -54,7 +54,7 @@ public class LevenshteinAlignmentAlgorithm {
 			for (int j = 1; j < n; j++) {
 
 				int matchValue = mtx[i - 1][j - 1];
-				if (str1.segments[i] != str2.segments[j])
+				if (str1.segments[i-1] != str2.segments[j-1])
 					matchValue++;
 				int insertionValue = mtx[i][j - 1] + 1;
 				int deletionValue = mtx[i - 1][j] + 1;
@@ -85,7 +85,7 @@ public class LevenshteinAlignmentAlgorithm {
 		}
 
 		double alignmentScore = mtx[m - 1][n - 1];
-		double normalizedAlignmentScore = alignmentScore / Math.max(m, n);
+		double normalizedAlignmentScore = alignmentScore / Math.max(m - 1, n - 1);
 
 		// build the alignment from the backpointer substrings
 		int i = m - 1;

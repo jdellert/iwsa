@@ -35,13 +35,13 @@ public class ConceptLevelWeightedEditDistanceOutput {
 									PhoneticString lang2Form = database.getForm(lang2FormID);
 									PhoneticStringAlignment alignment = LevenshteinAlignmentAlgorithm.constructAlignment(lang1Form, lang2Form);
 									numPairs++;
-									if (alignment.normalizedAlignmentScore <= 0.3) numCognatePairs++;
+									if (alignment.normalizedAlignmentScore <= 0.35) numCognatePairs++;
 								}
 							}
 						}
 					}
 				}
-				System.err.println(" done. Aligned " + numPairs + " form pairs, of which " + numCognatePairs + " look like cognates (normalized edit distance < 0.3)");
+				System.err.println(" done. Aligned " + numPairs + " form pairs, of which " + numCognatePairs + " look like cognates (normalized edit distance < 0.35)");
 				
 				for (int hinFormID : database.lookupFormIDs("hin", "Haus::N")) {
 					for (int benFormID : database.lookupFormIDs("ben", "Haus::N")) {
