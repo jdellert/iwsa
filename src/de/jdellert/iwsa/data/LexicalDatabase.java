@@ -156,4 +156,8 @@ public class LexicalDatabase {
 		}
 		annotationsPerForm.set(formID, value);
 	}
+
+	public PhoneticString getRandomForm() {
+		return forms.get((int) (Math.random() * forms.size()));
+	}
 }

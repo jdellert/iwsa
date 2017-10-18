@@ -12,4 +12,12 @@ public class PhoneticStringAlignment {
 	public String toString(PhoneticSymbolTable symbolTable) {
 		return str1.toString(symbolTable) + "\n" + str2.toString(symbolTable);
 	}
+
+	public int getLength() {
+		return str1.segments.length;
+	}
+
+	public int getSymbolPairIDAtPos(int pos, PhoneticSymbolTable symbolTable) {
+		return str1.segments[pos] * symbolTable.getSize() + str2.segments[pos];
+	}
 }
