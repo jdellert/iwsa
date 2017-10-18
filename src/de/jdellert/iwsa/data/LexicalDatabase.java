@@ -43,7 +43,7 @@ public class LexicalDatabase {
 	private ArrayList<List<Integer>> cognateSets;
 	// form ID => cognate set ID
 	private ArrayList<Integer> cognateSetForForm;
-	
+
 	public LexicalDatabase(PhoneticSymbolTable symbolTable, String[] langs, String[] concepts) {
 		this(symbolTable, langs, concepts, langs.length * concepts.length);
 	}
@@ -65,7 +65,7 @@ public class LexicalDatabase {
 		for (int conceptID = 0; conceptID < this.conceptNames.length; conceptID++) {
 			this.conceptNameToID.put(this.conceptNames[conceptID], conceptID);
 		}
-		
+
 		this.formToLang = new ArrayList<Integer>(numForms);
 		this.formToConcept = new ArrayList<Integer>(numForms);
 		this.langAndConceptToForms = new ArrayList<List<List<Integer>>>(this.langCodes.length);
@@ -76,44 +76,71 @@ public class LexicalDatabase {
 			}
 			this.langAndConceptToForms.add(conceptToForms);
 		}
-		
+
 		this.cognateSets = new ArrayList<List<Integer>>();
 		this.cognateSetForForm = new ArrayList<Integer>(numForms);
 	}
-	
+
 	public PhoneticSymbolTable getSymbolTable() {
 		return symbolTable;
 	}
-	
-	public int addForm(String langCode, String conceptName, PhoneticString form)
-	{
+
+	public int addForm(String langCode, String conceptName, PhoneticString form) {
 		forms.add(form);
-		
+
 		int formID = forms.size() - 1;
 		int langID = langCodeToID.get(langCode);
 		int conceptID = conceptNameToID.get(conceptName);
-		
+
 		formToLang.add(langID);
 		formToConcept.add(conceptID);
 		langAndConceptToForms.get(langID).get(conceptID).add(formID);
-		
+
 		return formID;
 	}
-	
-	public List<Integer> getFormIDsForLanguageAndConcept(int langID, int conceptID)
-	{
+
+	public List<Integer> getFormIDsForLanguageAndConcept(int langID, int conceptID) {
 		return langAndConceptToForms.get(langID).get(conceptID);
 	}
-	
-	public PhoneticString getForm(int formID)
-	{
+
+	public List<List<Integer>> getFormIDsForConceptPerLanguage(int conceptID) {
+		List<List<Integer>> result = new ArrayList<List<Integer>>(langCodes.length);
+		for (int langID = 0; langID < langCodes.length; langID++) {
+			result.add(getFormIDsForLanguageAndConcept(langID, conceptID));
+		}
+		return result;
+	}
+
+	public PhoneticString getForm(int formID) {
 		return forms.get(formID);
 	}
 
-	public List<Integer> lookupFormIDs(String langCode, String conceptName) 
-	{
+	public List<Integer> lookupFormIDs(String langCode, String conceptName) {
 		int langID = langCodeToID.get(langCode);
 		int conceptID = conceptNameToID.get(conceptName);
 		return getFormIDsForLanguageAndConcept(langID, conceptID);
+	}
+
+	public int getNumConcepts() {
+		return conceptNames.length;
+	}
+
+	public String getConceptName(int conceptID) {
+		return conceptNames[conceptID];
+	}
+
+	public int getNumLanguages() {
+		return langCodes.length;
+	}
+
+	public String getLanguageCode(int langID) {
+		return langCodes[langID];
+	}
+
+	public String getAnnotation(String fieldID, int formID) {
+		List<String> annotationsPerForm = annotations.get(fieldID);
+		if (annotationsPerForm == null)
+			return "?";
+		return annotationsPerForm.get(formID);
 	}
 }
