@@ -6,10 +6,13 @@ import java.util.List;
 
 import de.jdellert.iwsa.align.LevenshteinAlignmentAlgorithm;
 import de.jdellert.iwsa.align.PhoneticStringAlignment;
+import de.jdellert.iwsa.corrmodel.CorrespondenceModel;
 import de.jdellert.iwsa.data.CLDFImport;
 import de.jdellert.iwsa.data.LexicalDatabase;
 import de.jdellert.iwsa.sequence.PhoneticString;
 import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
+import de.jdellert.iwsa.stat.CategoricalDistribution;
+import de.jdellert.iwsa.stat.SmoothingMethod;
 
 public class ConceptLevelWeightedEditDistanceOutput {
 	public static void main(String[] args) {
@@ -18,9 +21,7 @@ public class ConceptLevelWeightedEditDistanceOutput {
 			PhoneticSymbolTable symbolTable = database.getSymbolTable();
 			int numPairs = 0;
 			int numCognatePairs = 0;
-			int[] cognatePairCorrespondenceCounts = new int[symbolTable.getSize() * symbolTable.getSize()];
-			Arrays.fill(cognatePairCorrespondenceCounts, 1);
-			double cognatePairCorrespondences = symbolTable.getSize() * symbolTable.getSize();
+			CategoricalDistribution cognatePairCorrespondenceDist = new CategoricalDistribution(symbolTable.getSize() * symbolTable.getSize(), SmoothingMethod.LAPLACE);
 			System.err.print("Stage 1: Inference of global segment similarity matrix\n");
 			System.err.print("  Step 1: Finding ED-based cognate candidates ...");
 			for (int conceptID = 0; conceptID < database.getNumConcepts(); conceptID++) {
@@ -36,7 +37,7 @@ public class ConceptLevelWeightedEditDistanceOutput {
 								numPairs++;
 								if (alignment.normalizedAlignmentScore <= 0.35) {
 									for (int pos = 0; pos < alignment.getLength(); pos++) {
-										cognatePairCorrespondenceCounts[alignment.getSymbolPairIDAtPos(pos, symbolTable)]++;
+										cognatePairCorrespondenceDist.addObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable));
 									}
 									numCognatePairs++;
 								}
@@ -47,32 +48,42 @@ public class ConceptLevelWeightedEditDistanceOutput {
 			}
 			System.err.print(" done. Aligned " + numPairs + " form pairs, of which " + numCognatePairs
 					+ " look like cognates (normalized edit distance < 0.35)\n");
-			int[] randomPairCorrespondenceCounts = new int[symbolTable.getSize() * symbolTable.getSize()];
-			Arrays.fill(randomPairCorrespondenceCounts, 100);
-			double randomPairCorrespondences = symbolTable.getSize() * symbolTable.getSize() * 100;
-			System.err.print("          Creating " + (numCognatePairs * 100)
+			CategoricalDistribution randomPairCorrespondenceDist = new CategoricalDistribution(symbolTable.getSize() * symbolTable.getSize(), SmoothingMethod.LAPLACE);
+			System.err.print("          Creating " + (numCognatePairs * 10)
 					+ " random alignments to model the distribution in absence of correspondences ...");
 			for (int i = 0; i < numCognatePairs * 100; i++) {
 				PhoneticString form1 = database.getRandomForm();
 				PhoneticString form2 = database.getRandomForm();
 				PhoneticStringAlignment alignment = LevenshteinAlignmentAlgorithm.constructAlignment(form1, form2);
-
 				for (int pos = 0; pos < alignment.getLength(); pos++) {
-					randomPairCorrespondenceCounts[alignment.getSymbolPairIDAtPos(pos, symbolTable)]++;
-					randomPairCorrespondences++;
+					randomPairCorrespondenceDist.addObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable));
 				}
 			}
 			System.err.print(" done.");
 			
 			System.err.print("          Comparing the distributions of symbol pairs for PMI scores ...");
+			CorrespondenceModel globalCorr = new CorrespondenceModel(symbolTable);
 			for (int symbolPairID = 0; symbolPairID < symbolTable.getSize() * symbolTable.getSize(); symbolPairID++)
 			{
-				double cognateSymbolPairProbability = cognatePairCorrespondenceCounts[symbolPairID] / cognatePairCorrespondences;
-				double randomSymbolPairProbability = randomPairCorrespondenceCounts[symbolPairID] / randomPairCorrespondences;
+				double cognateSymbolPairProbability = cognatePairCorrespondenceDist.getProb(symbolPairID);
+				double randomSymbolPairProbability = randomPairCorrespondenceDist.getProb(symbolPairID);
 				double pmiScore = Math.log(cognateSymbolPairProbability/randomSymbolPairProbability);
-				//if (cognatePairCorrespondenceCounts[symbolPairID] == 1 || pmiScore < 0.0) continue;
-				System.err.println(symbolTable.toSymbol(symbolPairID / symbolTable.getSize()) + "\t" + symbolTable.toSymbol(symbolPairID % symbolTable.getSize()) + "\t" + cognateSymbolPairProbability + "\t" + randomSymbolPairProbability + "\t" + pmiScore);
+				if (Math.abs(pmiScore) >= 0.1)
+				{
+					globalCorr.setScore(symbolPairID, pmiScore);
+					//System.err.println(symbolTable.toSymbol(symbolPairID / symbolTable.getSize()) + "\t" + symbolTable.toSymbol(symbolPairID % symbolTable.getSize()) + "\t" + 
+					//		cognateSymbolPairProbability + "\t" + randomSymbolPairProbability + "\t" + pmiScore);
+				}
 			}
+			System.err.print(" done.");
+			
+			System.err.print("  Step 2: Finding WED-based cognate candidates ...");
+			numPairs = 0;
+			numCognatePairs = 0;
+			
+			
+			System.err.print(" done. Aligned " + numPairs + " form pairs, of which " + numCognatePairs
+					+ " look like cognates (normalized aligment score < 0.35)\n");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
