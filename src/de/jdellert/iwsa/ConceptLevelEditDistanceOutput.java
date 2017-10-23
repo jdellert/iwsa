@@ -35,7 +35,7 @@ public class ConceptLevelEditDistanceOutput {
 								System.out.print(database.getLanguageCode(lang1ID) + "\t" + database.getLanguageCode(lang2ID) + "\t");
 								System.out.print(database.getAnnotation("Word_Form", lang1FormID) + "\t" + database.getAnnotation("Word_Form", lang2FormID) + "\t");
 								System.out.print(lang1Form.toString(symbolTable) + "\t" + lang2Form.toString(symbolTable) + "\t");
-								System.out.println(alignment.alignmentScore + "\t" + alignment.normalizedAlignmentScore);
+								System.out.println(alignment.alignmentScore + "\t" + alignment.normalizedDistanceScore);
 							}
 						}
 					}
