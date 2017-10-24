@@ -29,7 +29,7 @@ public class ConceptLevelWeightedEditDistanceOutput {
 			for (int conceptID = 0; conceptID < database.getNumConcepts(); conceptID++) {
 				List<List<Integer>> formsPerLang = database.getFormIDsForConceptPerLanguage(conceptID);
 				for (int lang1ID = 0; lang1ID < database.getNumLanguages(); lang1ID++) {
-					for (int lang2ID = lang1ID + 1; lang2ID < database.getNumLanguages(); lang2ID++) {
+					for (int lang2ID = 0; lang2ID < database.getNumLanguages(); lang2ID++) {
 						for (int lang1FormID : formsPerLang.get(lang1ID)) {
 							PhoneticString lang1Form = database.getForm(lang1FormID);
 							for (int lang2FormID : formsPerLang.get(lang2ID)) {
@@ -53,9 +53,9 @@ public class ConceptLevelWeightedEditDistanceOutput {
 					+ " look like cognates (normalized edit distance < 0.35)\n");
 			CategoricalDistribution randomPairCorrespondenceDist = new CategoricalDistribution(
 					symbolTable.getSize() * symbolTable.getSize(), SmoothingMethod.LAPLACE);
-			System.err.print("          Creating " + (numCognatePairs * 10)
+			System.err.print("          Creating " + (numCognatePairs * 20)
 					+ " random alignments to model the distribution in absence of correspondences ...");
-			for (int i = 0; i < numCognatePairs * 100; i++) {
+			for (int i = 0; i < numCognatePairs * 20; i++) {
 				PhoneticString form1 = database.getRandomForm();
 				PhoneticString form2 = database.getRandomForm();
 				PhoneticStringAlignment alignment = LevenshteinAlignmentAlgorithm.constructAlignment(form1, form2);
@@ -63,7 +63,7 @@ public class ConceptLevelWeightedEditDistanceOutput {
 					randomPairCorrespondenceDist.addObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable));
 				}
 			}
-			System.err.print(" done.");
+			System.err.print(" done.\n");
 
 			System.err.print("          Comparing the distributions of symbol pairs for PMI scores ...");
 			CorrespondenceModel globalCorr = new CorrespondenceModel(symbolTable);
@@ -79,7 +79,7 @@ public class ConceptLevelWeightedEditDistanceOutput {
 					// pmiScore);
 				}
 			}
-			System.err.print(" done.");
+			System.err.print(" done.\n");
 
 			System.err.print("  Step 2: Finding WED-based cognate candidates ...");
 			numPairs = 0;
@@ -87,7 +87,7 @@ public class ConceptLevelWeightedEditDistanceOutput {
 			for (int conceptID = 0; conceptID < database.getNumConcepts(); conceptID++) {
 				List<List<Integer>> formsPerLang = database.getFormIDsForConceptPerLanguage(conceptID);
 				for (int lang1ID = 0; lang1ID < database.getNumLanguages(); lang1ID++) {
-					for (int lang2ID = lang1ID + 1; lang2ID < database.getNumLanguages(); lang2ID++) {
+					for (int lang2ID = 0; lang2ID < database.getNumLanguages(); lang2ID++) {
 						for (int lang1FormID : formsPerLang.get(lang1ID)) {
 							PhoneticString lang1Form = database.getForm(lang1FormID);
 							for (int lang2FormID : formsPerLang.get(lang2ID)) {
