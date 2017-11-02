@@ -160,4 +160,14 @@ public class LexicalDatabase {
 	public PhoneticString getRandomForm() {
 		return forms.get((int) (Math.random() * forms.size()));
 	}
+
+	public PhoneticString getRandomFormForLanguage(int langID) {
+		List<List<Integer>> conceptToFormsForLang = langAndConceptToForms.get(langID);
+		List<Integer> formsForRandomConcept = conceptToFormsForLang
+				.get((int) (Math.random() * conceptToFormsForLang.size()));
+		while (formsForRandomConcept.size() == 0) {
+			formsForRandomConcept = conceptToFormsForLang.get((int) (Math.random() * conceptToFormsForLang.size()));
+		}
+		return forms.get(formsForRandomConcept.get((int) (Math.random() * formsForRandomConcept.size())));
+	}
 }

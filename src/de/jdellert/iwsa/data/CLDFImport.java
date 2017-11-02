@@ -14,6 +14,7 @@ import java.util.TreeSet;
 
 import de.jdellert.iwsa.sequence.PhoneticString;
 import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
+import de.jdellert.iwsa.tokenize.IPATokenizer;
 
 /**
  * Building a LexicalDatabase object from a TSV file in CLDF format.
@@ -23,7 +24,12 @@ import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
  */
 
 public class CLDFImport {
-	public static LexicalDatabase loadDatabase(String fileName, boolean ignoreTokenization) throws IOException {
+	public static LexicalDatabase loadDatabase(String fileName, boolean retokenize) throws IOException {
+
+		IPATokenizer tokenizer = null;
+		if (retokenize) {
+			tokenizer = new IPATokenizer();
+		}
 
 		List<String> langCodePerLine = new ArrayList<String>();
 		Set<String> langCodes = new TreeSet<String>();
@@ -85,8 +91,8 @@ public class CLDFImport {
 			conceptNames.add(conceptName);
 
 			String[] tokenizedIPA = null;
-			if (ignoreTokenization) {
-				tokenizedIPA = tokens[ipaColumnIdx].replaceAll(" ", "").split("");
+			if (retokenize) {
+				tokenizedIPA = tokenizer.tokenizeIPA(tokens[ipaColumnIdx].replaceAll(" ", ""));
 			} else {
 				tokenizedIPA = tokens[ipaColumnIdx].split(" ");
 			}
