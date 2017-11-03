@@ -133,11 +133,6 @@ public class ConceptLevelWeightedEditDistanceOutput {
 					double randomSymbolPairProbability = randomPairCorrespondenceDist.getProb(symbolPairID);
 					double pmiScore = Math.log(cognateSymbolPairProbability / randomSymbolPairProbability);
 					globalCorr.setScore(symbolPairID, pmiScore);
-					// System.err.println(symbolTable.toSymbol(symbolPairID / symbolTable.getSize())
-					// + "\t"
-					// + symbolTable.toSymbol(symbolPairID % symbolTable.getSize()) + "\t"
-					// + cognateSymbolPairProbability + "\t" + randomSymbolPairProbability + "\t" +
-					// pmiScore);
 				}
 				System.err.print(" done.\n");
 			}
@@ -287,17 +282,14 @@ public class ConceptLevelWeightedEditDistanceOutput {
 										.constructAlignment(lang1Form, lang2Form, localCorrModels[lang1ID][lang2ID]);
 								double localWeightDistance = localWeightsAlignment.normalizedDistanceScore;
 								double minDistance = Math.min(globalWeightDistance, localWeightDistance);
-								// if (alignment.normalizedDistanceScore <= 0.7)
-								{
-									System.out.print(database.getConceptName(conceptID) + "\t");
-									System.out.print(database.getLanguageCode(lang1ID) + "\t"
-											+ database.getLanguageCode(lang2ID) + "\t");
-									System.out.print(database.getAnnotation("Word_Form", lang1FormID) + "\t"
-											+ database.getAnnotation("Word_Form", lang2FormID) + "\t");
-									System.out.print(lang1Form.toString(symbolTable) + "\t"
-											+ lang2Form.toString(symbolTable) + "\t");
-									System.out.println(globalWeightDistance + "\t" + localWeightDistance + "\t" + minDistance);
-								}
+								System.out.print(database.getConceptName(conceptID) + "\t");
+								System.out.print(database.getLanguageCode(lang1ID) + "\t"
+										+ database.getLanguageCode(lang2ID) + "\t");
+								System.out.print(database.getAnnotation("Word_Form", lang1FormID) + "\t"
+										+ database.getAnnotation("Word_Form", lang2FormID) + "\t");
+								System.out.print(lang1Form.toString(symbolTable) + "\t"
+										+ lang2Form.toString(symbolTable) + "\t");
+								System.out.println(globalWeightDistance + "\t" + localWeightDistance + "\t" + minDistance);
 							}
 						}
 					}
