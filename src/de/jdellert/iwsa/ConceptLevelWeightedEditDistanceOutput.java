@@ -236,9 +236,9 @@ public class ConceptLevelWeightedEditDistanceOutput {
 								+ " form pairs look like cognates (normalized aligment score < 0.7)\n");
 						randomCorrespondenceDistForPair = new CategoricalDistribution(
 								symbolTable.getSize() * symbolTable.getSize(), SmoothingMethod.LAPLACE);
-						System.err.print("          Creating " + (numCognatePairs * 50)
+						System.err.print("          Creating " + (numCognatePairs * 10)
 								+ " random alignments to model the distribution in absence of correspondences ...");
-						for (int i = 0; i < numCognatePairs * 50; i++) {
+						for (int i = 0; i < numCognatePairs * 10; i++) {
 							PhoneticString form1 = database.getRandomFormForLanguage(lang1ID);
 							PhoneticString form2 = database.getRandomFormForLanguage(lang2ID);
 							PhoneticStringAlignment alignment = NeedlemanWunschAlgorithm.constructAlignment(form1,
