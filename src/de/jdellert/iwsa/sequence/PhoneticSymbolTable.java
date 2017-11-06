@@ -1,5 +1,6 @@
 package de.jdellert.iwsa.sequence;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 import java.util.TreeMap;
@@ -13,7 +14,9 @@ import java.util.TreeMap;
  *
  */
 
-public class PhoneticSymbolTable {
+public class PhoneticSymbolTable implements Serializable {
+	private static final long serialVersionUID = -8825447220839372572L;
+	
 	private String[] idToSymbol;
 	private Map<String, Integer> symbolToID;
 
