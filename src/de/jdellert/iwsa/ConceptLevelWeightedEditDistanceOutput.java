@@ -32,7 +32,7 @@ public class ConceptLevelWeightedEditDistanceOutput {
 						+ "-global.corr ... ");
 				globalCorrModel = CorrespondenceModelStorage
 						.loadCorrespondenceModel(new ObjectInputStream(new FileInputStream(args[0] + "-global.corr")));
-				System.err.print("done.");
+				System.err.print("done.\nStage 1: Global sound correspondences - skipped because previously inferred model was found. Delete model file and rerun to cause re-inference.\n");
 			} catch (FileNotFoundException e) {
 				System.err.print(" failed, need to infer global model first.\n");
 			} catch (IOException e) {
@@ -43,8 +43,10 @@ public class ConceptLevelWeightedEditDistanceOutput {
 			}
 			if (globalCorrModel == null)
 			{
+				System.err.print("Stage 1: Inference of global PMI scores\n");
 				globalCorrModel = CorrespondenceModelInference.inferGlobalCorrespondenceModel(database, symbolTable);
 				CorrespondenceModelStorage.writeGlobalModelToFile(globalCorrModel, args[0] + "-global.corr");
+				
 			}
 
 			System.err.print("Stage 2: Inference of sound correspondence matrices for each language pair\n");

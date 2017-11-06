@@ -6,6 +6,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.Map;
+
+import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
 
 public class CorrespondenceModelStorage {
 	public static void writeModelToObjectStream(CorrespondenceModel model, ObjectOutputStream stream)
@@ -15,9 +18,9 @@ public class CorrespondenceModelStorage {
 	}
 	public static void writeGlobalModelToFile(CorrespondenceModel globalCorrModel, String fileName)
 			throws FileNotFoundException, IOException {
-		System.err.print("Writing correspondence model to " + fileName + "-global.corr ...");
+		System.err.print("Writing correspondence model to " + fileName + " ...");
 		ObjectOutputStream outputStream = new ObjectOutputStream(
-				new FileOutputStream(new File(fileName + "-global.corr")));
+				new FileOutputStream(new File(fileName)));
 		writeModelToObjectStream(globalCorrModel, outputStream);
 		outputStream.close();
 		System.err.println("done.");
@@ -26,9 +29,9 @@ public class CorrespondenceModelStorage {
 
 	public static void writeLocalModelsToFile(CorrespondenceModel[][] localCorrModels, String[] langIDs, String fileName)
 			throws FileNotFoundException, IOException {
-		System.err.print("Writing correspondence models to " + fileName + "-local.corr ...");
+		System.err.print("Writing correspondence models to " + fileName);
 		ObjectOutputStream outputStream = new ObjectOutputStream(
-				new FileOutputStream(new File(fileName + "-local.corr")));
+				new FileOutputStream(new File(fileName)));
 		outputStream.writeObject(langIDs);
 		for (int i = 0; i < langIDs.length; i++) {
 			for (int j = 0; j < langIDs.length; j++) {
@@ -41,7 +44,10 @@ public class CorrespondenceModelStorage {
 	
 	public static CorrespondenceModel loadCorrespondenceModel(ObjectInputStream in)
 			throws IOException, ClassNotFoundException {
-		CorrespondenceModel correspondenceModel = (CorrespondenceModel) in.readObject();
+		PhoneticSymbolTable symbolTable = (PhoneticSymbolTable) in.readObject();
+		Map<Integer,Double> scores = (Map<Integer,Double>) in.readObject();	
+		CorrespondenceModel correspondenceModel = new CorrespondenceModel(symbolTable);
+		correspondenceModel.scores = scores;
 		return correspondenceModel;
 	}
 

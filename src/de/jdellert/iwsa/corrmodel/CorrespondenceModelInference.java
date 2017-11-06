@@ -15,8 +15,6 @@ import de.jdellert.iwsa.stat.SmoothingMethod;
 public class CorrespondenceModelInference {
 	public static CorrespondenceModel inferGlobalCorrespondenceModel(LexicalDatabase database,
 			PhoneticSymbolTable symbolTable) {
-		System.err.print("Stage 1: Inference of global PMI scores\n");
-		
 		CategoricalDistribution randomPairCorrespondenceDist = new CategoricalDistribution(
 				symbolTable.getSize() * symbolTable.getSize(), SmoothingMethod.LAPLACE);
 		int numRandomPairs = database.getNumConcepts() * database.getNumLanguages() * database.getNumLanguages();
