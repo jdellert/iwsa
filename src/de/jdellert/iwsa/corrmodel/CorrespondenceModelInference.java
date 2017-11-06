@@ -15,12 +15,28 @@ import de.jdellert.iwsa.stat.SmoothingMethod;
 public class CorrespondenceModelInference {
 	public static CorrespondenceModel inferGlobalCorrespondenceModel(LexicalDatabase database,
 			PhoneticSymbolTable symbolTable) {
+		System.err.print("Stage 1: Inference of global PMI scores\n");
+		
+		CategoricalDistribution randomPairCorrespondenceDist = new CategoricalDistribution(
+				symbolTable.getSize() * symbolTable.getSize(), SmoothingMethod.LAPLACE);
+		int numRandomPairs = database.getNumConcepts() * database.getNumLanguages() * database.getNumLanguages();
+		System.err.print("  Step 1: Simulating non-cognates by means of " +  numRandomPairs + " random alignments ...");
+		for (int i = 0; i < numRandomPairs; i++) {
+			PhoneticString form1 = database.getRandomForm();
+			PhoneticString form2 = database.getRandomForm();
+			PhoneticStringAlignment alignment = LevenshteinAlignmentAlgorithm.constructAlignment(form1, form2);
+			for (int pos = 0; pos < alignment.getLength(); pos++) {
+				randomPairCorrespondenceDist.addObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable));
+			}
+		}
+		System.err.print(" done.\n");
+		
 		int numPairs = 0;
 		int numCognatePairs = 0;
 		CategoricalDistribution cognatePairCorrespondenceDist = new CategoricalDistribution(
 				symbolTable.getSize() * symbolTable.getSize(), SmoothingMethod.LAPLACE);
-		System.err.print("Stage 1: Inference of global PMI scores\n");
-		System.err.print("  Step 1: Finding ED-based cognate candidates ...");
+		
+		System.err.print("  Step 2: Finding ED-based cognate candidates ...");
 		for (int conceptID = 0; conceptID < database.getNumConcepts(); conceptID++) {
 			List<List<Integer>> formsPerLang = database.getFormIDsForConceptPerLanguage(conceptID);
 			for (int lang1ID = 0; lang1ID < database.getNumLanguages(); lang1ID++) {
@@ -46,19 +62,6 @@ public class CorrespondenceModelInference {
 		}
 		System.err.print(" done. Aligned " + numPairs + " form pairs, of which " + numCognatePairs
 				+ " look like cognates (normalized edit distance < 0.35)\n");
-		CategoricalDistribution randomPairCorrespondenceDist = new CategoricalDistribution(
-				symbolTable.getSize() * symbolTable.getSize(), SmoothingMethod.LAPLACE);
-		System.err.print("          Creating " + (numCognatePairs * 20)
-				+ " random alignments to model the distribution in absence of correspondences ...");
-		for (int i = 0; i < numCognatePairs * 20; i++) {
-			PhoneticString form1 = database.getRandomForm();
-			PhoneticString form2 = database.getRandomForm();
-			PhoneticStringAlignment alignment = LevenshteinAlignmentAlgorithm.constructAlignment(form1, form2);
-			for (int pos = 0; pos < alignment.getLength(); pos++) {
-				randomPairCorrespondenceDist.addObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable));
-			}
-		}
-		System.err.print(" done.\n");
 
 		System.err.print("          Comparing the distributions of symbol pairs for PMI scores ...");
 		CorrespondenceModel globalCorr = new CorrespondenceModel(symbolTable);
@@ -72,8 +75,7 @@ public class CorrespondenceModelInference {
 
 		int numGlobalInferenceIterations = 3;
 		System.err.print(
-				"  Step 2: Reestimation based on Needleman-Wunsch (" + numGlobalInferenceIterations + " iterations)\n");
-
+				"  Step 3: Reestimation based on Needleman-Wunsch (" + numGlobalInferenceIterations + " iterations)\n");
 		for (int iteration = 0; iteration < numGlobalInferenceIterations; iteration++) {
 			cognatePairCorrespondenceDist = new CategoricalDistribution(symbolTable.getSize() * symbolTable.getSize(),
 					SmoothingMethod.LAPLACE);
@@ -105,20 +107,6 @@ public class CorrespondenceModelInference {
 			}
 			System.err.print(
 					" done. " + numCognatePairs + " form pairs look like cognates (normalized aligment score < 0.7)\n");
-			randomPairCorrespondenceDist = new CategoricalDistribution(symbolTable.getSize() * symbolTable.getSize(),
-					SmoothingMethod.LAPLACE);
-			System.err.print("          Creating " + (numCognatePairs * 20)
-					+ " random alignments to model the distribution in absence of correspondences ...");
-			for (int i = 0; i < numCognatePairs * 20; i++) {
-				PhoneticString form1 = database.getRandomForm();
-				PhoneticString form2 = database.getRandomForm();
-				PhoneticStringAlignment alignment = NeedlemanWunschAlgorithm.constructAlignment(form1, form2,
-						globalCorr);
-				for (int pos = 0; pos < alignment.getLength(); pos++) {
-					randomPairCorrespondenceDist.addObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable));
-				}
-			}
-			System.err.print(" done.\n");
 
 			System.err.print("          Comparing the distributions of symbol pairs to reestimate PMI scores ...");
 			globalCorr = new CorrespondenceModel(symbolTable);
