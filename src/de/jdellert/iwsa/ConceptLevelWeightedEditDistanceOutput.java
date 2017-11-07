@@ -34,9 +34,9 @@ public class ConceptLevelWeightedEditDistanceOutput {
 						.loadCorrespondenceModel(new ObjectInputStream(new FileInputStream(args[0] + "-global.corr")));
 				System.err.print("done.\nStage 1: Global sound correspondences - skipped because previously inferred model was found. Delete model file and rerun to cause re-inference.\n");
 			} catch (FileNotFoundException e) {
-				System.err.print(" failed, need to infer global model first.\n");
+				System.err.print(" file not found, need to infer global model first.\n");
 			} catch (IOException e) {
-				System.err.print(" failed, need to infer global model first.\n");
+				System.err.print(" format error, need to reinfer global model.\n");
 			} catch (ClassNotFoundException e) {
 				e.printStackTrace();
 				System.exit(0);

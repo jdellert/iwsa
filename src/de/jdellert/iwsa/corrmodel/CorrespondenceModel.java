@@ -15,6 +15,10 @@ public class CorrespondenceModel {
 		this.scores = new TreeMap<Integer, Double>();
 	}
 
+	public PhoneticSymbolTable getSymbolTable() {
+		return symbolTable;
+	}
+
 	public void setScore(int symbolPairID, double score) {
 		scores.put(symbolPairID, score);
 	}

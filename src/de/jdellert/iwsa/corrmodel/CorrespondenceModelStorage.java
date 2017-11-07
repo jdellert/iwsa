@@ -11,17 +11,14 @@ import java.util.Map;
 import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
 
 public class CorrespondenceModelStorage {
-	public static void writeModelToObjectStream(CorrespondenceModel model, ObjectOutputStream stream)
-			throws IOException {
-		stream.writeObject(model.symbolTable);
-		stream.writeObject(model.scores);
-	}
+
 	public static void writeGlobalModelToFile(CorrespondenceModel globalCorrModel, String fileName)
 			throws FileNotFoundException, IOException {
-		System.err.print("Writing correspondence model to " + fileName + " ...");
+		System.err.print("Writing global correspondence model to " + fileName + " ...");
 		ObjectOutputStream outputStream = new ObjectOutputStream(
 				new FileOutputStream(new File(fileName)));
-		writeModelToObjectStream(globalCorrModel, outputStream);
+		outputStream.writeObject(globalCorrModel.symbolTable);
+		outputStream.writeObject(globalCorrModel.scores);
 		outputStream.close();
 		System.err.println("done.");
 	}
@@ -29,13 +26,14 @@ public class CorrespondenceModelStorage {
 
 	public static void writeLocalModelsToFile(CorrespondenceModel[][] localCorrModels, String[] langIDs, String fileName)
 			throws FileNotFoundException, IOException {
-		System.err.print("Writing correspondence models to " + fileName);
+		System.err.print("Writing pair-specific correspondence models to " + fileName);
 		ObjectOutputStream outputStream = new ObjectOutputStream(
 				new FileOutputStream(new File(fileName)));
 		outputStream.writeObject(langIDs);
+		outputStream.writeObject(localCorrModels[0][0].symbolTable);
 		for (int i = 0; i < langIDs.length; i++) {
 			for (int j = 0; j < langIDs.length; j++) {
-				writeModelToObjectStream(localCorrModels[i][j], outputStream);
+				outputStream.writeObject(localCorrModels[i][j].scores);
 			}
 		}
 		outputStream.close();
@@ -54,11 +52,12 @@ public class CorrespondenceModelStorage {
 	public static CorrespondenceModel[][] loadCorrespondenceModels(ObjectInputStream in)
 			throws IOException, ClassNotFoundException {
 		String langIDs[] = (String[]) in.readObject();
-		//TODO: the same symbol table gets copied during import, store it only once in the global file!
+		PhoneticSymbolTable symbolTable = (PhoneticSymbolTable) in.readObject();
 		CorrespondenceModel[][] correspondenceModels = new CorrespondenceModel[langIDs.length][langIDs.length];
 		for (int i = 0; i < langIDs.length; i++) {
 			for (int j = 0; j < langIDs.length; j++) {
-				CorrespondenceModel correspondenceModel = (CorrespondenceModel) in.readObject();
+				CorrespondenceModel correspondenceModel = new CorrespondenceModel(symbolTable);
+				correspondenceModel.scores = (Map<Integer,Double>) in.readObject();
 				correspondenceModels[i][j] = correspondenceModel;
 			}
 		}
