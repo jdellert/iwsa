@@ -2,8 +2,11 @@ package de.jdellert.iwsa.sequence;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 /**
  * Symbol table for mapping IPA segments to integers for efficient internal
@@ -35,7 +38,7 @@ public class PhoneticSymbolTable implements Serializable {
 		}
 	}
 
-	public int toInt(String symbol) {
+	public Integer toInt(String symbol) {
 		return symbolToID.get(symbol);
 	}
 
@@ -57,6 +60,11 @@ public class PhoneticSymbolTable implements Serializable {
 			segments[idx] = idToSymbol[segmentIDs[idx]];
 		}
 		return segments;
+	}
+	
+	public Set<String> getDefinedSymbols()
+	{
+		return new TreeSet<String>(symbolToID.keySet());
 	}
 
 	public int getSize() {

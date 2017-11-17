@@ -13,8 +13,8 @@ import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
 public class CorrespondenceModelOutput {
 	public static void main(String[] args) {
 		if (args.length != 1 && args.length != 3) {
-			System.err.println("Usage: SoundCorrespondenceOutput [globalCorrespondenceFile]");
-			System.err.println("       SoundCorrespondenceOutput [localCorrespondenceFile] [langCode1] [langCode2]");
+			System.err.println("Usage: CorrespondenceModelOutput [globalCorrespondenceFile]");
+			System.err.println("       CorrespondenceModelOutput [localCorrespondenceFile] [langCode1] [langCode2]");
 		}
 		if (args.length == 1) {
 			CorrespondenceModel globalCorrModel = null;

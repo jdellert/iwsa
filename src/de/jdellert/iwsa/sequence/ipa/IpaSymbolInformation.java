@@ -2,6 +2,7 @@ package de.jdellert.iwsa.sequence.ipa;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -58,13 +59,13 @@ public class IpaSymbolInformation {
 		return description;
 	}
 
-	public static String getTIPAEquivalentForSymbol(String symbol) {
+	public static String getTipaForSymbol(String symbol) {
 		String tipa = ipaToTipa.get(symbol);
 		if (tipa == null) {
 			if (symbol.length() > 1) {
 				tipa = "";
 				for (String elementarySymbol : symbol.split("")) {
-					tipa += getTIPAEquivalentForSymbol(elementarySymbol);
+					tipa += getTipaForSymbol(elementarySymbol);
 				}
 			} else {
 				tipa = symbol;
