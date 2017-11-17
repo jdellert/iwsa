@@ -1,0 +1,115 @@
+#	word boundary
+-	gap symbol (models deletion and insertion in alignments)
+m	bilabial nasal
+ɱ	labiodental nasal
+n	alveolar or dental nasal
+ɳ	retroflex nasal
+ɲ	palatal nasal
+ŋ	velar nasal
+ɴ	uvular nasal
+p	voiceless bilabial stop
+b	voiced bilabial stop
+t	voiceless alveolar or dental stop
+d	voiced alveolar or dental stop
+ʈ	voiceless retroflex stop
+ɖ	voiced retroflex stop
+c	voiceless palatal stop
+ɟ	voiced palatal stop
+k	voiceless velar stop
+ɡ	voiced velar stop
+q	voiceless uvular stop
+ɢ	voiced uvular stop
+ʡ	epiglottal stop
+ʔ	glottal stop
+t͡s	voiceless alveolar sibilant affricate
+d͡z	voiced alveolar sibilant affricate
+t͡ʃ	voiceless palato-alveolar sibilant affricate
+d͡ʒ	voiced palato-alveolar sibilant affricate
+t͡ʂ	voiceless retroflex sibilant affricate
+ɖ͡ʐ	voiced retroflex sibilant affricate
+t͡ɕ	voiceless alveolo-palatal sibilant affricate
+d͡ʑ	voiced alveolo-palatal sibilant affricate
+p͡f	voiceless labiodental affricate
+c͡ç	voiceless palatal affricate
+ɟ͡ʝ	voiced palatal affricate
+q͡χ	voiceless uvular affricate
+s	voiceless alveolar sibilant
+z	voiced alveolar sibilant
+ʃ	voiceless palato-alveolar sibilant fricative
+ʒ	voiced palato-alveolar sibilant fricative
+ʂ	voiceless retroflex sibilant fricative
+ʐ	voiced retroflex sibilant fricative
+ɕ	voiceless alveolo-palatal sibilant fricative
+ʑ	voiced alveolo-palatal sibilant fricative
+ɸ	voiceless bilabial fricative
+β	voiced bilabial fricative
+f	voiceless labiodental fricative
+v	voiced labiodental fricative
+ʋ	labiodental approximant
+θ	voiceless dental non-sibilant fricative
+ð	voiced dental fricative
+ɹ	alveolar approximant
+ɻ	retroflex approximant
+ç	voiceless palatal fricative
+ʝ	voiced palatal fricative
+j	voiced palatal approximant
+x	voiceless velar fricative
+ɣ	voiced velar fricative
+χ	voiceless uvular fricative
+ʁ	voiced uvular fricative
+ħ	voiceless pharyngeal fricative
+ʕ	voiced pharyngeal approximant
+h	voiceless glottal transition
+ɦ	breathy-voiced glottal transition
+ɾ	alveolar flap
+ɽ	retroflex flap
+r	alveolar trill
+ʀ	uvular trill
+ʜ	voiceless epiglottal trill
+t͡ɬ	voiceless alveolar lateral affricate
+ɬ	voiceless alveolar lateral fricative
+ɮ	voiced alveolar lateral fricative
+l	alveolar lateral approximant
+ɭ	retroflex lateral approximant
+ʎ	palatal lateral approximant
+ɺ	alveolar lateral flap
+ʘ	tenuis bilabial click
+ʍ	voiceless labiovelar approximant
+w	voiced labio-velar approximant
+ɥ	labialized palatal approximant
+ɫ	velarized alveolar lateral approximant
+i	high front unrounded vowel
+y	high front rounded vowel
+ɪ	near-high near-front unrounded vowel
+ʏ	near-high near-front rounded vowel
+ɨ	high central unrounded vowel
+ʉ	high central rounded vowel
+ʊ	near-high near-back rounded vowel
+ɯ	high back unrounded vowel
+u	high back rounded vowel
+e	high-mid front unrounded vowel
+ø	high-mid front rounded vowel
+ɘ	high-mid central unrounded vowel
+ɵ	high-mid central rounded vowel
+ɤ	high-mid back unrounded vowel
+o	high-mid back rounded vowel
+ə	mid central unrounded vowel
+ɛ	low-mid front unrounded vowel
+œ	low-mid front rounded vowel
+ɜ	low-mid central unrounded vowel
+ʌ	low-mid back unrounded vowel
+ɔ	low-mid back rounded vowel
+æ	near-low front unrounded vowel
+ɐ	near-open central unrounded vowel
+a	low front unrounded vowel
+ɑ	low back unrounded vowel
+ɒ	low back rounded vowel
+ʰ	aspiration
+ʼ	ejectivity
+ʲ	palatalizion
+ʷ	labialization
+ˀ	laryngealization
+ˠ	velarization
+ˤ	pharyngealization
+̴	uvularization
+̃	nasalization

@@ -42,7 +42,7 @@ public class CorrespondenceModelOutput {
 
 		}
 		if (args.length == 3) {
-
+			//TODO: extract local correspondence model for a language pair
 		}
 	}
 }
