@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
+import de.jdellert.iwsa.util.io.Formatting;
 
 public class InformationModel {
 	// gappy bigrams are also stored in this structure
@@ -16,7 +17,7 @@ public class InformationModel {
 	// bigrams
 	double observationCountsSum = 0.0;
 
-	double smoothingMassRatio = 0.2;
+	double smoothingMassRatio = 0.5;
 
 	int numSymbols;
 	int numTrigrams;
@@ -51,13 +52,11 @@ public class InformationModel {
 	}
 
 	public double smoothedTrigramCount(int a, int b, int c) {
-		return trigramCount(a, b, c) + ((smoothingMassRatio * observationCountsSum) / numTrigrams)
-				/ ((1.0 + smoothingMassRatio) * observationCountsSum);
+		return trigramCount(a, b, c) + ((smoothingMassRatio * observationCountsSum) / numTrigrams);
 	}
 
 	public double smoothedGappyBigramCount(int a, int b, int c) {
-		return trigramCount(a, b, c) + ((smoothingMassRatio * observationCountsSum) / numGappyBigrams)
-				/ ((1.0 + smoothingMassRatio) * observationCountsSum);
+		return trigramCount(a, b, c) + ((smoothingMassRatio * observationCountsSum) / numGappyBigrams);
 	}
 
 	public double informationContent(int[] s, int i) {
@@ -70,11 +69,16 @@ public class InformationModel {
 	}
 
 	public double informationContent(int a, int b, int c, int d, int e) {
-		System.out.print("c(" + a + "," + b + "," + c + "," + d + "," + e + "): ");
+		System.out.print("c(" + Formatting.intRPad(a, 3) + "," + Formatting.intRPad(b, 3) + ","
+				+ Formatting.intRPad(c, 3) + "," + Formatting.intRPad(d, 3) + "," + Formatting.intRPad(e, 3) + "):  ");
 		double abcProb = smoothedTrigramCount(a, b, c) / smoothedGappyBigramCount(a, b, 1);
 		double bcdProb = smoothedTrigramCount(b, c, d) / smoothedGappyBigramCount(b, 1, d);
 		double cdeProb = smoothedTrigramCount(c, d, e) / smoothedGappyBigramCount(1, d, e);
-		System.out.println(abcProb + "\t" + bcdProb + "\t" + cdeProb);
+		System.out
+				.print(Formatting.str3f(abcProb) + " = " + trigramCount(a, b, c) + "/" + trigramCount(a, b, 1) + "\t");
+		System.out
+				.print(Formatting.str3f(bcdProb) + " = " + trigramCount(b, c, d) + "/" + trigramCount(b, 1, d) + "\t");
+		System.out.println(Formatting.str3f(cdeProb) + " = " + trigramCount(c, d, e) + "/" + trigramCount(1, d, e));
 		double maxProb = Math.max(abcProb, Math.max(bcdProb, cdeProb));
 		return -Math.log(maxProb);
 	}

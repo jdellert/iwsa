@@ -8,6 +8,7 @@ import de.jdellert.iwsa.infomodel.InformationModel;
 import de.jdellert.iwsa.infomodel.InformationModelInference;
 import de.jdellert.iwsa.sequence.PhoneticString;
 import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
+import de.jdellert.iwsa.util.io.Formatting;
 
 /**
  * A class for inspecting language-specific information weightings. The output
@@ -43,11 +44,11 @@ public class InformationWeightOutput {
 				StringBuilder infoString = new StringBuilder();
 				for (int i = 0; i < s.length; i++)
 				{
-					formString.append(symbolTable.toSymbol(s[i]) + " ");
-					infoString.append(model.informationContent(s, i) + " ");
+					formString.append("  " + symbolTable.toSymbol(s[i]) + "   ");
+					infoString.append(Formatting.str3f(model.informationContent(s, i)) + " ");
 				}
 				formString.deleteCharAt(formString.length() - 1);
-				infoString.deleteCharAt(formString.length() - 1);
+				infoString.deleteCharAt(infoString.length() - 1);
 				System.out.println(formString);
 				System.out.println(infoString);
 				System.out.println();
