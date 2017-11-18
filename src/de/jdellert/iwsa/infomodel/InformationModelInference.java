@@ -18,6 +18,7 @@ public class InformationModelInference {
 		InformationModel model = new InformationModel(symbolTable);
 		for (int formID : database.getFormIDsForLanguage(langID)) {
 			PhoneticString form = database.getForm(formID);
+			if (form.getLength() == 0) continue;
 			int k = form.getLength() - 1;
 			model.addTrigramObservation(0, 0, form.segments[0]);
 			model.addTrigramObservation(form.segments[k], 0, 0);

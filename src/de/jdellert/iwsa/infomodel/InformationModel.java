@@ -60,11 +60,22 @@ public class InformationModel {
 				/ ((1.0 + smoothingMassRatio) * observationCountsSum);
 	}
 
+	public double informationContent(int[] s, int i) {
+		int a = (i > 1 ? s[i - 2] : 0);
+		int b = (i > 0 ? s[i - 1] : 0);
+		int c = s[i];
+		int d = (i < s.length - 1 ? s[i + 1] : 0);
+		int e = (i < s.length - 2 ? s[i + 2] : 0);
+		return informationContent(a, b, c, d, e);
+	}
+
 	public double informationContent(int a, int b, int c, int d, int e) {
+		System.out.print("c(" + a + "," + b + "," + c + "," + d + "," + e + "): ");
 		double abcProb = smoothedTrigramCount(a, b, c) / smoothedGappyBigramCount(a, b, 1);
 		double bcdProb = smoothedTrigramCount(b, c, d) / smoothedGappyBigramCount(b, 1, d);
 		double cdeProb = smoothedTrigramCount(c, d, e) / smoothedGappyBigramCount(1, d, e);
-		double maxProb = Math.max(abcProb, Math.min(bcdProb, cdeProb));
+		System.out.println(abcProb + "\t" + bcdProb + "\t" + cdeProb);
+		double maxProb = Math.max(abcProb, Math.max(bcdProb, cdeProb));
 		return -Math.log(maxProb);
 	}
 
