@@ -17,7 +17,7 @@ public class InformationModel {
 	// bigrams
 	double observationCountsSum = 0.0;
 
-	double smoothingMassRatio = 0.5;
+	double smoothingMassRatio = 0.2;
 
 	int numSymbols;
 	int numTrigrams;
@@ -55,8 +55,12 @@ public class InformationModel {
 		return trigramCount(a, b, c) + ((smoothingMassRatio * observationCountsSum) / numTrigrams);
 	}
 
+	public double smoothedTrigramCount(int a, int b, int c, double bigramCount) {
+		return trigramCount(a, b, c) + ((smoothingMassRatio * bigramCount) / (numSymbols - 1));
+	}
+
 	public double smoothedGappyBigramCount(int a, int b, int c) {
-		return trigramCount(a, b, c) + ((smoothingMassRatio * observationCountsSum) / numGappyBigrams);
+		return (1 + smoothingMassRatio) * trigramCount(a, b, c) + ((smoothingMassRatio * observationCountsSum) / numGappyBigrams);
 	}
 
 	public double informationContent(int[] s, int i) {
@@ -71,14 +75,18 @@ public class InformationModel {
 	public double informationContent(int a, int b, int c, int d, int e) {
 		System.out.print("c(" + Formatting.intRPad(a, 3) + "," + Formatting.intRPad(b, 3) + ","
 				+ Formatting.intRPad(c, 3) + "," + Formatting.intRPad(d, 3) + "," + Formatting.intRPad(e, 3) + "):  ");
-		double abcProb = smoothedTrigramCount(a, b, c) / smoothedGappyBigramCount(a, b, 1);
-		double bcdProb = smoothedTrigramCount(b, c, d) / smoothedGappyBigramCount(b, 1, d);
-		double cdeProb = smoothedTrigramCount(c, d, e) / smoothedGappyBigramCount(1, d, e);
-		System.out
-				.print(Formatting.str3f(abcProb) + " = " + trigramCount(a, b, c) + "/" + trigramCount(a, b, 1) + "\t");
-		System.out
-				.print(Formatting.str3f(bcdProb) + " = " + trigramCount(b, c, d) + "/" + trigramCount(b, 1, d) + "\t");
-		System.out.println(Formatting.str3f(cdeProb) + " = " + trigramCount(c, d, e) + "/" + trigramCount(1, d, e));
+		double abCount = smoothedGappyBigramCount(a, b, 1);
+		double bdCount = smoothedGappyBigramCount(b, 1, d);
+		double deCount = smoothedGappyBigramCount(1, d, e);
+		double abcCount = smoothedTrigramCount(a, b, c, abCount);
+		double bcdCount = smoothedTrigramCount(b, c, d, bdCount);
+		double cdeCount = smoothedTrigramCount(c, d, e, deCount);
+		double abcProb = abcCount / abCount;
+		double bcdProb = bcdCount / bdCount;
+		double cdeProb = cdeCount / deCount;
+		System.out.print(Formatting.str3f(abcProb) + " = " + Math.round(abcCount) + "/" + Math.round(abCount) + "\t");
+		System.out.print(Formatting.str3f(bcdProb) + " = " + Math.round(bcdCount) + "/" + Math.round(bdCount) + "\t");
+		System.out.println(Formatting.str3f(cdeProb) + " = " + Math.round(cdeCount) + "/" + Math.round(deCount));
 		double maxProb = Math.max(abcProb, Math.max(bcdProb, cdeProb));
 		return -Math.log(maxProb);
 	}
