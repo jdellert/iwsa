@@ -119,4 +119,12 @@ public class CorrespondenceModelInference {
 
 		return globalCorr;
 	}
+	
+	public static CorrespondenceModel[][] inferLocalCorrespondenceModels(LexicalDatabase database,
+			PhoneticSymbolTable symbolTable, CorrespondenceModel globalCorrespondenceModel)
+	{
+		CorrespondenceModel[][] models = new CorrespondenceModel[database.getNumLanguages()][database.getNumLanguages()];
+		//TODO
+		return models;
+	}
 }

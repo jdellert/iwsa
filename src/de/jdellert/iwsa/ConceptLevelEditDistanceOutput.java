@@ -15,7 +15,7 @@ public class ConceptLevelEditDistanceOutput {
 
 	public static void main(String[] args) {
 		try {
-			LexicalDatabase database = CLDFImport.loadDatabase(args[0], false);
+			LexicalDatabase database = CLDFImport.loadDatabase(args[0], true);
 			PhoneticSymbolTable symbolTable = database.getSymbolTable();
 			for (int conceptID = 0; conceptID < database.getNumConcepts(); conceptID++)
 			{

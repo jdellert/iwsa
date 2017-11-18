@@ -40,8 +40,10 @@ public class CategoricalDistribution {
 			return (observationCounts[i] + ((smoothingMassRatio * observationCountsSum) / observationCounts.length))
 					/ ((1.0 + smoothingMassRatio) * observationCountsSum);
 		case WITTEN_BELL:
+			//TODO
 			break;
 		case GOOD_TURING:
+			//TODO
 			break;
 		default:
 			break;

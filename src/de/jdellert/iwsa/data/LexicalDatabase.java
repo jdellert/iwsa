@@ -99,6 +99,14 @@ public class LexicalDatabase {
 		return formID;
 	}
 
+	public List<Integer> getFormIDsForLanguage(int langID) {
+		List<Integer> result = new ArrayList<Integer>();
+		for (List<Integer> formList : langAndConceptToForms.get(langID)) {
+			result.addAll(formList);
+		}
+		return result;
+	}
+
 	public List<Integer> getFormIDsForLanguageAndConcept(int langID, int conceptID) {
 		return langAndConceptToForms.get(langID).get(conceptID);
 	}
@@ -135,6 +143,18 @@ public class LexicalDatabase {
 
 	public String getLanguageCode(int langID) {
 		return langCodes[langID];
+	}
+	
+	/**
+	 * Gets the internal language ID for a given language code.
+	 * @param langCode
+	 * @return the internal ID of that language, or -1 if language code is not in database.
+	 */
+	public int getIDForLanguageCode(String langCode)
+	{
+		Integer langID = langCodeToID.get(langCode);
+		if (langID == null) langID = -1;
+		return langID;
 	}
 
 	public String getAnnotation(String field, int formID) {
