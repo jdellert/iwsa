@@ -26,13 +26,36 @@ public class ConceptLevelWeightedEditDistanceOutput {
 			LexicalDatabase database = CLDFImport.loadDatabase(args[0], true);
 			PhoneticSymbolTable symbolTable = database.getSymbolTable();
 
+			// default: assume all languages are relevant, and part of the inference
+			String[] relevantLangCodes = database.getLanguageCodes();
+			int[] relevantLangIDs = new int[database.getNumLanguages()];
+			for (int i = 0; i < relevantLangIDs.length; i++) {
+				relevantLangIDs[i] = i;
+			}
+
+			// interpret additional arguments as language IDs
+			if (args.length > 1) {
+				relevantLangCodes = new String[args.length - 1];
+				relevantLangIDs = new int[args.length - 1];
+				for (int i = 1; i < args.length; i++) {
+					int langID = database.getIDForLanguageCode(args[i]);
+					if (langID == -1) {
+						System.err.println("ERROR: language code " + args[i] + " does not occur in database!");
+						System.exit(1);
+					}
+					relevantLangCodes[i - 1] = args[i];
+					relevantLangIDs[i - 1] = langID;
+				}
+			}
+
 			CorrespondenceModel globalCorrModel = null;
 			try {
 				System.err.print("Attempting to load existing global correspondence model from " + args[0]
 						+ "-global.corr ... ");
 				globalCorrModel = CorrespondenceModelStorage
 						.loadCorrespondenceModel(new ObjectInputStream(new FileInputStream(args[0] + "-global.corr")));
-				System.err.print("done.\nStage 1: Global sound correspondences - skipped because previously inferred model was found. Delete model file and rerun to cause re-inference.\n");
+				System.err.print(
+						"done.\nStage 1: Global sound correspondences - skipped because previously inferred model was found. Delete model file and rerun to cause re-inference.\n");
 			} catch (FileNotFoundException e) {
 				System.err.print(" file not found, need to infer global model first.\n");
 			} catch (IOException e) {
@@ -41,178 +64,104 @@ public class ConceptLevelWeightedEditDistanceOutput {
 				e.printStackTrace();
 				System.exit(0);
 			}
-			if (globalCorrModel == null)
-			{
+			if (globalCorrModel == null) {
 				System.err.print("Stage 1: Inference of global PMI scores\n");
 				globalCorrModel = CorrespondenceModelInference.inferGlobalCorrespondenceModel(database, symbolTable);
 				CorrespondenceModelStorage.writeGlobalModelToFile(globalCorrModel, args[0] + "-global.corr");
-				
+
 			}
 
-			System.err.print("Stage 2: Inference of sound correspondence matrices for each language pair\n");
-			CorrespondenceModel[][] localCorrModels = new CorrespondenceModel[database.getNumLanguages()][database
-					.getNumLanguages()];
-			// estimation of language-specific sound correspondences;
-			// use global correspondences only in first iteration
-			for (int lang1ID = 0; lang1ID < database.getNumLanguages(); lang1ID++) {
-				for (int lang2ID = 0; lang2ID < database.getNumLanguages(); lang2ID++) {
-					System.err.print("  Pair " + database.getLanguageCode(lang1ID) + "/"
-							+ database.getLanguageCode(lang2ID) + ":\n");
-					CategoricalDistribution cognateCorrespondenceDistForPair = new CategoricalDistribution(
-							symbolTable.getSize() * symbolTable.getSize(), SmoothingMethod.LAPLACE);
-					int numPairs = 0;
-					int numCognatePairs = 0;
-					System.err.print("    Step 1: Finding cognate candidates based on global WED ...");
-					for (int conceptID = 0; conceptID < database.getNumConcepts(); conceptID++) {
-						List<List<Integer>> formsPerLang = database.getFormIDsForConceptPerLanguage(conceptID);
-						for (int lang1FormID : formsPerLang.get(lang1ID)) {
-							PhoneticString lang1Form = database.getForm(lang1FormID);
-							for (int lang2FormID : formsPerLang.get(lang2ID)) {
-								PhoneticString lang2Form = database.getForm(lang2FormID);
-								PhoneticStringAlignment alignment = NeedlemanWunschAlgorithm
-										.constructAlignment(lang1Form, lang2Form, globalCorrModel);
-								numPairs++;
-								if (alignment.normalizedDistanceScore <= 0.7) {
-									for (int pos = 0; pos < alignment.getLength(); pos++) {
-										cognateCorrespondenceDistForPair
-												.addObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable));
-									}
-									numCognatePairs++;
-								}
-							}
-						}
-					}
+			CorrespondenceModel[][] localCorrModels = null;
+			try {
+				System.err.print(
+						"Attempting to load existing global correspondence model from " + args[0] + "-local.corr ... ");
+				localCorrModels = CorrespondenceModelStorage
+						.loadCorrespondenceModels(new ObjectInputStream(new FileInputStream(args[0] + "-local.corr")));
+				System.err.print(
+						"done.\nStage 2: Pairwise sound correspondences - skipped because previously inferred models were found. Delete model file and rerun to cause re-inference.\n");
 
-					System.err.print(" done. Aligned " + numPairs + " form pairs, of which " + numCognatePairs
-							+ " look like cognates (normalized edit distance < 0.7)\n");
-					CategoricalDistribution randomCorrespondenceDistForPair = new CategoricalDistribution(
-							symbolTable.getSize() * symbolTable.getSize(), SmoothingMethod.LAPLACE);
-					System.err.print("            Creating " + (numCognatePairs * 50)
-							+ " random alignments to model the distribution in absence of correspondences ...");
-					for (int i = 0; i < numCognatePairs * 50; i++) {
-						PhoneticString form1 = database.getRandomFormForLanguage(lang1ID);
-						PhoneticString form2 = database.getRandomFormForLanguage(lang2ID);
-						PhoneticStringAlignment alignment = NeedlemanWunschAlgorithm.constructAlignment(form1, form2,
-								globalCorrModel);
-						for (int pos = 0; pos < alignment.getLength(); pos++) {
-							randomCorrespondenceDistForPair
-									.addObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable));
-						}
-					}
-					System.err.print(" done.\n");
-
-					System.err.print(
-							"          Comparing the distributions of symbol pairs to reestimate PMI scores ...");
-					CorrespondenceModel localCorr = new CorrespondenceModel(symbolTable);
-					for (int symbolPairID = 0; symbolPairID < symbolTable.getSize()
-							* symbolTable.getSize(); symbolPairID++) {
-						double cognateSymbolPairProbability = cognateCorrespondenceDistForPair.getProb(symbolPairID);
-						double randomSymbolPairProbability = randomCorrespondenceDistForPair.getProb(symbolPairID);
-						double pmiScore = Math.log(cognateSymbolPairProbability / randomSymbolPairProbability);
-						localCorr.setScore(symbolPairID, pmiScore);
-					}
-					System.err.print(" done.\n");
-
-					int numLocalInferenceIterations = 3;
-					System.err.print("    Step 2: Reestimation based on Needleman-Wunsch ("
-							+ numLocalInferenceIterations + " iterations)\n");
-
-					for (int iteration = 0; iteration < numLocalInferenceIterations; iteration++) {
-						System.err.print(
-								"    Iteration 0" + (iteration + 1) + ": Finding WED-based cognate candidates ...");
-						numPairs = 0;
-						numCognatePairs = 0;
-						cognateCorrespondenceDistForPair = new CategoricalDistribution(
-								symbolTable.getSize() * symbolTable.getSize(), SmoothingMethod.LAPLACE);
-						for (int conceptID = 0; conceptID < database.getNumConcepts(); conceptID++) {
-							List<List<Integer>> formsPerLang = database.getFormIDsForConceptPerLanguage(conceptID);
-							for (int lang1FormID : formsPerLang.get(lang1ID)) {
-								PhoneticString lang1Form = database.getForm(lang1FormID);
-								for (int lang2FormID : formsPerLang.get(lang2ID)) {
-									PhoneticString lang2Form = database.getForm(lang2FormID);
-									PhoneticStringAlignment alignment = NeedlemanWunschAlgorithm
-											.constructAlignment(lang1Form, lang2Form, localCorr);
-									numPairs++;
-									if (alignment.normalizedDistanceScore <= 0.7) {
-										for (int pos = 0; pos < alignment.getLength(); pos++) {
-											cognateCorrespondenceDistForPair
-													.addObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable));
-										}
-										numCognatePairs++;
-									}
-								}
-							}
-						}
-
-						System.err.print(" done. " + numCognatePairs
-								+ " form pairs look like cognates (normalized aligment score < 0.7)\n");
-						randomCorrespondenceDistForPair = new CategoricalDistribution(
-								symbolTable.getSize() * symbolTable.getSize(), SmoothingMethod.LAPLACE);
-						System.err.print("          Creating " + (numCognatePairs * 10)
-								+ " random alignments to model the distribution in absence of correspondences ...");
-						for (int i = 0; i < numCognatePairs * 10; i++) {
-							PhoneticString form1 = database.getRandomFormForLanguage(lang1ID);
-							PhoneticString form2 = database.getRandomFormForLanguage(lang2ID);
-							PhoneticStringAlignment alignment = NeedlemanWunschAlgorithm.constructAlignment(form1,
-									form2, localCorr);
-							for (int pos = 0; pos < alignment.getLength(); pos++) {
-								randomCorrespondenceDistForPair
-										.addObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable));
-							}
-						}
-						System.err.print(" done.\n");
-
-						System.err.print(
-								"          Comparing the distributions of symbol pairs to reestimate PMI scores ...");
-						localCorr = new CorrespondenceModel(symbolTable);
-						for (int symbolPairID = 0; symbolPairID < symbolTable.getSize()
-								* symbolTable.getSize(); symbolPairID++) {
-							double cognateSymbolPairProbability = cognateCorrespondenceDistForPair
-									.getProb(symbolPairID);
-							double randomSymbolPairProbability = randomCorrespondenceDistForPair.getProb(symbolPairID);
-							double pmiScore = Math.log(cognateSymbolPairProbability / randomSymbolPairProbability);
-							localCorr.setScore(symbolPairID, pmiScore);
-						}
-						System.err.print(" done.\n");
-					}
-					localCorrModels[lang1ID][lang2ID] = localCorr;
-				}
+			} catch (FileNotFoundException e) {
+				System.err.print(" file not found, need to infer pairwise correspondence models first.\n");
+			} catch (IOException e) {
+				System.err.print(" format error, need to reinfer pairwise correspondence models.\n");
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
+				System.exit(0);
+			}
+			if (localCorrModels == null) {
+				System.err.print("Stage 2: Inference of sound correspondence matrices for each language pair\n");
+				localCorrModels = CorrespondenceModelInference.inferLocalCorrespondenceModels(database, symbolTable,
+						relevantLangIDs, globalCorrModel);
+				CorrespondenceModelStorage.writeLocalModelsToFile(localCorrModels, relevantLangCodes, symbolTable,
+						args[0] + "-local.corr");
 			}
 
 			// finally: output of distances
-			for (int conceptID = 0; conceptID < database.getNumConcepts(); conceptID++) {
-				List<List<Integer>> formsPerLang = database.getFormIDsForConceptPerLanguage(conceptID);
-				for (int lang1ID = 0; lang1ID < database.getNumLanguages(); lang1ID++) {
-					for (int lang2ID = 0; lang2ID < database.getNumLanguages(); lang2ID++) {
-						for (int lang1FormID : formsPerLang.get(lang1ID)) {
-							PhoneticString lang1Form = database.getForm(lang1FormID);
-							for (int lang2FormID : formsPerLang.get(lang2ID)) {
-								PhoneticString lang2Form = database.getForm(lang2FormID);
-								PhoneticStringAlignment globalWeightsAlignment = NeedlemanWunschAlgorithm
-										.constructAlignment(lang1Form, lang2Form, globalCorrModel);
-								double globalWeightDistance = globalWeightsAlignment.normalizedDistanceScore;
-								PhoneticStringAlignment localWeightsAlignment = NeedlemanWunschAlgorithm
-										.constructAlignment(lang1Form, lang2Form, localCorrModels[lang1ID][lang2ID]);
-								double localWeightDistance = localWeightsAlignment.normalizedDistanceScore;
-								double minDistance = Math.min(globalWeightDistance, localWeightDistance);
-								System.out.print(database.getConceptName(conceptID) + "\t");
-								System.out.print(database.getLanguageCode(lang1ID) + "\t"
-										+ database.getLanguageCode(lang2ID) + "\t");
-								System.out.print(database.getAnnotation("Word_Form", lang1FormID) + "\t"
-										+ database.getAnnotation("Word_Form", lang2FormID) + "\t");
-								System.out.print(lang1Form.toString(symbolTable) + "\t"
-										+ lang2Form.toString(symbolTable) + "\t");
-								System.out.println(
-										globalWeightDistance + "\t" + localWeightDistance + "\t" + minDistance);
-							}
-						}
-					}
-				}
-			}
+			distanceOutput(database, symbolTable, relevantLangIDs, globalCorrModel, localCorrModels);
 
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}
+
+	}
+
+	public static void distanceOutput(LexicalDatabase database, PhoneticSymbolTable symbolTable, int[] relevantLangIDs,
+			CorrespondenceModel globalCorrModel, CorrespondenceModel[][] localCorrModels) {
+		for (int conceptID = 0; conceptID < database.getNumConcepts(); conceptID++) {
+			List<List<Integer>> formsPerLang = database.getFormIDsForConceptPerLanguage(conceptID);
+			for (int lang1ID : relevantLangIDs) {
+				for (int lang2ID : relevantLangIDs) {
+					for (int lang1FormID : formsPerLang.get(lang1ID)) {
+						PhoneticString lang1Form = database.getForm(lang1FormID);
+						for (int lang2FormID : formsPerLang.get(lang2ID)) {
+							PhoneticString lang2Form = database.getForm(lang2FormID);
+							PhoneticStringAlignment globalWeightsAlignment = NeedlemanWunschAlgorithm
+									.constructAlignment(lang1Form, lang2Form, globalCorrModel, globalCorrModel, globalCorrModel);
+							double globalWeightDistance = globalWeightsAlignment.normalizedDistanceScore;
+							PhoneticStringAlignment localWeightsAlignment = NeedlemanWunschAlgorithm
+									.constructAlignment(lang1Form, lang2Form, localCorrModels[lang1ID][lang2ID], localCorrModels[lang1ID][lang1ID], localCorrModels[lang2ID][lang2ID]);
+							double localWeightDistance = localWeightsAlignment.normalizedDistanceScore;
+							double minDistance = Math.min(globalWeightDistance, localWeightDistance);
+							System.out.print(database.getConceptName(conceptID) + "\t");
+							System.out.print(database.getLanguageCode(lang1ID) + "\t"
+									+ database.getLanguageCode(lang2ID) + "\t");
+							System.out.print(database.getAnnotation("Word_Form", lang1FormID) + "\t"
+									+ database.getAnnotation("Word_Form", lang2FormID) + "\t");
+							System.out.print(
+									lang1Form.toString(symbolTable) + "\t" + lang2Form.toString(symbolTable) + "\t");
+							System.out.println(globalWeightDistance + "\t" + localWeightDistance + "\t" + minDistance);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	public static void distanceOutput(LexicalDatabase database, PhoneticSymbolTable symbolTable, int lang1ID,
+			int lang2ID, CorrespondenceModel globalCorrModel, CorrespondenceModel localCorrModel) {
+		for (int conceptID = 0; conceptID < database.getNumConcepts(); conceptID++) {
+			List<List<Integer>> formsPerLang = database.getFormIDsForConceptPerLanguage(conceptID);
+			for (int lang1FormID : formsPerLang.get(lang1ID)) {
+				PhoneticString lang1Form = database.getForm(lang1FormID);
+				for (int lang2FormID : formsPerLang.get(lang2ID)) {
+					PhoneticString lang2Form = database.getForm(lang2FormID);
+					PhoneticStringAlignment globalWeightsAlignment = NeedlemanWunschAlgorithm
+							.constructAlignment(lang1Form, lang2Form, globalCorrModel, globalCorrModel, globalCorrModel);
+					double globalWeightDistance = globalWeightsAlignment.normalizedDistanceScore;
+					PhoneticStringAlignment localWeightsAlignment = NeedlemanWunschAlgorithm
+							.constructAlignment(lang1Form, lang2Form, localCorrModel, globalCorrModel, globalCorrModel);
+					double localWeightDistance = localWeightsAlignment.normalizedDistanceScore;
+					double minDistance = Math.min(globalWeightDistance, localWeightDistance);
+					System.out.print(database.getConceptName(conceptID) + "\t");
+					System.out
+							.print(database.getLanguageCode(lang1ID) + "\t" + database.getLanguageCode(lang2ID) + "\t");
+					System.out.print(database.getAnnotation("Word_Form", lang1FormID) + "\t"
+							+ database.getAnnotation("Word_Form", lang2FormID) + "\t");
+					System.out.print(lang1Form.toString(symbolTable) + "\t" + lang2Form.toString(symbolTable) + "\t");
+					System.out.println(globalWeightDistance + "\t" + localWeightDistance + "\t" + minDistance);
+				}
+			}
 		}
 	}
 }

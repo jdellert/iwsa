@@ -70,4 +70,8 @@ public class PhoneticSymbolTable implements Serializable {
 	public int getSize() {
 		return idToSymbol.length;
 	}
+
+	public String toSymbolPair(int symbolPairID) {
+		return "(" + toSymbol(symbolPairID / idToSymbol.length) + "," + toSymbol(symbolPairID % idToSymbol.length) + ")";
+	}
 }

@@ -7,7 +7,7 @@ import de.jdellert.iwsa.corrmodel.CorrespondenceModel;
 import de.jdellert.iwsa.sequence.PhoneticString;
 
 public class NeedlemanWunschAlgorithm {
-	public static PhoneticStringAlignment constructAlignment(PhoneticString str1, PhoneticString str2, CorrespondenceModel corrModel) {
+	public static PhoneticStringAlignment constructAlignment(PhoneticString str1, PhoneticString str2, CorrespondenceModel corrModel, CorrespondenceModel selfSimModel1, CorrespondenceModel selfSimModel2) {
 		int m = str1.getLength() + 1;
 		int n = str2.getLength() + 1;
 
@@ -63,12 +63,12 @@ public class NeedlemanWunschAlgorithm {
 		double str1SelfSimilarity = 0.0;
 		for (int segmentID : str1.segments)
 		{
-			str1SelfSimilarity += corrModel.getScore(segmentID, segmentID);
+			str1SelfSimilarity += selfSimModel1.getScore(segmentID, segmentID);
 		}
 		double str2SelfSimilarity = 0.0;
 		for (int segmentID : str2.segments)
 		{
-			str2SelfSimilarity += corrModel.getScore(segmentID, segmentID);
+			str2SelfSimilarity += selfSimModel2.getScore(segmentID, segmentID);
 		}
 		double normalizedDistanceScore = 1 - (2 * similarityScore) / (str1SelfSimilarity + str2SelfSimilarity);
 

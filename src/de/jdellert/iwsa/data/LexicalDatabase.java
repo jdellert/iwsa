@@ -1,6 +1,7 @@
 package de.jdellert.iwsa.data;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -143,6 +144,11 @@ public class LexicalDatabase {
 
 	public String getLanguageCode(int langID) {
 		return langCodes[langID];
+	}
+	
+	public String[] getLanguageCodes()
+	{
+		return Arrays.copyOf(langCodes, langCodes.length);
 	}
 	
 	/**
