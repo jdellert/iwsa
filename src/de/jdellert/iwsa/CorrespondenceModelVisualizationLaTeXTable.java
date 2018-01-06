@@ -120,8 +120,7 @@ public class CorrespondenceModelVisualizationLaTeXTable {
 			    		i++;
 			    	} 	
 			    	System.out.println("}\\\\");
-			    }
-			    
+			    } 
 			    System.out.println("\\hline");
 			    System.out.println("\\end{longtable}");
 			    System.out.println("");
@@ -134,7 +133,6 @@ public class CorrespondenceModelVisualizationLaTeXTable {
 				e.printStackTrace();
 				System.exit(0);
 			}
-
 		}
 		if (args.length == 3) {
 			//TODO: extract local correspondence model for a language pair

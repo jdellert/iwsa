@@ -19,9 +19,6 @@ import de.jdellert.iwsa.util.io.Formatting;
  */
 
 public class InformationWeightOutput {
-	
-	
-	// TODO: change this to work on stored information model files
 	public static void main(String[] args) {
 		try {
 			LexicalDatabase database = CLDFImport.loadDatabase(args[0], true);

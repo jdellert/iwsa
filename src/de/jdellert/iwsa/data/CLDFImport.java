@@ -24,6 +24,8 @@ import de.jdellert.iwsa.tokenize.IPATokenizer;
  */
 
 public class CLDFImport {
+	public static boolean VERBOSE = true;;
+
 	public static LexicalDatabase loadDatabase(String fileName, boolean retokenize) throws IOException {
 
 		IPATokenizer tokenizer = null;
@@ -113,7 +115,7 @@ public class CLDFImport {
 		String[] langCodesArray = langCodes.toArray(new String[langCodes.size()]);
 		String[] conceptNamesArray = conceptNames.toArray(new String[conceptNames.size()]);
 
-		System.out.print("Building database using " + symbolTable.getSize() + " symbols for " + langCodePerLine.size()
+		if (VERBOSE) System.out.print("Building database using " + symbolTable.getSize() + " symbols for " + langCodePerLine.size()
 				+ " forms covering " + conceptNamesArray.length + " concepts across " + langCodesArray.length
 				+ " languages ... ");
 		LexicalDatabase database = new LexicalDatabase(symbolTable, langCodesArray, conceptNamesArray,
@@ -125,7 +127,7 @@ public class CLDFImport {
 				database.addAnnotation(formID, annotation.getKey(), annotation.getValue());
 			}
 		}
-		System.out.println("done.");
+		if (VERBOSE) System.out.println("done.");
 
 		return database;
 	}

@@ -11,6 +11,8 @@ import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
 import de.jdellert.iwsa.util.io.Formatting;
 
 public class InformationModel {
+	public static boolean VERBOSE = false;
+	
 	// gappy bigrams are also stored in this structure
 	Map<Integer, Integer> observationCounts;
 	// only 1/4 of the some of observation counts due to representation of gappy
@@ -73,7 +75,7 @@ public class InformationModel {
 	}
 
 	public double informationContent(int a, int b, int c, int d, int e) {
-		System.out.print("c(" + Formatting.intRPad(a, 3) + "," + Formatting.intRPad(b, 3) + ","
+		if (VERBOSE) System.out.print("c(" + Formatting.intRPad(a, 3) + "," + Formatting.intRPad(b, 3) + ","
 				+ Formatting.intRPad(c, 3) + "," + Formatting.intRPad(d, 3) + "," + Formatting.intRPad(e, 3) + "):  ");
 		double abCount = smoothedGappyBigramCount(a, b, 1);
 		double bdCount = smoothedGappyBigramCount(b, 1, d);
@@ -84,9 +86,9 @@ public class InformationModel {
 		double abcProb = abcCount / abCount;
 		double bcdProb = bcdCount / bdCount;
 		double cdeProb = cdeCount / deCount;
-		System.out.print(Formatting.str3f(abcProb) + " = " + Math.round(abcCount) + "/" + Math.round(abCount) + "\t");
-		System.out.print(Formatting.str3f(bcdProb) + " = " + Math.round(bcdCount) + "/" + Math.round(bdCount) + "\t");
-		System.out.println(Formatting.str3f(cdeProb) + " = " + Math.round(cdeCount) + "/" + Math.round(deCount));
+		if (VERBOSE) System.out.print(Formatting.str3f(abcProb) + " = " + Math.round(abcCount) + "/" + Math.round(abCount) + "\t");
+		if (VERBOSE) System.out.print(Formatting.str3f(bcdProb) + " = " + Math.round(bcdCount) + "/" + Math.round(bdCount) + "\t");
+		if (VERBOSE) System.out.println(Formatting.str3f(cdeProb) + " = " + Math.round(cdeCount) + "/" + Math.round(deCount));
 		double maxProb = Math.max(abcProb, Math.max(bcdProb, cdeProb));
 		return -Math.log(maxProb);
 	}
