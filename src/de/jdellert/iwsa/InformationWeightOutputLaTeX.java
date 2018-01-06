@@ -59,7 +59,7 @@ public class InformationWeightOutputLaTeX {
 				{
 					double infoVal = infoModel.informationContent(s, i);
 					
-					infoString.append("{\\color[gray]{" + (1.0 - (infoVal / 5.0)) + "}\\ipa{");
+					infoString.append("{\\color[gray]{" + (1 - (infoVal / 6.0)) + "}\\ipa{");
 					infoString.append(IpaSymbolInformation.getTipaForSymbol(symbolTable.toSymbol(s[i])));
 					infoString.append("} }");
 				}

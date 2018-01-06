@@ -19,7 +19,7 @@ public class InformationModel {
 	// bigrams
 	double observationCountsSum = 0.0;
 
-	double smoothingMassRatio = 0.2;
+	double smoothingMassRatio = 1.0;
 
 	int numSymbols;
 	int numTrigrams;
@@ -80,9 +80,12 @@ public class InformationModel {
 		double abCount = smoothedGappyBigramCount(a, b, 1);
 		double bdCount = smoothedGappyBigramCount(b, 1, d);
 		double deCount = smoothedGappyBigramCount(1, d, e);
-		double abcCount = smoothedTrigramCount(a, b, c, abCount);
-		double bcdCount = smoothedTrigramCount(b, c, d, bdCount);
-		double cdeCount = smoothedTrigramCount(c, d, e, deCount);
+		//double abcCount = smoothedTrigramCount(a, b, c, abCount);
+		//double bcdCount = smoothedTrigramCount(b, c, d, bdCount);
+		//double cdeCount = smoothedTrigramCount(c, d, e, deCount);
+		double abcCount = smoothedTrigramCount(a, b, c);
+		double bcdCount = smoothedTrigramCount(b, c, d);
+		double cdeCount = smoothedTrigramCount(c, d, e);
 		double abcProb = abcCount / abCount;
 		double bcdProb = bcdCount / bdCount;
 		double cdeProb = cdeCount / deCount;
@@ -90,6 +93,7 @@ public class InformationModel {
 		if (VERBOSE) System.out.print(Formatting.str3f(bcdProb) + " = " + Math.round(bcdCount) + "/" + Math.round(bdCount) + "\t");
 		if (VERBOSE) System.out.println(Formatting.str3f(cdeProb) + " = " + Math.round(cdeCount) + "/" + Math.round(deCount));
 		double maxProb = Math.max(abcProb, Math.max(bcdProb, cdeProb));
+		//return 1 - maxProb;
 		return -Math.log(maxProb);
 	}
 
