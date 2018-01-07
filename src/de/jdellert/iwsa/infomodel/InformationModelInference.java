@@ -28,7 +28,7 @@ public class InformationModelInference {
 				model.addTrigramObservation(0, form.segments[0], form.segments[1]);
 				model.addTrigramObservation(form.segments[k - 1], form.segments[k], 0);
 			}
-			for (int i = 0; i < k - 2; i++) {
+			for (int i = 0; i < k - 1; i++) {
 				model.addTrigramObservation(form.segments[i], form.segments[i + 1], form.segments[i + 2]);
 			}
 		}
