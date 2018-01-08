@@ -65,4 +65,24 @@ public class CorrespondenceModelStorage {
 		}
 		return correspondenceModels;
 	}
+	
+	public static CorrespondenceModel[][] loadCorrespondenceModels(ObjectInputStream in, Map<String,Integer> langToID)
+			throws IOException, ClassNotFoundException {
+		String langIDs[] = (String[]) in.readObject();
+		int maxID = 0;
+		for (int langID : langToID.values())
+		{
+			if (langID > maxID) maxID = langID;
+		}
+		PhoneticSymbolTable symbolTable = (PhoneticSymbolTable) in.readObject();
+		CorrespondenceModel[][] correspondenceModels = new CorrespondenceModel[maxID + 1][maxID + 1];
+		for (int i = 0; i < langIDs.length; i++) {
+			for (int j = 0; j < langIDs.length; j++) {
+				CorrespondenceModel correspondenceModel = new CorrespondenceModel(symbolTable);
+				correspondenceModel.scores = (Map<Integer, Double>) in.readObject();
+				correspondenceModels[langToID.get(langIDs[i])][langToID.get(langIDs[j])] = correspondenceModel;
+			}
+		}
+		return correspondenceModels;
+	}
 }

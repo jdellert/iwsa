@@ -5,6 +5,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import de.jdellert.iwsa.align.InformationWeightedSequenceAlignment;
 import de.jdellert.iwsa.align.PhoneticStringAlignment;
@@ -47,7 +49,14 @@ public class ConceptLevelInformationWeightedEditDistanceOutput {
 					relevantLangIDs[i - 1] = langID;
 				}
 			}
+			
+			Map<String,Integer> relevantLangToID = new TreeMap<String, Integer>();
+			for (int langID = 0; langID < relevantLangIDs.length; langID++)
+			{
+				relevantLangToID.put(relevantLangCodes[langID], relevantLangIDs[langID]);
+			}
 
+			
 			CorrespondenceModel globalCorrModel = null;
 			try {
 				System.err.print("Attempting to load existing global correspondence model from " + args[0]
@@ -76,7 +85,7 @@ public class ConceptLevelInformationWeightedEditDistanceOutput {
 				System.err.print(
 						"Attempting to load existing global correspondence model from " + args[0] + "-local.corr ... ");
 				localCorrModels = CorrespondenceModelStorage
-						.loadCorrespondenceModels(new ObjectInputStream(new FileInputStream(args[0] + "-local.corr")));
+						.loadCorrespondenceModels(new ObjectInputStream(new FileInputStream(args[0] + "-local.corr")), relevantLangToID);
 				System.err.print(
 						"done.\nStage 2: Pairwise sound correspondences - skipped because previously inferred models were found. Delete model file and rerun to cause re-inference.\n");
 
