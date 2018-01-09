@@ -20,13 +20,13 @@ public class InformationWeightedSequenceAlignment extends PhoneticStringAlignmen
 		mtx[0][0] = 0;
 		for (int i = 1; i < m; i++) {
 			mtx[i][0] = mtx[i - 1][0]
-					+ corrModel.getScore(str1.segments[i - 1], 1) * getInfoScore(str1, i - 1, infoModel1);
+					+ corrModel.getScore(str1.segments[i - 1], 1) * getMeanInfoScore(str1, str1, i - 1, i - 1, infoModel1, infoModel1);
 			aSubst[i][0] = str1.segments[i - 1];
 			bSubst[i][0] = 1; // corresponds to gap symbol
 		}
 		for (int j = 1; j < n; j++) {
 			mtx[0][j] = mtx[0][j - 1]
-					+ corrModel.getScore(1, str2.segments[j - 1]) * getInfoScore(str2, j - 1, infoModel2);
+					+ corrModel.getScore(1, str2.segments[j - 1]) * getMeanInfoScore(str2, str2, j - 1, j - 1, infoModel2, infoModel2);
 			aSubst[0][j] = 1; // corresponds to gap symbol
 			bSubst[0][j] = str2.segments[j - 1];
 		}
@@ -36,8 +36,8 @@ public class InformationWeightedSequenceAlignment extends PhoneticStringAlignmen
 						* getMeanInfoScore(str1, str2, i - 1, j - 1, infoModel1, infoModel2);
 				if (str1.segments[i - 1] != str2.segments[j - 1])
 					matchValue++;
-				double insertionValue = mtx[i][j - 1] + corrModel.getScore(1, str2.segments[j - 1]) * getInfoScore(str2, j - 1, infoModel2);
-				double deletionValue = mtx[i - 1][j] + corrModel.getScore(str1.segments[i - 1], 1) * getInfoScore(str1, i - 1, infoModel1);
+				double insertionValue = mtx[i][j - 1] + corrModel.getScore(1, str2.segments[j - 1]) * getMeanInfoScore(str2, str2, j - 1, j - 1, infoModel2, infoModel2);
+				double deletionValue = mtx[i - 1][j] + corrModel.getScore(str1.segments[i - 1], 1) * getMeanInfoScore(str1, str1, i - 1, i - 1, infoModel1, infoModel1);
 				mtx[i][j] = Math.max(matchValue, Math.max(insertionValue, deletionValue));
 
 				if (insertionValue > matchValue) {
@@ -67,11 +67,11 @@ public class InformationWeightedSequenceAlignment extends PhoneticStringAlignmen
 		double similarityScore = mtx[m - 1][n - 1];
 		double str1SelfSimilarity = 0.0;
 		for (int i = 0; i < str1.getLength(); i++) {
-			str1SelfSimilarity += selfSimModel1.getScore(str1.segments[i], str1.segments[i]) * getInfoScore(str1, i, infoModel1);
+			str1SelfSimilarity += selfSimModel1.getScore(str1.segments[i], str1.segments[i]) * getMeanInfoScore(str1, str1, i, i, infoModel1, infoModel1);
 		}
 		double str2SelfSimilarity = 0.0;
 		for (int j = 0; j < str2.getLength(); j++) {
-			str2SelfSimilarity += selfSimModel2.getScore(str2.segments[j], str2.segments[j]) * getInfoScore(str2, j, infoModel1);
+			str2SelfSimilarity += selfSimModel2.getScore(str2.segments[j], str2.segments[j]) * getMeanInfoScore(str2, str2, j, j, infoModel2, infoModel2);
 		}
 		double normalizedDistanceScore = 1 - (2 * similarityScore) / (str1SelfSimilarity + str2SelfSimilarity);
 
