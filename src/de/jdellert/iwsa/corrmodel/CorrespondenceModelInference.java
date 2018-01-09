@@ -15,6 +15,8 @@ import de.jdellert.iwsa.stat.SmoothingMethod;
 import de.jdellert.iwsa.util.io.Formatting;
 
 public class CorrespondenceModelInference {
+	public static boolean VERBOSE = false;
+	
 	public static CorrespondenceModel inferGlobalCorrespondenceModel(LexicalDatabase database,
 			PhoneticSymbolTable symbolTable) {
 		CategoricalDistribution randomPairCorrespondenceDist = new CategoricalDistribution(
@@ -127,12 +129,14 @@ public class CorrespondenceModelInference {
 		CorrespondenceModel[][] localCorrModels = new CorrespondenceModel[database.getNumLanguages()][database
 				.getNumLanguages()];
 		for (int langID : relevantLangIDs) {
+			System.err.println("Storing localCorrModels[" + langID + "][" + langID + "]");
 			localCorrModels[langID][langID] = inferSelfSimilarityModel(database, symbolTable, langID, globalCorr);
 		}
 		for (int lang1ID : relevantLangIDs) {
 			for (int lang2ID : relevantLangIDs) {
 				if (lang1ID == lang2ID)
 					continue;
+				System.err.println("Storing localCorrModels[" + lang1ID + "][" + lang2ID + "]");
 				localCorrModels[lang1ID][lang2ID] = inferCorrModelForPair(database, symbolTable, lang1ID, lang2ID,
 						globalCorr, localCorrModels[lang1ID][lang1ID], localCorrModels[lang2ID][lang2ID]);
 			}
@@ -303,18 +307,21 @@ public class CorrespondenceModelInference {
 				double cognateSymbolPairProbability = cognateCorrespondenceDistForPair.getProb(symbolPairID);
 				double randomSymbolPairProbability = randomCorrespondenceDistForPair.getProb(symbolPairID);
 				double pmiScore = Math.log(cognateSymbolPairProbability / randomSymbolPairProbability);
-				localCorr.setScore(symbolPairID, (globalCorr.getScore(symbolPairID) + pmiScore) / 2);
-				System.err.println(database.getLanguageCode(lang1ID) + "-" + database.getLanguageCode(lang2ID)
-						+ " correspondence for " + symbolTable.toSymbolPair(symbolPairID) + ": "
-						+ Formatting.str3f(globalCorr.getScore(symbolPairID)) + "\t" + Formatting.str3f(pmiScore) + "\t"
-						+ Formatting.str3f(localCorr.getScore(symbolPairID)) + "\t"
-						+ Formatting.str3f(cognateSymbolPairProbability) + "\t"
-						+ Formatting.str3f(randomSymbolPairProbability));
+				double avgScore = (globalCorr.getScore(symbolPairID) + pmiScore) / 2;
+				if (Math.abs(avgScore) > 0.1)
+				{
+					localCorr.setScore(symbolPairID, (globalCorr.getScore(symbolPairID) + pmiScore) / 2);
+					if (VERBOSE) System.err.println(database.getLanguageCode(lang1ID) + "-" + database.getLanguageCode(lang2ID)
+							+ " correspondence for " + symbolTable.toSymbolPair(symbolPairID) + ": "
+							+ Formatting.str3f(globalCorr.getScore(symbolPairID)) + "\t" + Formatting.str3f(pmiScore) + "\t"
+							+ Formatting.str3f(localCorr.getScore(symbolPairID)) + "\t"
+							+ Formatting.str3f(cognateSymbolPairProbability) + "\t"
+							+ Formatting.str3f(randomSymbolPairProbability));
+				}
 			}
 			System.err.print(" done.\n");
 
-			ConceptLevelWeightedEditDistanceOutput.distanceOutput(database, symbolTable, lang1ID, lang2ID, globalCorr,
-					localCorr);
+			if (VERBOSE) ConceptLevelWeightedEditDistanceOutput.distanceOutput(database, symbolTable, lang1ID, lang2ID, globalCorr, localCorr);
 		}
 		return localCorr;
 	}

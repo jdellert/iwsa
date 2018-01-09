@@ -70,6 +70,7 @@ public class NeedlemanWunschAlgorithm {
 		{
 			str2SelfSimilarity += selfSimModel2.getScore(segmentID, segmentID);
 		}
+		//System.out.println(similarityScore + "\t" + str1SelfSimilarity + "\t" + str2SelfSimilarity);
 		double normalizedDistanceScore = 1 - (2 * similarityScore) / (str1SelfSimilarity + str2SelfSimilarity);
 
 		// build the alignment from the backpointer substrings

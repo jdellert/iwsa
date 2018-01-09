@@ -37,6 +37,7 @@ public class CorrespondenceModel {
 
 	public double getScore(int symbol1ID, int symbol2ID) {
 		int symbolPairID = symbolTable.getSize() * symbol1ID + symbol2ID;
+		//System.out.print("[" + symbolPairID + "]\t");
 		return getScore(symbolPairID);
 	}
 }

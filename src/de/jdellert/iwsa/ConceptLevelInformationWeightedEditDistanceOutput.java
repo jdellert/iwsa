@@ -101,7 +101,7 @@ public class ConceptLevelInformationWeightedEditDistanceOutput {
 				System.err.print("Stage 2: Inference of sound correspondence matrices for each language pair\n");
 				localCorrModels = CorrespondenceModelInference.inferLocalCorrespondenceModels(database, symbolTable,
 						relevantLangIDs, globalCorrModel);
-				CorrespondenceModelStorage.writeLocalModelsToFile(localCorrModels, relevantLangCodes, symbolTable,
+				CorrespondenceModelStorage.writeLocalModelsToFile(localCorrModels, database.getLanguageCodes(), symbolTable,
 						args[0] + "-local.corr");
 			}
 			

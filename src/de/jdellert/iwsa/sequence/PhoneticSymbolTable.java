@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -73,5 +74,17 @@ public class PhoneticSymbolTable implements Serializable {
 
 	public String toSymbolPair(int symbolPairID) {
 		return "(" + toSymbol(symbolPairID / idToSymbol.length) + "," + toSymbol(symbolPairID % idToSymbol.length) + ")";
+	}
+	
+	public String toString()
+	{
+		StringBuilder line1 = new StringBuilder();
+		StringBuilder line2 = new StringBuilder();
+		for (int i = 0; i < idToSymbol.length; i++)
+		{
+			line1.append(i + "\t");
+			line2.append(idToSymbol[i] + "\t");
+		}
+		return line1 + "\n" + line2;
 	}
 }

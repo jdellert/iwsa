@@ -6,7 +6,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.Arrays;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
@@ -76,11 +78,24 @@ public class CorrespondenceModelStorage {
 		}
 		PhoneticSymbolTable symbolTable = (PhoneticSymbolTable) in.readObject();
 		CorrespondenceModel[][] correspondenceModels = new CorrespondenceModel[maxID + 1][maxID + 1];
-		for (int i = 0; i < langIDs.length; i++) {
-			for (int j = 0; j < langIDs.length; j++) {
+		for (int fileI = 0; fileI < langIDs.length; fileI++) {
+			int i = -1;
+			if (langToID.get(langIDs[fileI]) != null)
+			{
+				i = langToID.get(langIDs[fileI]);
+			}
+			for (int fileJ = 0; fileJ < langIDs.length; fileJ++) {
+				int j = -1;
+				if (langToID.get(langIDs[fileJ]) != null)
+				{
+					j = langToID.get(langIDs[fileJ]);
+				}
 				CorrespondenceModel correspondenceModel = new CorrespondenceModel(symbolTable);
 				correspondenceModel.scores = (Map<Integer, Double>) in.readObject();
-				correspondenceModels[langToID.get(langIDs[i])][langToID.get(langIDs[j])] = correspondenceModel;
+				if (i >= 0 && j >=0)
+				{
+					correspondenceModels[i][j] = correspondenceModel;
+				}
 			}
 		}
 		return correspondenceModels;
