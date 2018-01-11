@@ -24,4 +24,19 @@ public class PhoneticString {
 	public String toString(PhoneticSymbolTable symbolTable) {
 		return String.join(" ", symbolTable.decode(segments));
 	}
+
+	public PhoneticString copyWithoutGaps() {
+		int numGaps = 0;
+		for (int segment : segments)
+		{
+			if (segment == 1) numGaps++;
+		}
+		int[] reducedSegments = new int[segments.length - numGaps];
+		int pos = 0;
+		for (int segment : segments)
+		{
+			if (segment > 1) reducedSegments[pos++] = segment;
+		}
+		return new PhoneticString(reducedSegments);
+	}
 }

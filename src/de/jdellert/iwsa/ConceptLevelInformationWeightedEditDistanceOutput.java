@@ -10,6 +10,7 @@ import java.util.TreeMap;
 
 import de.jdellert.iwsa.align.InformationWeightedSequenceAlignment;
 import de.jdellert.iwsa.align.PhoneticStringAlignment;
+import de.jdellert.iwsa.align.PhoneticStringAlignmentOutput;
 import de.jdellert.iwsa.corrmodel.CorrespondenceModel;
 import de.jdellert.iwsa.corrmodel.CorrespondenceModelInference;
 import de.jdellert.iwsa.corrmodel.CorrespondenceModelStorage;
@@ -127,10 +128,12 @@ public class ConceptLevelInformationWeightedEditDistanceOutput {
 							PhoneticStringAlignment globalWeightsAlignment = InformationWeightedSequenceAlignment
 									.constructAlignment(lang1Form, lang2Form, globalCorrModel, globalCorrModel, globalCorrModel, infoModels[lang1ID], infoModels[lang2ID]);
 							double globalWeightDistance = globalWeightsAlignment.normalizedDistanceScore;
+							System.out.println(PhoneticStringAlignmentOutput.iwsaToString(globalWeightsAlignment, symbolTable, globalCorrModel, globalCorrModel, globalCorrModel, infoModels[lang1ID], infoModels[lang2ID]));
 							PhoneticStringAlignment localWeightsAlignment = InformationWeightedSequenceAlignment
 									.constructAlignment(lang1Form, lang2Form, localCorrModels[lang1ID][lang2ID], localCorrModels[lang1ID][lang1ID], localCorrModels[lang2ID][lang2ID], infoModels[lang1ID], infoModels[lang2ID]);
 							double localWeightDistance = localWeightsAlignment.normalizedDistanceScore;
 							double minDistance = Math.min(globalWeightDistance, localWeightDistance);
+							System.out.println(PhoneticStringAlignmentOutput.iwsaToString(localWeightsAlignment, symbolTable, localCorrModels[lang1ID][lang2ID], localCorrModels[lang1ID][lang1ID], localCorrModels[lang2ID][lang2ID], infoModels[lang1ID], infoModels[lang2ID]));
 							System.out.print(database.getConceptName(conceptID) + "\t");
 							System.out.print(database.getLanguageCode(lang1ID) + "\t"
 									+ database.getLanguageCode(lang2ID) + "\t");
