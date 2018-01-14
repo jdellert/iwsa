@@ -15,7 +15,7 @@ import de.jdellert.iwsa.stat.SmoothingMethod;
 import de.jdellert.iwsa.util.io.Formatting;
 
 public class CorrespondenceModelInference {
-	public static boolean VERBOSE = false;
+	public static boolean VERBOSE = true;
 	
 	public static CorrespondenceModel inferGlobalCorrespondenceModel(LexicalDatabase database,
 			PhoneticSymbolTable symbolTable) {
@@ -185,7 +185,8 @@ public class CorrespondenceModelInference {
 			double cognateSymbolPairProbability = cognateCorrespondenceDistForPair.getProb(symbolPairID);
 			double randomSymbolPairProbability = randomCorrespondenceDistForPair.getProb(symbolPairID);
 			double pmiScore = Math.log(cognateSymbolPairProbability / randomSymbolPairProbability);
-			localCorr.setScore(symbolPairID, (globalCorr.getScore(symbolPairID) + pmiScore) / 2);
+			localCorr.setScore(symbolPairID, Math.max(globalCorr.getScore(symbolPairID),pmiScore));
+			//localCorr.setScore(symbolPairID, (globalCorr.getScore(symbolPairID) + pmiScore) / 2);
 		}
 		System.err.print(" done.\n");
 		return localCorr;
@@ -308,15 +309,17 @@ public class CorrespondenceModelInference {
 				double randomSymbolPairProbability = randomCorrespondenceDistForPair.getProb(symbolPairID);
 				double pmiScore = Math.log(cognateSymbolPairProbability / randomSymbolPairProbability);
 				double avgScore = (globalCorr.getScore(symbolPairID) + pmiScore) / 2;
+				avgScore = globalCorr.getScore(symbolPairID);
+				if (pmiScore > avgScore) avgScore = pmiScore;
 				if (Math.abs(avgScore) > 0.1)
 				{
-					localCorr.setScore(symbolPairID, (globalCorr.getScore(symbolPairID) + pmiScore) / 2);
+					localCorr.setScore(symbolPairID, avgScore);
 					if (VERBOSE) System.err.println(database.getLanguageCode(lang1ID) + "-" + database.getLanguageCode(lang2ID)
 							+ " correspondence for " + symbolTable.toSymbolPair(symbolPairID) + ": "
 							+ Formatting.str3f(globalCorr.getScore(symbolPairID)) + "\t" + Formatting.str3f(pmiScore) + "\t"
 							+ Formatting.str3f(localCorr.getScore(symbolPairID)) + "\t"
-							+ Formatting.str3f(cognateSymbolPairProbability) + "\t"
-							+ Formatting.str3f(randomSymbolPairProbability));
+							+ Formatting.str3f(cognateSymbolPairProbability) + " (" + (int) cognateCorrespondenceDistForPair.getObservationCount(symbolPairID) + "/" + (int) cognateCorrespondenceDistForPair.getObservationCountsSum() + ")\t"
+							+ Formatting.str3f(randomSymbolPairProbability) + " (" + (int) randomCorrespondenceDistForPair.getObservationCount(symbolPairID) + "/" + (int) randomCorrespondenceDistForPair.getObservationCountsSum() + ")\t");
 				}
 			}
 			System.err.print(" done.\n");
