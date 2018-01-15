@@ -34,8 +34,6 @@ public class InformationWeightedSequenceAlignment extends PhoneticStringAlignmen
 			for (int j = 1; j < n; j++) {
 				double matchValue = mtx[i - 1][j - 1] + corrModel.getScore(str1.segments[i - 1], str2.segments[j - 1])
 						* getMeanInfoScore(str1, str2, i - 1, j - 1, infoModel1, infoModel2);
-				if (str1.segments[i - 1] != str2.segments[j - 1])
-					matchValue++;
 				double insertionValue = mtx[i][j - 1] + corrModel.getScore(1, str2.segments[j - 1]) * getMeanInfoScore(str2, str2, j - 1, j - 1, infoModel2, infoModel2);
 				double deletionValue = mtx[i - 1][j] + corrModel.getScore(str1.segments[i - 1], 1) * getMeanInfoScore(str1, str1, i - 1, i - 1, infoModel1, infoModel1);
 				mtx[i][j] = Math.max(matchValue, Math.max(insertionValue, deletionValue));

@@ -27,10 +27,7 @@ public class NeedlemanWunschAlgorithm {
 		}
 		for (int i = 1; i < m; i++) {
 			for (int j = 1; j < n; j++) {
-
 				double matchValue = mtx[i - 1][j - 1] + corrModel.getScore(str1.segments[i - 1], str2.segments[j - 1]);
-				if (str1.segments[i-1] != str2.segments[j-1])
-					matchValue++;
 				double insertionValue = mtx[i][j - 1] + corrModel.getScore(1, str2.segments[j - 1]);
 				double deletionValue = mtx[i - 1][j] + corrModel.getScore(str1.segments[i - 1], 1);
 				mtx[i][j] = Math.max(matchValue, Math.max(insertionValue, deletionValue));
