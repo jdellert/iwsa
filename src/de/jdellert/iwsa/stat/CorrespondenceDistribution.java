@@ -59,7 +59,7 @@ public class CorrespondenceDistribution {
 	}
 
 	/**
-	 * Returns the probability with Jelinek-Mercer smoothing (interpolation of unigram and bigram models
+	 * Returns the probability with Jelinek-Mercer smoothing (interpolation of unigram and bigram models)
 	 * @param i segmentID in lang1, j segmentID in lang2
 	 * @return
 	 */
@@ -68,6 +68,14 @@ public class CorrespondenceDistribution {
 		double cij = bigramObservations[i * k + j];
 		double ci = unigramObservations1[i];
 		double cj = unigramObservations2[j];
-		return cij/(cij+1) * (cij/sum) + 1/(cij+1) * (ci/sum) * (cj/sum);
+		double prob = cij/(cij+1) * (cij/sum) + 1/(cij+1) * (ci/sum) * (cj/sum);
+		System.err.println("prob: " + prob + " (sum: " + (int) sum + " cij: " + (int) cij + " ci: " + (int) ci + " cj: " + (int) cj + ")");
+		return prob;
+	}
+
+	public int getMinUnigramCount(int bigramID) {
+		int i = bigramID / k;
+		int j = bigramID % k;
+		return (int) Math.min(unigramObservations1[i], unigramObservations2[j]);
 	}
 }

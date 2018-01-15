@@ -227,7 +227,7 @@ public class CorrespondenceModelInference {
 					PhoneticStringAlignment alignment = NeedlemanWunschAlgorithm.constructAlignment(lang1Form,
 							lang2Form, globalCorr, globalCorr, globalCorr);
 					numPairs++;
-					if (alignment.normalizedDistanceScore <= 0.35) {
+					if (alignment.normalizedDistanceScore <= 0.7) {
 						for (int pos = 0; pos < alignment.getLength(); pos++) {
 							cognateCorrespondenceDistForPair.addBigramObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable));
 						}
@@ -237,11 +237,12 @@ public class CorrespondenceModelInference {
 			}
 		}
 		System.err.print(" done. Aligned " + numPairs + " form pairs, of which " + numCognatePairs
-				+ " look like cognates (weighted edit distance <= 0.35)\n");
+				+ " look like cognates (weighted edit distance <= 0.7)\n");
 
 		System.err.print("          Comparing the distributions of symbol pairs to reestimate PMI scores ...");
 		CorrespondenceModel localCorr = new CorrespondenceModel(symbolTable);
 		for (int symbolPairID = 0; symbolPairID < symbolTable.getSize() * symbolTable.getSize(); symbolPairID++) {
+			if (randomCorrespondenceDistForPair.getMinUnigramCount(symbolPairID) == 0) continue;
 			double cognateSymbolPairProbability = cognateCorrespondenceDistForPair.getProb(symbolPairID);
 			double randomSymbolPairProbability = randomCorrespondenceDistForPair.getProb(symbolPairID);
 			double pmiScore = Math.log(cognateSymbolPairProbability / randomSymbolPairProbability);
@@ -267,7 +268,7 @@ public class CorrespondenceModelInference {
 						PhoneticStringAlignment alignment = NeedlemanWunschAlgorithm.constructAlignment(lang1Form,
 								lang2Form, localCorr, lang1SelfCorr, lang2SelfCorr);
 						numPairs++;
-						if (alignment.normalizedDistanceScore <= 0.35) {
+						if (alignment.normalizedDistanceScore <= 0.7) {
 							for (int pos = 0; pos < alignment.getLength(); pos++) {
 								cognateCorrespondenceDistForPair.addBigramObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable));
 							}
@@ -278,7 +279,7 @@ public class CorrespondenceModelInference {
 			}
 
 			System.err.print(" done. " + numCognatePairs
-					+ " form pairs look like cognates (normalized distance score <= 0.35)\n");
+					+ " form pairs look like cognates (normalized distance score <= 0.7)\n");
 
 			// randomCorrespondenceDistForPair = new CategoricalDistribution(
 			// symbolTable.getSize() * symbolTable.getSize(), SmoothingMethod.LAPLACE);
@@ -301,6 +302,7 @@ public class CorrespondenceModelInference {
 			System.err.print("          Comparing the distributions of symbol pairs to reestimate PMI scores ...");
 			localCorr = new CorrespondenceModel(symbolTable);
 			for (int symbolPairID = 0; symbolPairID < symbolTable.getSize() * symbolTable.getSize(); symbolPairID++) {
+				if (randomCorrespondenceDistForPair.getMinUnigramCount(symbolPairID) == 0) continue;
 				double cognateSymbolPairProbability = cognateCorrespondenceDistForPair.getProb(symbolPairID);
 				double randomSymbolPairProbability = randomCorrespondenceDistForPair.getProb(symbolPairID);
 				double pmiScore = Math.log(cognateSymbolPairProbability / randomSymbolPairProbability);
