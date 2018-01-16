@@ -55,21 +55,7 @@ public class NeedlemanWunschAlgorithm {
 				}
 			}
 		}
-
-		double similarityScore = mtx[m - 1][n - 1];
-		double str1SelfSimilarity = 0.0;
-		for (int segmentID : str1.segments)
-		{
-			str1SelfSimilarity += selfSimModel1.getScore(segmentID, segmentID);
-		}
-		double str2SelfSimilarity = 0.0;
-		for (int segmentID : str2.segments)
-		{
-			str2SelfSimilarity += selfSimModel2.getScore(segmentID, segmentID);
-		}
-		//System.out.println(similarityScore + "\t" + str1SelfSimilarity + "\t" + str2SelfSimilarity);
-		double normalizedDistanceScore = 1 - (2 * similarityScore) / (str1SelfSimilarity + str2SelfSimilarity);
-
+		
 		// build the alignment from the backpointer substrings
 		int i = m - 1;
 		int j = n - 1;
@@ -92,6 +78,25 @@ public class NeedlemanWunschAlgorithm {
 				break;
 		}
 
+		double similarityScore = mtx[m - 1][n - 1];
+		double str1SelfSimilarity = 0.0;
+		for (int segmentID : str1.segments)
+		{
+			str1SelfSimilarity += selfSimModel1.getScore(segmentID, segmentID);
+		}
+		double str2SelfSimilarity = 0.0;
+		for (int segmentID : str2.segments)
+		{
+			str2SelfSimilarity += selfSimModel2.getScore(segmentID, segmentID);
+		}
+		
+		similarityScore /= result1.size();
+		str1SelfSimilarity /= m - 1;
+		str2SelfSimilarity /= n - 1;
+		
+		//System.out.println(similarityScore + "\t" + str1SelfSimilarity + "\t" + str2SelfSimilarity);
+		double normalizedDistanceScore = 1 - (2 * similarityScore) / (str1SelfSimilarity + str2SelfSimilarity);
+		
 		PhoneticStringAlignment alignment = new PhoneticStringAlignment();
 		alignment.str1 = new PhoneticString(result1.stream().mapToInt(Integer::intValue).toArray());
 		alignment.str2 = new PhoneticString(result2.stream().mapToInt(Integer::intValue).toArray());

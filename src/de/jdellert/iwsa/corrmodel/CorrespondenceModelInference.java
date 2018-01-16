@@ -149,8 +149,7 @@ public class CorrespondenceModelInference {
 			PhoneticSymbolTable symbolTable, int langID, CorrespondenceModel globalCorr) {
 		System.err.print("  Self-similarity for language " + database.getLanguageCode(langID) + ":\n");
 
-		CategoricalDistribution randomCorrespondenceDistForPair = new CategoricalDistribution(
-				symbolTable.getSize() * symbolTable.getSize(), SmoothingMethod.LAPLACE);
+		CorrespondenceDistribution randomCorrespondenceDistForPair = new CorrespondenceDistribution(symbolTable.getSize());
 		System.err.print("    Step 1: " + 100000
 				+ " random alignments to model the distribution in absence of correspondences ...");
 		for (int i = 0; i < 100000; i++) {
@@ -159,13 +158,12 @@ public class CorrespondenceModelInference {
 			PhoneticStringAlignment alignment = NeedlemanWunschAlgorithm.constructAlignment(form1, form2, globalCorr,
 					globalCorr, globalCorr);
 			for (int pos = 0; pos < alignment.getLength(); pos++) {
-				randomCorrespondenceDistForPair.addObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable));
+				randomCorrespondenceDistForPair.addBigramObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable));
 			}
 		}
 		System.err.print(" done.\n");
 		// first iteration: use global sound correspondences
-		CategoricalDistribution cognateCorrespondenceDistForPair = new CategoricalDistribution(
-				symbolTable.getSize() * symbolTable.getSize(), SmoothingMethod.LAPLACE);
+		CorrespondenceDistribution cognateCorrespondenceDistForPair = new CorrespondenceDistribution(symbolTable.getSize());
 		System.err.print("    Step 2: Self-alignment based on global WED ...");
 		for (int conceptID = 0; conceptID < database.getNumConcepts(); conceptID++) {
 			List<List<Integer>> formsPerLang = database.getFormIDsForConceptPerLanguage(conceptID);
@@ -174,7 +172,7 @@ public class CorrespondenceModelInference {
 				PhoneticStringAlignment alignment = NeedlemanWunschAlgorithm.constructAlignment(langForm, langForm,
 						globalCorr, globalCorr, globalCorr);
 				for (int pos = 0; pos < alignment.getLength(); pos++) {
-					cognateCorrespondenceDistForPair.addObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable));
+					cognateCorrespondenceDistForPair.addBigramObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable));
 				}
 			}
 		}
@@ -183,9 +181,14 @@ public class CorrespondenceModelInference {
 		System.err.print("          Comparing the distributions of symbol pairs to reestimate PMI scores ...");
 		CorrespondenceModel localCorr = new CorrespondenceModel(symbolTable);
 		for (int symbolPairID = 0; symbolPairID < symbolTable.getSize() * symbolTable.getSize(); symbolPairID++) {
-			double cognateSymbolPairProbability = cognateCorrespondenceDistForPair.getProb(symbolPairID);
-			double randomSymbolPairProbability = randomCorrespondenceDistForPair.getProb(symbolPairID);
-			double pmiScore = Math.log(cognateSymbolPairProbability / randomSymbolPairProbability);
+			double pmiScore = 0.0;
+			double cij = cognateCorrespondenceDistForPair.getBigramCount(symbolPairID);
+			double cognateSymbolPairProbability = (cij / cognateCorrespondenceDistForPair.getObservationCountsSum());
+			double randomSymbolPairProbability = (randomCorrespondenceDistForPair.getBigramCount(symbolPairID) / randomCorrespondenceDistForPair.getObservationCountsSum());
+			if (randomCorrespondenceDistForPair.getBigramCount(symbolPairID) > 0)
+			{
+				pmiScore = cij/(cij+5) * Math.log(cognateSymbolPairProbability / randomSymbolPairProbability);	
+			}
 			localCorr.setScore(symbolPairID, Math.max(globalCorr.getScore(symbolPairID),pmiScore));
 			//localCorr.setScore(symbolPairID, (globalCorr.getScore(symbolPairID) + pmiScore) / 2);
 		}
@@ -227,7 +230,7 @@ public class CorrespondenceModelInference {
 					PhoneticStringAlignment alignment = NeedlemanWunschAlgorithm.constructAlignment(lang1Form,
 							lang2Form, globalCorr, globalCorr, globalCorr);
 					numPairs++;
-					if (alignment.normalizedDistanceScore <= 0.7) {
+					if (alignment.normalizedDistanceScore <= 0.5) {
 						for (int pos = 0; pos < alignment.getLength(); pos++) {
 							cognateCorrespondenceDistForPair.addBigramObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable));
 						}
@@ -237,7 +240,7 @@ public class CorrespondenceModelInference {
 			}
 		}
 		System.err.print(" done. Aligned " + numPairs + " form pairs, of which " + numCognatePairs
-				+ " look like cognates (weighted edit distance <= 0.7)\n");
+				+ " look like cognates (weighted edit distance <= 0.5)\n");
 
 		System.err.print("          Comparing the distributions of symbol pairs to reestimate PMI scores ...");
 		CorrespondenceModel localCorr = new CorrespondenceModel(symbolTable);
@@ -303,9 +306,17 @@ public class CorrespondenceModelInference {
 			localCorr = new CorrespondenceModel(symbolTable);
 			for (int symbolPairID = 0; symbolPairID < symbolTable.getSize() * symbolTable.getSize(); symbolPairID++) {
 				if (randomCorrespondenceDistForPair.getMinUnigramCount(symbolPairID) == 0) continue;
-				double cognateSymbolPairProbability = cognateCorrespondenceDistForPair.getProb(symbolPairID);
-				double randomSymbolPairProbability = randomCorrespondenceDistForPair.getProb(symbolPairID);
-				double pmiScore = Math.log(cognateSymbolPairProbability / randomSymbolPairProbability);
+				double pmiScore = 0.0;
+				double cij = cognateCorrespondenceDistForPair.getBigramCount(symbolPairID);
+				double cognateSymbolPairProbability = (cij / cognateCorrespondenceDistForPair.getObservationCountsSum());
+				double randomSymbolPairProbability = (randomCorrespondenceDistForPair.getBigramCount(symbolPairID) / randomCorrespondenceDistForPair.getObservationCountsSum());
+				if (randomCorrespondenceDistForPair.getBigramCount(symbolPairID) > 0)
+				{
+					pmiScore = cij/(cij+5) * Math.log(cognateSymbolPairProbability / randomSymbolPairProbability);	
+				}
+				//double cognateSymbolPairProbability = cognateCorrespondenceDistForPair.getProb(symbolPairID);
+				//double randomSymbolPairProbability = randomCorrespondenceDistForPair.getProb(symbolPairID);
+				//double pmiScore = Math.log(cognateSymbolPairProbability / randomSymbolPairProbability);
 				double avgScore = (globalCorr.getScore(symbolPairID) + pmiScore) / 2;
 				avgScore = globalCorr.getScore(symbolPairID);
 				if (pmiScore > avgScore) avgScore = pmiScore;
