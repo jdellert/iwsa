@@ -24,6 +24,9 @@ import de.jdellert.iwsa.stat.CategoricalDistribution;
 import de.jdellert.iwsa.stat.SmoothingMethod;
 
 public class ConceptLevelWeightedEditDistanceOutput {
+	public static final boolean ALIGNMENT_OUTPUT = true;
+	public static final boolean USE_LOCAL_MODELS = true;
+	
 	public static void main(String[] args) {
 		try {
 			LexicalDatabase database = CLDFImport.loadDatabase(args[0], true);
