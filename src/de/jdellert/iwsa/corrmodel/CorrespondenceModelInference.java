@@ -187,10 +187,14 @@ public class CorrespondenceModelInference {
 			double randomSymbolPairProbability = (randomCorrespondenceDistForPair.getBigramCount(symbolPairID) / randomCorrespondenceDistForPair.getObservationCountsSum());
 			if (randomCorrespondenceDistForPair.getBigramCount(symbolPairID) > 0)
 			{
-				pmiScore = cij/(cij+5) * Math.log(cognateSymbolPairProbability / randomSymbolPairProbability);	
+				pmiScore = Math.log(cognateSymbolPairProbability / randomSymbolPairProbability);	
 			}
-			localCorr.setScore(symbolPairID, Math.max(globalCorr.getScore(symbolPairID),pmiScore));
-			//localCorr.setScore(symbolPairID, (globalCorr.getScore(symbolPairID) + pmiScore) / 2);
+			double avgScore = cij/(cij+5) * pmiScore + 5.0/(cij+5) * globalCorr.getScore(symbolPairID);
+			if (Math.abs(avgScore) > 0.1)
+			{
+				localCorr.setScore(symbolPairID, Math.max(globalCorr.getScore(symbolPairID),pmiScore));
+				//localCorr.setScore(symbolPairID, (globalCorr.getScore(symbolPairID) + pmiScore) / 2);
+			}
 		}
 		System.err.print(" done.\n");
 		return localCorr;
@@ -312,14 +316,13 @@ public class CorrespondenceModelInference {
 				double randomSymbolPairProbability = (randomCorrespondenceDistForPair.getBigramCount(symbolPairID) / randomCorrespondenceDistForPair.getObservationCountsSum());
 				if (randomCorrespondenceDistForPair.getBigramCount(symbolPairID) > 0)
 				{
-					pmiScore = cij/(cij+5) * Math.log(cognateSymbolPairProbability / randomSymbolPairProbability);	
+					pmiScore = Math.log(cognateSymbolPairProbability / randomSymbolPairProbability);	
 				}
 				//double cognateSymbolPairProbability = cognateCorrespondenceDistForPair.getProb(symbolPairID);
 				//double randomSymbolPairProbability = randomCorrespondenceDistForPair.getProb(symbolPairID);
 				//double pmiScore = Math.log(cognateSymbolPairProbability / randomSymbolPairProbability);
-				double avgScore = (globalCorr.getScore(symbolPairID) + pmiScore) / 2;
-				avgScore = globalCorr.getScore(symbolPairID);
-				if (pmiScore > avgScore) avgScore = pmiScore;
+				double avgScore = cij/(cij+5) * pmiScore + 5.0/(cij+5) * globalCorr.getScore(symbolPairID);
+				//if (pmiScore > avgScore) avgScore = pmiScore;
 				if (Math.abs(avgScore) > 0.1)
 				{
 					localCorr.setScore(symbolPairID, avgScore);
