@@ -131,11 +131,11 @@ public class ConceptLevelInformationWeightedEditDistanceOutput {
 							PhoneticString lang2Form = database.getForm(lang2FormID);
 							PhoneticStringAlignment globalWeightsAlignment = InformationWeightedSequenceAlignment
 									.constructAlignment(lang1Form, lang2Form, globalCorrModel, globalCorrModel,
-											globalCorrModel, infoModels[lang1ID], infoModels[lang2ID]);
+											globalCorrModel, globalCorrModel, infoModels[lang1ID], infoModels[lang2ID]);
 							double globalWeightDistance = globalWeightsAlignment.normalizedDistanceScore;
 							if (ALIGNMENT_OUTPUT)
 								System.out.println(PhoneticStringAlignmentOutput.iwsaToString(globalWeightsAlignment,
-										symbolTable, globalCorrModel, globalCorrModel, globalCorrModel,
+										symbolTable, globalCorrModel, globalCorrModel, globalCorrModel, globalCorrModel,
 										infoModels[lang1ID], infoModels[lang2ID]));
 							System.out.print(database.getConceptName(conceptID) + "\t");
 							System.out.print(database.getLanguageCode(lang1ID) + "\t"
@@ -147,12 +147,13 @@ public class ConceptLevelInformationWeightedEditDistanceOutput {
 							System.out.println(globalWeightDistance);
 							if (USE_LOCAL_MODELS) {
 								PhoneticStringAlignment localWeightsAlignment = InformationWeightedSequenceAlignment
-										.constructAlignment(lang1Form, lang2Form, localCorrModels[lang1ID][lang2ID],
-												localCorrModels[lang1ID][lang1ID], localCorrModels[lang2ID][lang2ID],
-												infoModels[lang1ID], infoModels[lang2ID]);
+										.constructAlignment(lang1Form, lang2Form, globalCorrModel,
+												localCorrModels[lang1ID][lang2ID], localCorrModels[lang1ID][lang1ID],
+												localCorrModels[lang2ID][lang2ID], infoModels[lang1ID],
+												infoModels[lang2ID]);
 								if (ALIGNMENT_OUTPUT)
 									System.out.println(PhoneticStringAlignmentOutput.iwsaToString(localWeightsAlignment,
-											symbolTable, localCorrModels[lang1ID][lang2ID],
+											symbolTable, globalCorrModel, localCorrModels[lang1ID][lang2ID],
 											localCorrModels[lang1ID][lang1ID], localCorrModels[lang2ID][lang2ID],
 											infoModels[lang1ID], infoModels[lang2ID]));
 								double localWeightDistance = localWeightsAlignment.normalizedDistanceScore;
@@ -177,12 +178,12 @@ public class ConceptLevelInformationWeightedEditDistanceOutput {
 					PhoneticString lang2Form = database.getForm(lang2FormID);
 					PhoneticStringAlignment globalWeightsAlignment = InformationWeightedSequenceAlignment
 							.constructAlignment(lang1Form, lang2Form, globalCorrModel, globalCorrModel, globalCorrModel,
-									infoModels[lang1ID], infoModels[lang2ID]);
+									globalCorrModel, infoModels[lang1ID], infoModels[lang2ID]);
 					double globalWeightDistance = globalWeightsAlignment.normalizedDistanceScore;
 					PhoneticStringAlignment localWeightsAlignment = InformationWeightedSequenceAlignment
-							.constructAlignment(lang1Form, lang2Form, localCorrModels[lang1ID][lang2ID],
-									localCorrModels[lang1ID][lang1ID], localCorrModels[lang2ID][lang2ID],
-									infoModels[lang1ID], infoModels[lang2ID]);
+							.constructAlignment(lang1Form, lang2Form, globalCorrModel,
+									localCorrModels[lang1ID][lang2ID], localCorrModels[lang1ID][lang1ID],
+									localCorrModels[lang2ID][lang2ID], infoModels[lang1ID], infoModels[lang2ID]);
 					double localWeightDistance = localWeightsAlignment.normalizedDistanceScore;
 					double minDistance = Math.min(globalWeightDistance, localWeightDistance);
 					System.out.print(database.getConceptName(conceptID) + "\t");

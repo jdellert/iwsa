@@ -16,8 +16,8 @@ import de.jdellert.iwsa.stat.SmoothingMethod;
 import de.jdellert.iwsa.util.io.Formatting;
 
 public class CorrespondenceModelInference {
-	public static boolean VERBOSE = true;
-	
+	public static boolean VERBOSE = false;
+
 	public static CorrespondenceModel inferGlobalCorrespondenceModel(LexicalDatabase database,
 			PhoneticSymbolTable symbolTable) {
 		CategoricalDistribution randomPairCorrespondenceDist = new CategoricalDistribution(
@@ -93,8 +93,8 @@ public class CorrespondenceModelInference {
 							PhoneticString lang1Form = database.getForm(lang1FormID);
 							for (int lang2FormID : formsPerLang.get(lang2ID)) {
 								PhoneticString lang2Form = database.getForm(lang2FormID);
-								PhoneticStringAlignment alignment = NeedlemanWunschAlgorithm
-										.constructAlignment(lang1Form, lang2Form, globalCorr, globalCorr, globalCorr);
+								PhoneticStringAlignment alignment = NeedlemanWunschAlgorithm.constructAlignment(
+										lang1Form, lang2Form, globalCorr, globalCorr, globalCorr, globalCorr);
 								numPairs++;
 								if (alignment.normalizedDistanceScore <= 0.35) {
 									for (int pos = 0; pos < alignment.getLength(); pos++) {
@@ -149,30 +149,33 @@ public class CorrespondenceModelInference {
 			PhoneticSymbolTable symbolTable, int langID, CorrespondenceModel globalCorr) {
 		System.err.print("  Self-similarity for language " + database.getLanguageCode(langID) + ":\n");
 
-		CorrespondenceDistribution randomCorrespondenceDistForPair = new CorrespondenceDistribution(symbolTable.getSize());
+		CorrespondenceDistribution randomCorrespondenceDistForPair = new CorrespondenceDistribution(
+				symbolTable.getSize());
 		System.err.print("    Step 1: " + 100000
 				+ " random alignments to model the distribution in absence of correspondences ...");
 		for (int i = 0; i < 100000; i++) {
 			PhoneticString form1 = database.getRandomFormForLanguage(langID);
 			PhoneticString form2 = database.getRandomFormForLanguage(langID);
 			PhoneticStringAlignment alignment = NeedlemanWunschAlgorithm.constructAlignment(form1, form2, globalCorr,
-					globalCorr, globalCorr);
+					globalCorr, globalCorr, globalCorr);
 			for (int pos = 0; pos < alignment.getLength(); pos++) {
 				randomCorrespondenceDistForPair.addBigramObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable));
 			}
 		}
 		System.err.print(" done.\n");
 		// first iteration: use global sound correspondences
-		CorrespondenceDistribution cognateCorrespondenceDistForPair = new CorrespondenceDistribution(symbolTable.getSize());
+		CorrespondenceDistribution cognateCorrespondenceDistForPair = new CorrespondenceDistribution(
+				symbolTable.getSize());
 		System.err.print("    Step 2: Self-alignment based on global WED ...");
 		for (int conceptID = 0; conceptID < database.getNumConcepts(); conceptID++) {
 			List<List<Integer>> formsPerLang = database.getFormIDsForConceptPerLanguage(conceptID);
 			for (int langFormID : formsPerLang.get(langID)) {
 				PhoneticString langForm = database.getForm(langFormID);
 				PhoneticStringAlignment alignment = NeedlemanWunschAlgorithm.constructAlignment(langForm, langForm,
-						globalCorr, globalCorr, globalCorr);
+						globalCorr, globalCorr, globalCorr, globalCorr);
 				for (int pos = 0; pos < alignment.getLength(); pos++) {
-					cognateCorrespondenceDistForPair.addBigramObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable));
+					cognateCorrespondenceDistForPair
+							.addBigramObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable));
 				}
 			}
 		}
@@ -184,16 +187,16 @@ public class CorrespondenceModelInference {
 			double pmiScore = 0.0;
 			double cij = cognateCorrespondenceDistForPair.getBigramCount(symbolPairID);
 			double cognateSymbolPairProbability = (cij / cognateCorrespondenceDistForPair.getObservationCountsSum());
-			double randomSymbolPairProbability = (randomCorrespondenceDistForPair.getBigramCount(symbolPairID) / randomCorrespondenceDistForPair.getObservationCountsSum());
-			if (randomCorrespondenceDistForPair.getBigramCount(symbolPairID) > 0)
-			{
-				pmiScore = Math.log(cognateSymbolPairProbability / randomSymbolPairProbability);	
+			double randomSymbolPairProbability = (randomCorrespondenceDistForPair.getBigramCount(symbolPairID)
+					/ randomCorrespondenceDistForPair.getObservationCountsSum());
+			if (randomCorrespondenceDistForPair.getBigramCount(symbolPairID) > 0) {
+				pmiScore = Math.log(cognateSymbolPairProbability / randomSymbolPairProbability);
 			}
-			double avgScore = cij/(cij+5) * pmiScore + 5.0/(cij+5) * globalCorr.getScore(symbolPairID);
-			if (Math.abs(avgScore) > 0.1)
-			{
-				localCorr.setScore(symbolPairID, Math.max(globalCorr.getScore(symbolPairID),pmiScore));
-				//localCorr.setScore(symbolPairID, (globalCorr.getScore(symbolPairID) + pmiScore) / 2);
+			double avgScore = cij / (cij + 5) * pmiScore + 5.0 / (cij + 5) * globalCorr.getScore(symbolPairID);
+			if (Math.abs(avgScore) > 0.1) {
+				localCorr.setScore(symbolPairID, Math.max(globalCorr.getScore(symbolPairID), pmiScore));
+				// localCorr.setScore(symbolPairID, (globalCorr.getScore(symbolPairID) +
+				// pmiScore) / 2);
 			}
 		}
 		System.err.print(" done.\n");
@@ -206,14 +209,15 @@ public class CorrespondenceModelInference {
 		System.err
 				.print("  Pair " + database.getLanguageCode(lang1ID) + "/" + database.getLanguageCode(lang2ID) + ":\n");
 
-		CorrespondenceDistribution randomCorrespondenceDistForPair = new CorrespondenceDistribution(symbolTable.getSize());
+		CorrespondenceDistribution randomCorrespondenceDistForPair = new CorrespondenceDistribution(
+				symbolTable.getSize());
 		System.err.print("    Step 1: " + 100000
 				+ " random alignments to model the distribution in absence of correspondences ...");
 		for (int i = 0; i < 100000; i++) {
 			PhoneticString form1 = database.getRandomFormForLanguage(lang1ID);
 			PhoneticString form2 = database.getRandomFormForLanguage(lang2ID);
 			PhoneticStringAlignment alignment = NeedlemanWunschAlgorithm.constructAlignment(form1, form2, globalCorr,
-					globalCorr, globalCorr);
+					globalCorr, globalCorr, globalCorr);
 			for (int pos = 0; pos < alignment.getLength(); pos++) {
 				randomCorrespondenceDistForPair.addBigramObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable));
 			}
@@ -221,7 +225,8 @@ public class CorrespondenceModelInference {
 		System.err.print(" done.\n");
 
 		// first iteration: use global sound correspondences
-		CorrespondenceDistribution cognateCorrespondenceDistForPair = new CorrespondenceDistribution(symbolTable.getSize());
+		CorrespondenceDistribution cognateCorrespondenceDistForPair = new CorrespondenceDistribution(
+				symbolTable.getSize());
 		int numPairs = 0;
 		int numCognatePairs = 0;
 		System.err.print("    Step 2: Finding cognate candidates based on global WED ...");
@@ -232,11 +237,12 @@ public class CorrespondenceModelInference {
 				for (int lang2FormID : formsPerLang.get(lang2ID)) {
 					PhoneticString lang2Form = database.getForm(lang2FormID);
 					PhoneticStringAlignment alignment = NeedlemanWunschAlgorithm.constructAlignment(lang1Form,
-							lang2Form, globalCorr, globalCorr, globalCorr);
+							lang2Form, globalCorr, globalCorr, globalCorr, globalCorr);
 					numPairs++;
 					if (alignment.normalizedDistanceScore <= 0.5) {
 						for (int pos = 0; pos < alignment.getLength(); pos++) {
-							cognateCorrespondenceDistForPair.addBigramObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable));
+							cognateCorrespondenceDistForPair
+									.addBigramObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable));
 						}
 						numCognatePairs++;
 					}
@@ -249,7 +255,10 @@ public class CorrespondenceModelInference {
 		System.err.print("          Comparing the distributions of symbol pairs to reestimate PMI scores ...");
 		CorrespondenceModel localCorr = new CorrespondenceModel(symbolTable);
 		for (int symbolPairID = 0; symbolPairID < symbolTable.getSize() * symbolTable.getSize(); symbolPairID++) {
-			if (randomCorrespondenceDistForPair.getMinUnigramCount(symbolPairID) == 0) continue;
+			if (randomCorrespondenceDistForPair.getMinUnigramCount(symbolPairID) == 0)
+				continue;
+			if (symbolPairID / symbolTable.getSize() == 1) continue; //do not reinfer correspondences for gaps
+			if (symbolPairID % symbolTable.getSize() == 1) continue; //do not reinfer correspondences for gaps
 			double cognateSymbolPairProbability = cognateCorrespondenceDistForPair.getProb(symbolPairID);
 			double randomSymbolPairProbability = randomCorrespondenceDistForPair.getProb(symbolPairID);
 			double pmiScore = Math.log(cognateSymbolPairProbability / randomSymbolPairProbability);
@@ -273,11 +282,12 @@ public class CorrespondenceModelInference {
 					for (int lang2FormID : formsPerLang.get(lang2ID)) {
 						PhoneticString lang2Form = database.getForm(lang2FormID);
 						PhoneticStringAlignment alignment = NeedlemanWunschAlgorithm.constructAlignment(lang1Form,
-								lang2Form, localCorr, lang1SelfCorr, lang2SelfCorr);
+								lang2Form, globalCorr, localCorr, lang1SelfCorr, lang2SelfCorr);
 						numPairs++;
 						if (alignment.normalizedDistanceScore <= 0.7) {
 							for (int pos = 0; pos < alignment.getLength(); pos++) {
-								cognateCorrespondenceDistForPair.addBigramObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable));
+								cognateCorrespondenceDistForPair
+										.addBigramObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable));
 							}
 							numCognatePairs++;
 						}
@@ -309,34 +319,47 @@ public class CorrespondenceModelInference {
 			System.err.print("          Comparing the distributions of symbol pairs to reestimate PMI scores ...");
 			localCorr = new CorrespondenceModel(symbolTable);
 			for (int symbolPairID = 0; symbolPairID < symbolTable.getSize() * symbolTable.getSize(); symbolPairID++) {
-				if (randomCorrespondenceDistForPair.getMinUnigramCount(symbolPairID) == 0) continue;
+				if (randomCorrespondenceDistForPair.getMinUnigramCount(symbolPairID) == 0)
+					continue;
+				if (symbolPairID / symbolTable.getSize() == 1) continue; //do not reinfer correspondences for gaps
+				if (symbolPairID % symbolTable.getSize() == 1) continue; //do not reinfer correspondences for gaps
 				double pmiScore = 0.0;
 				double cij = cognateCorrespondenceDistForPair.getBigramCount(symbolPairID);
-				double cognateSymbolPairProbability = (cij / cognateCorrespondenceDistForPair.getObservationCountsSum());
-				double randomSymbolPairProbability = (randomCorrespondenceDistForPair.getBigramCount(symbolPairID) / randomCorrespondenceDistForPair.getObservationCountsSum());
-				if (randomCorrespondenceDistForPair.getBigramCount(symbolPairID) > 0)
-				{
-					pmiScore = Math.log(cognateSymbolPairProbability / randomSymbolPairProbability);	
+				double cognateSymbolPairProbability = (cij
+						/ cognateCorrespondenceDistForPair.getObservationCountsSum());
+				double randomSymbolPairProbability = (randomCorrespondenceDistForPair.getBigramCount(symbolPairID)
+						/ randomCorrespondenceDistForPair.getObservationCountsSum());
+				if (randomCorrespondenceDistForPair.getBigramCount(symbolPairID) > 0) {
+					pmiScore = Math.log(cognateSymbolPairProbability / randomSymbolPairProbability);
 				}
-				//double cognateSymbolPairProbability = cognateCorrespondenceDistForPair.getProb(symbolPairID);
-				//double randomSymbolPairProbability = randomCorrespondenceDistForPair.getProb(symbolPairID);
-				//double pmiScore = Math.log(cognateSymbolPairProbability / randomSymbolPairProbability);
-				double avgScore = cij/(cij+5) * pmiScore + 5.0/(cij+5) * globalCorr.getScore(symbolPairID);
-				//if (pmiScore > avgScore) avgScore = pmiScore;
-				if (Math.abs(avgScore) > 0.1)
-				{
+				// double cognateSymbolPairProbability =
+				// cognateCorrespondenceDistForPair.getProb(symbolPairID);
+				// double randomSymbolPairProbability =
+				// randomCorrespondenceDistForPair.getProb(symbolPairID);
+				// double pmiScore = Math.log(cognateSymbolPairProbability /
+				// randomSymbolPairProbability);
+				double avgScore = cij / (cij + 5) * pmiScore + 5.0 / (cij + 5) * globalCorr.getScore(symbolPairID);
+				// if (pmiScore > avgScore) avgScore = pmiScore;
+				if (Math.abs(avgScore) > 0.1) {
 					localCorr.setScore(symbolPairID, avgScore);
-					if (VERBOSE) System.err.println(database.getLanguageCode(lang1ID) + "-" + database.getLanguageCode(lang2ID)
-							+ " correspondence for " + symbolTable.toSymbolPair(symbolPairID) + ": "
-							+ Formatting.str3f(globalCorr.getScore(symbolPairID)) + "\t" + Formatting.str3f(pmiScore) + "\t"
-							+ Formatting.str3f(localCorr.getScore(symbolPairID)) + "\t"
-							+ Formatting.str3f(cognateSymbolPairProbability) + " (" + (int) cognateCorrespondenceDistForPair.getBigramCount(symbolPairID) + "/" + (int) cognateCorrespondenceDistForPair.getObservationCountsSum() + ")\t"
-							+ Formatting.str3f(randomSymbolPairProbability) + " (" + (int) randomCorrespondenceDistForPair.getBigramCount(symbolPairID) + "/" + (int) randomCorrespondenceDistForPair.getObservationCountsSum() + ")\t");
+					if (VERBOSE)
+						System.err.println(database.getLanguageCode(lang1ID) + "-" + database.getLanguageCode(lang2ID)
+								+ " correspondence for " + symbolTable.toSymbolPair(symbolPairID) + ": "
+								+ Formatting.str3f(globalCorr.getScore(symbolPairID)) + "\t"
+								+ Formatting.str3f(pmiScore) + "\t" + Formatting.str3f(localCorr.getScore(symbolPairID))
+								+ "\t" + Formatting.str3f(cognateSymbolPairProbability) + " ("
+								+ (int) cognateCorrespondenceDistForPair.getBigramCount(symbolPairID) + "/"
+								+ (int) cognateCorrespondenceDistForPair.getObservationCountsSum() + ")\t"
+								+ Formatting.str3f(randomSymbolPairProbability) + " ("
+								+ (int) randomCorrespondenceDistForPair.getBigramCount(symbolPairID) + "/"
+								+ (int) randomCorrespondenceDistForPair.getObservationCountsSum() + ")\t");
 				}
 			}
 			System.err.print(" done.\n");
 
-			if (VERBOSE) ConceptLevelWeightedEditDistanceOutput.distanceOutput(database, symbolTable, lang1ID, lang2ID, globalCorr, localCorr);
+			if (VERBOSE)
+				ConceptLevelWeightedEditDistanceOutput.distanceOutput(database, symbolTable, lang1ID, lang2ID,
+						globalCorr, localCorr);
 		}
 		return localCorr;
 	}

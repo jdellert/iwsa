@@ -8,8 +8,8 @@ import de.jdellert.iwsa.infomodel.InformationModel;
 import de.jdellert.iwsa.sequence.PhoneticString;
 
 public class InformationWeightedSequenceAlignment extends PhoneticStringAlignment {
-	public static PhoneticStringAlignment constructAlignment(PhoneticString str1, PhoneticString str2,
-			CorrespondenceModel corrModel, CorrespondenceModel selfSimModel1, CorrespondenceModel selfSimModel2,
+	public static PhoneticStringAlignment constructAlignment(PhoneticString str1, PhoneticString str2, CorrespondenceModel gloCorrModel,
+			CorrespondenceModel locCorrModel, CorrespondenceModel selfSimModel1, CorrespondenceModel selfSimModel2,
 			InformationModel infoModel1, InformationModel infoModel2) {
 		int m = str1.getLength() + 1;
 		int n = str2.getLength() + 1;
@@ -20,22 +20,22 @@ public class InformationWeightedSequenceAlignment extends PhoneticStringAlignmen
 		mtx[0][0] = 0;
 		for (int i = 1; i < m; i++) {
 			mtx[i][0] = mtx[i - 1][0]
-					+ corrModel.getScore(str1.segments[i - 1], 1) * getMeanInfoScore(str1, str1, i - 1, i - 1, infoModel1, infoModel1);
+					+ getCorrespondenceScore(gloCorrModel, locCorrModel, str1.segments[i - 1], 1) * getMeanInfoScore(str1, str1, i - 1, i - 1, infoModel1, infoModel1);
 			aSubst[i][0] = str1.segments[i - 1];
 			bSubst[i][0] = 1; // corresponds to gap symbol
 		}
 		for (int j = 1; j < n; j++) {
 			mtx[0][j] = mtx[0][j - 1]
-					+ corrModel.getScore(1, str2.segments[j - 1]) * getMeanInfoScore(str2, str2, j - 1, j - 1, infoModel2, infoModel2);
+					+ getCorrespondenceScore(gloCorrModel, locCorrModel, 1, str2.segments[j - 1]) * getMeanInfoScore(str2, str2, j - 1, j - 1, infoModel2, infoModel2);
 			aSubst[0][j] = 1; // corresponds to gap symbol
 			bSubst[0][j] = str2.segments[j - 1];
 		}
 		for (int i = 1; i < m; i++) {
 			for (int j = 1; j < n; j++) {
-				double matchValue = mtx[i - 1][j - 1] + corrModel.getScore(str1.segments[i - 1], str2.segments[j - 1])
+				double matchValue = mtx[i - 1][j - 1] + getCorrespondenceScore(gloCorrModel, locCorrModel, str1.segments[i - 1], str2.segments[j - 1])
 						* getMeanInfoScore(str1, str2, i - 1, j - 1, infoModel1, infoModel2);
-				double insertionValue = mtx[i][j - 1] + corrModel.getScore(1, str2.segments[j - 1]) * getMeanInfoScore(str2, str2, j - 1, j - 1, infoModel2, infoModel2);
-				double deletionValue = mtx[i - 1][j] + corrModel.getScore(str1.segments[i - 1], 1) * getMeanInfoScore(str1, str1, i - 1, i - 1, infoModel1, infoModel1);
+				double insertionValue = mtx[i][j - 1] + getCorrespondenceScore(gloCorrModel, locCorrModel, 1, str2.segments[j - 1]) * getMeanInfoScore(str2, str2, j - 1, j - 1, infoModel2, infoModel2);
+				double deletionValue = mtx[i - 1][j] + getCorrespondenceScore(gloCorrModel, locCorrModel, str1.segments[i - 1], 1) * getMeanInfoScore(str1, str1, i - 1, i - 1, infoModel1, infoModel1);
 				mtx[i][j] = Math.max(matchValue, Math.max(insertionValue, deletionValue));
 
 				if (insertionValue > matchValue) {
@@ -113,5 +113,17 @@ public class InformationWeightedSequenceAlignment extends PhoneticStringAlignmen
 		double infoContent1 = infoModel1.informationContent(str1.segments, pos1);
 		double infoContent2 = infoModel2.informationContent(str2.segments, pos2);
 		return Math.sqrt((infoContent1 + infoContent2) / 2);
+	}
+	
+	public static double getCorrespondenceScore(CorrespondenceModel gloCorrModel, CorrespondenceModel locCorrModel,
+			int ci, int cj) {
+		Double score = locCorrModel.getScoreOrNull(ci, cj);
+		if (score == null) {
+			score = gloCorrModel.getScoreOrNull(ci, cj);
+		}
+		if (score == null) {
+			score = 0.0;
+		}
+		return score;
 	}
 }

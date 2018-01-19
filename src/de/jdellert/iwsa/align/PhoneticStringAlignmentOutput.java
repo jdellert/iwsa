@@ -8,7 +8,7 @@ import de.jdellert.iwsa.util.io.Formatting;
 
 public class PhoneticStringAlignmentOutput {
 	public static String needlemanWunschtoString(PhoneticStringAlignment alignment, PhoneticSymbolTable table,
-			CorrespondenceModel corrModel, CorrespondenceModel selfSimModel1, CorrespondenceModel selfSimModel2) {
+			CorrespondenceModel gloCorrModel, CorrespondenceModel locCorrModel, CorrespondenceModel selfSimModel1, CorrespondenceModel selfSimModel2) {
 		StringBuilder selfSim1Line = new StringBuilder();
 		StringBuilder string1Line = new StringBuilder();
 		StringBuilder corrLine = new StringBuilder();
@@ -35,7 +35,7 @@ public class PhoneticStringAlignmentOutput {
 			
 			double selfSimScore1 = selfSimModel1.getScore(symb1, symb1);
 			double selfSimScore2 = selfSimModel2.getScore(symb2, symb2);
-			double corrScore = corrModel.getScore(symb1, symb2);
+			double corrScore = getCorrespondenceScore(gloCorrModel, locCorrModel, symb1, symb2);
 			
 			selfSimScoreSum1 += selfSimScore1;
 			selfSimScoreSum2 += selfSimScore2;
@@ -71,7 +71,7 @@ public class PhoneticStringAlignmentOutput {
 	}
 	
 	public static String iwsaToString(PhoneticStringAlignment alignment, PhoneticSymbolTable table,
-			CorrespondenceModel corrModel, CorrespondenceModel selfSimModel1, CorrespondenceModel selfSimModel2, InformationModel infoModel1, InformationModel infoModel2) {
+			CorrespondenceModel gloCorrModel, CorrespondenceModel locCorrModel, CorrespondenceModel selfSimModel1, CorrespondenceModel selfSimModel2, InformationModel infoModel1, InformationModel infoModel2) {
 		StringBuilder informationModel1Line = new StringBuilder();
 		StringBuilder selfSim1Line = new StringBuilder();
 		StringBuilder string1Line = new StringBuilder();
@@ -114,7 +114,7 @@ public class PhoneticStringAlignmentOutput {
 			
 			double selfSimScore1 = selfSimModel1.getScore(symb1, symb1);
 			double selfSimScore2 = selfSimModel2.getScore(symb2, symb2);
-			double corrScore = corrModel.getScore(symb1, symb2);
+			double corrScore = getCorrespondenceScore(gloCorrModel, locCorrModel, symb1, symb2);
 
 			if (symb1 == 1)
 			{
@@ -158,5 +158,17 @@ public class PhoneticStringAlignmentOutput {
 		informationModel2Line.append("\n");
 		
 		return informationModel1Line.toString() + selfSim1Line.toString() + string1Line.toString() + corrLine.toString() + string2Line.toString() + selfSim2Line.toString() + informationModel2Line.toString();
+	}
+	
+	public static double getCorrespondenceScore(CorrespondenceModel gloCorrModel, CorrespondenceModel locCorrModel,
+			int ci, int cj) {
+		Double score = locCorrModel.getScoreOrNull(ci, cj);
+		if (score == null) {
+			score = gloCorrModel.getScoreOrNull(ci, cj);
+		}
+		if (score == null) {
+			score = 0.0;
+		}
+		return score;
 	}
 }

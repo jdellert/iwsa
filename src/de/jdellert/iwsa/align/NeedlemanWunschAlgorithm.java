@@ -7,7 +7,9 @@ import de.jdellert.iwsa.corrmodel.CorrespondenceModel;
 import de.jdellert.iwsa.sequence.PhoneticString;
 
 public class NeedlemanWunschAlgorithm {
-	public static PhoneticStringAlignment constructAlignment(PhoneticString str1, PhoneticString str2, CorrespondenceModel corrModel, CorrespondenceModel selfSimModel1, CorrespondenceModel selfSimModel2) {
+	public static PhoneticStringAlignment constructAlignment(PhoneticString str1, PhoneticString str2,
+			CorrespondenceModel gloCorrModel, CorrespondenceModel locCorrModel, CorrespondenceModel selfSimModel1,
+			CorrespondenceModel selfSimModel2) {
 		int m = str1.getLength() + 1;
 		int n = str2.getLength() + 1;
 
@@ -16,20 +18,23 @@ public class NeedlemanWunschAlgorithm {
 		int[][] bSubst = new int[m][n];
 		mtx[0][0] = 0;
 		for (int i = 1; i < m; i++) {
-			mtx[i][0] = mtx[i - 1][0] + corrModel.getScore(str1.segments[i - 1], 1);
+			mtx[i][0] = mtx[i - 1][0] + getCorrespondenceScore(gloCorrModel, locCorrModel, str1.segments[i - 1], 1);
 			aSubst[i][0] = str1.segments[i - 1];
 			bSubst[i][0] = 1; // corresponds to gap symbol
 		}
 		for (int j = 1; j < n; j++) {
-			mtx[0][j] = mtx[0][j - 1] + corrModel.getScore(1, str2.segments[j - 1]);
+			mtx[0][j] = mtx[0][j - 1] + getCorrespondenceScore(gloCorrModel, locCorrModel, 1, str2.segments[j - 1]);
 			aSubst[0][j] = 1; // corresponds to gap symbol
 			bSubst[0][j] = str2.segments[j - 1];
 		}
 		for (int i = 1; i < m; i++) {
 			for (int j = 1; j < n; j++) {
-				double matchValue = mtx[i - 1][j - 1] + corrModel.getScore(str1.segments[i - 1], str2.segments[j - 1]);
-				double insertionValue = mtx[i][j - 1] + corrModel.getScore(1, str2.segments[j - 1]);
-				double deletionValue = mtx[i - 1][j] + corrModel.getScore(str1.segments[i - 1], 1);
+				double matchValue = mtx[i - 1][j - 1] + getCorrespondenceScore(gloCorrModel, locCorrModel,
+						str1.segments[i - 1], str2.segments[j - 1]);
+				double insertionValue = mtx[i][j - 1]
+						+ getCorrespondenceScore(gloCorrModel, locCorrModel, 1, str2.segments[j - 1]);
+				double deletionValue = mtx[i - 1][j]
+						+ getCorrespondenceScore(gloCorrModel, locCorrModel, str1.segments[i - 1], 1);
 				mtx[i][j] = Math.max(matchValue, Math.max(insertionValue, deletionValue));
 
 				if (insertionValue > matchValue) {
@@ -55,7 +60,7 @@ public class NeedlemanWunschAlgorithm {
 				}
 			}
 		}
-		
+
 		// build the alignment from the backpointer substrings
 		int i = m - 1;
 		int j = n - 1;
@@ -80,29 +85,40 @@ public class NeedlemanWunschAlgorithm {
 
 		double similarityScore = mtx[m - 1][n - 1];
 		double str1SelfSimilarity = 0.0;
-		for (int segmentID : str1.segments)
-		{
+		for (int segmentID : str1.segments) {
 			str1SelfSimilarity += selfSimModel1.getScore(segmentID, segmentID);
 		}
 		double str2SelfSimilarity = 0.0;
-		for (int segmentID : str2.segments)
-		{
+		for (int segmentID : str2.segments) {
 			str2SelfSimilarity += selfSimModel2.getScore(segmentID, segmentID);
 		}
-		
+
 		similarityScore /= result1.size();
 		str1SelfSimilarity /= m - 1;
 		str2SelfSimilarity /= n - 1;
-		
-		//System.out.println(similarityScore + "\t" + str1SelfSimilarity + "\t" + str2SelfSimilarity);
+
+		// System.out.println(similarityScore + "\t" + str1SelfSimilarity + "\t" +
+		// str2SelfSimilarity);
 		double normalizedDistanceScore = 1 - (2 * similarityScore) / (str1SelfSimilarity + str2SelfSimilarity);
-		
+
 		PhoneticStringAlignment alignment = new PhoneticStringAlignment();
 		alignment.str1 = new PhoneticString(result1.stream().mapToInt(Integer::intValue).toArray());
 		alignment.str2 = new PhoneticString(result2.stream().mapToInt(Integer::intValue).toArray());
-		alignment.alignmentScore =similarityScore;
+		alignment.alignmentScore = similarityScore;
 		alignment.normalizedDistanceScore = normalizedDistanceScore;
 
 		return alignment;
+	}
+
+	public static double getCorrespondenceScore(CorrespondenceModel gloCorrModel, CorrespondenceModel locCorrModel,
+			int ci, int cj) {
+		Double score = locCorrModel.getScoreOrNull(ci, cj);
+		if (score == null) {
+			score = gloCorrModel.getScoreOrNull(ci, cj);
+		}
+		if (score == null) {
+			score = 0.0;
+		}
+		return score;
 	}
 }
