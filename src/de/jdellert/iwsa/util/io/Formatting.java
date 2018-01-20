@@ -5,13 +5,19 @@ import java.text.NumberFormat;
 import java.util.Locale;
 
 public class Formatting {
-	static NumberFormat threeFactionDigitsFormat;
+	static NumberFormat threeFractionDigitsFormat;
+	static NumberFormat sixFractionDigitsFormat;
 	
 	static {
-		threeFactionDigitsFormat = DecimalFormat.getInstance(Locale.ENGLISH);
-		threeFactionDigitsFormat.setMinimumIntegerDigits(1);
-		threeFactionDigitsFormat.setMinimumFractionDigits(3);
-		threeFactionDigitsFormat.setMaximumFractionDigits(3);
+		threeFractionDigitsFormat = DecimalFormat.getInstance(Locale.ENGLISH);
+		threeFractionDigitsFormat.setMinimumIntegerDigits(1);
+		threeFractionDigitsFormat.setMinimumFractionDigits(3);
+		threeFractionDigitsFormat.setMaximumFractionDigits(3);
+		
+		sixFractionDigitsFormat = DecimalFormat.getInstance(Locale.ENGLISH);
+		sixFractionDigitsFormat.setMinimumIntegerDigits(1);
+		sixFractionDigitsFormat.setMinimumFractionDigits(6);
+		sixFractionDigitsFormat.setMaximumFractionDigits(6);
 	}
 	
 	/**
@@ -20,7 +26,16 @@ public class Formatting {
 	 */
 	public static String str3f(double num)
 	{
-		return threeFactionDigitsFormat.format(num);
+		return threeFractionDigitsFormat.format(num);
+	}
+	
+	/**
+	 * Coerces a double into a length-8 string format for output.
+	 * @return
+	 */
+	public static String str6f(double num)
+	{
+		return sixFractionDigitsFormat.format(num);
 	}
 	
 	public static String intLPad(int num, int reqLength)

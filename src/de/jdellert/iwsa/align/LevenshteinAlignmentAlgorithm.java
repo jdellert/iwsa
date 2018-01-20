@@ -7,6 +7,7 @@ import de.jdellert.iwsa.sequence.PhoneticString;
 
 public class LevenshteinAlignmentAlgorithm {
 	public static double computeNormalizedEditDistance(PhoneticString str1, PhoneticString str2) {
+		//System.out.println(str1.toString() + "\t" + str2.toString() );
 		int m = str1.getLength() + 1;
 		int n = str2.getLength() + 1;
 
@@ -20,16 +21,15 @@ public class LevenshteinAlignmentAlgorithm {
 		}
 		for (int i = 1; i < m; i++) {
 			for (int j = 1; j < n; j++) {
-
 				int matchValue = mtx[i - 1][j - 1];
-				if (str1.segments[i] != str2.segments[j])
+				if (str1.segments[i-1] != str2.segments[j-1])
 					matchValue++;
 				int insertionValue = mtx[i][j - 1] + 1;
 				int deletionValue = mtx[i - 1][j] + 1;
 				mtx[i][j] = Math.min(matchValue, Math.min(insertionValue, deletionValue));
 			}
 		}
-		return (double) mtx[m - 1][n - 1] / Math.max(m, n);
+		return (double) mtx[m - 1][n - 1] / Math.max(m - 1, n - 1);
 	}
 
 	public static PhoneticStringAlignment constructAlignment(PhoneticString str1, PhoneticString str2) {
@@ -85,7 +85,7 @@ public class LevenshteinAlignmentAlgorithm {
 		}
 
 		double alignmentScore = mtx[m - 1][n - 1];
-		double normalizedAlignmentScore = alignmentScore / Math.min(m - 1, n - 1);
+		double normalizedAlignmentScore = alignmentScore / Math.max(m - 1, n - 1);
 
 		// build the alignment from the backpointer substrings
 		int i = m - 1;

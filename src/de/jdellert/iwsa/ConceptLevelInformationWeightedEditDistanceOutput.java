@@ -22,7 +22,7 @@ import de.jdellert.iwsa.sequence.PhoneticString;
 import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
 
 public class ConceptLevelInformationWeightedEditDistanceOutput {
-	public static final boolean ALIGNMENT_OUTPUT = true;
+	public static final boolean ALIGNMENT_OUTPUT = false;
 	public static final boolean USE_LOCAL_MODELS = true;
 
 	public static void main(String[] args) {
@@ -85,7 +85,7 @@ public class ConceptLevelInformationWeightedEditDistanceOutput {
 			CorrespondenceModel[][] localCorrModels = null;
 			if (USE_LOCAL_MODELS) {
 				try {
-					System.err.print("Attempting to load existing global correspondence model from " + args[0]
+					System.err.print("Attempting to load existing local correspondence models from " + args[0]
 							+ "-local.corr ... ");
 					localCorrModels = CorrespondenceModelStorage.loadCorrespondenceModels(
 							new ObjectInputStream(new FileInputStream(args[0] + "-local.corr")), relevantLangToID);
@@ -144,7 +144,7 @@ public class ConceptLevelInformationWeightedEditDistanceOutput {
 									+ database.getAnnotation("Word_Form", lang2FormID) + "\t");
 							System.out.print(
 									lang1Form.toString(symbolTable) + "\t" + lang2Form.toString(symbolTable) + "\t");
-							System.out.println(globalWeightDistance);
+							System.out.print(globalWeightDistance);
 							if (USE_LOCAL_MODELS) {
 								PhoneticStringAlignment localWeightsAlignment = InformationWeightedSequenceAlignment
 										.constructAlignment(lang1Form, lang2Form, globalCorrModel,
@@ -159,6 +159,10 @@ public class ConceptLevelInformationWeightedEditDistanceOutput {
 								double localWeightDistance = localWeightsAlignment.normalizedDistanceScore;
 								double minDistance = Math.min(globalWeightDistance, localWeightDistance);
 								System.out.println("\t" + localWeightDistance + "\t" + minDistance);
+							}
+							else
+							{
+								System.out.println();
 							}
 						}
 					}

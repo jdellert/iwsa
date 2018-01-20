@@ -196,4 +196,17 @@ public class LexicalDatabase {
 		}
 		return forms.get(formsForRandomConcept.get((int) (Math.random() * formsForRandomConcept.size())));
 	}
+
+	public PhoneticString getFormForLangConceptOrth(String lang, String concept, String orth) {
+		int langID = getIDForLanguageCode(lang);
+		if (langID == -1) return null;
+		Integer conceptID = conceptNameToID.get(concept);
+		if (conceptID == null) return null;
+		for (int formID : getFormIDsForLanguageAndConcept(langID, conceptID))
+		{
+			String formOrth = getAnnotation("Word_Form", formID);
+			if (formOrth.equals(orth)) return getForm(formID);
+		}
+		return null;
+	}
 }

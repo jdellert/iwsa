@@ -2,6 +2,8 @@ package de.jdellert.iwsa.sequence;
 
 import java.util.Arrays;
 
+import de.jdellert.iwsa.util.io.StringUtils;
+
 /**
  * Simple wrapper around int arrays used internally to compactly represent
  * phonetic strings.
@@ -19,6 +21,10 @@ public class PhoneticString {
 
 	public int getLength() {
 		return segments.length;
+	}
+	
+	public String toString() {
+		return "[" + StringUtils.join(" ", segments) + "]";
 	}
 
 	public String toString(PhoneticSymbolTable symbolTable) {
