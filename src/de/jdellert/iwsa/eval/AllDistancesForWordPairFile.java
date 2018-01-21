@@ -98,7 +98,7 @@ public class AllDistancesForWordPairFile {
 				
 				List<String[]> lines = SimpleFormatReader.arrayFromTSV(goldStandardFileName);
 				
-		        System.out.println("concept\tlang1\torth1\tpron1\tid1\tlang2\torth2\tpron2\tid2\tcognacy\tED\tlocalIWED\tglobalIWED\tcombinedIWED\tlocalWED\tglobalWED\tcombinedWED");
+		        System.out.println("concept\tlang1\torth1\tpron1\tid1\tlang2\torth2\tpron2\tid2\tcognacy\tED\tlocalWED\tglobalWED\tcombinedWED\tlocalIWED\tglobalIWED\tcombinedIWED");
 		        
 		        for (String[] line : lines)
 		        {
@@ -135,8 +135,10 @@ public class AllDistancesForWordPairFile {
 					PhoneticStringAlignment globalWeightsAlignment = NeedlemanWunschAlgorithm
 							.constructAlignment(lang1Form, lang2Form, globalCorrModel, globalCorrModel, globalCorrModel, globalCorrModel);
 					double globalWED = globalWeightsAlignment.normalizedDistanceScore;
+					System.out.println(PhoneticStringAlignmentOutput.needlemanWunschtoString(globalWeightsAlignment, symbolTable, globalCorrModel, globalCorrModel, globalCorrModel, globalCorrModel));
 					PhoneticStringAlignment localWeightsAlignment = NeedlemanWunschAlgorithm
 							.constructAlignment(lang1Form, lang2Form, globalCorrModel, localCorrModels[lang1ID][lang2ID], localCorrModels[lang1ID][lang1ID], localCorrModels[lang2ID][lang2ID]);
+					System.out.println(PhoneticStringAlignmentOutput.needlemanWunschtoString(localWeightsAlignment, symbolTable, globalCorrModel, localCorrModels[lang1ID][lang2ID], localCorrModels[lang1ID][lang1ID], localCorrModels[lang2ID][lang2ID]));
 					double localWED = localWeightsAlignment.normalizedDistanceScore;
 					double combinedWED = Math.min(globalWED, localWED);
 					
