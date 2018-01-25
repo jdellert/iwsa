@@ -4,12 +4,10 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import de.jdellert.iwsa.align.LevenshteinAlignmentAlgorithm;
 import de.jdellert.iwsa.align.NeedlemanWunschAlgorithm;
 import de.jdellert.iwsa.align.PhoneticStringAlignment;
 import de.jdellert.iwsa.align.PhoneticStringAlignmentOutput;
@@ -18,10 +16,10 @@ import de.jdellert.iwsa.corrmodel.CorrespondenceModelInference;
 import de.jdellert.iwsa.corrmodel.CorrespondenceModelStorage;
 import de.jdellert.iwsa.data.CLDFImport;
 import de.jdellert.iwsa.data.LexicalDatabase;
+import de.jdellert.iwsa.infomodel.InformationModel;
+import de.jdellert.iwsa.infomodel.InformationModelInference;
 import de.jdellert.iwsa.sequence.PhoneticString;
 import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
-import de.jdellert.iwsa.stat.CategoricalDistribution;
-import de.jdellert.iwsa.stat.SmoothingMethod;
 
 public class ConceptLevelWeightedEditDistanceOutput {
 	public static final boolean ALIGNMENT_OUTPUT = true;
@@ -31,6 +29,8 @@ public class ConceptLevelWeightedEditDistanceOutput {
 		try {
 			LexicalDatabase database = CLDFImport.loadDatabase(args[0], true);
 			PhoneticSymbolTable symbolTable = database.getSymbolTable();
+			
+			InformationModel[] infoModels = InformationModelInference.inferInformationModels(database, symbolTable);
 
 			// default: assume all languages are relevant, and part of the inference
 			String[] relevantLangCodes = database.getLanguageCodes();
@@ -103,7 +103,7 @@ public class ConceptLevelWeightedEditDistanceOutput {
 			if (localCorrModels == null) {
 				System.err.print("Stage 2: Inference of sound correspondence matrices for each language pair\n");
 				localCorrModels = CorrespondenceModelInference.inferLocalCorrespondenceModels(database, symbolTable,
-						relevantLangIDs, globalCorrModel);
+						relevantLangIDs, globalCorrModel, infoModels);
 				CorrespondenceModelStorage.writeLocalModelsToFile(localCorrModels, database.getLanguageCodes(), symbolTable,
 						args[0] + "-local.corr");
 			}

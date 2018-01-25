@@ -6,6 +6,7 @@ import java.util.List;
 import de.jdellert.iwsa.corrmodel.CorrespondenceModel;
 import de.jdellert.iwsa.infomodel.InformationModel;
 import de.jdellert.iwsa.sequence.PhoneticString;
+import de.jdellert.iwsa.util.io.Formatting;
 
 public class InformationWeightedSequenceAlignment extends PhoneticStringAlignment {
 	public static PhoneticStringAlignment constructAlignment(PhoneticString str1, PhoneticString str2, CorrespondenceModel gloCorrModel,
@@ -125,5 +126,40 @@ public class InformationWeightedSequenceAlignment extends PhoneticStringAlignmen
 			score = 0.0;
 		}
 		return score;
+	}
+	
+	public static double[] combinedInfoScoresForAlignment(PhoneticStringAlignment alignment, InformationModel infoModel1, InformationModel infoModel2)
+	{
+		int pos1 = -1;
+		int pos2 = -1;
+
+		PhoneticString str1Reduced = alignment.str1.copyWithoutGaps();
+		PhoneticString str2Reduced = alignment.str2.copyWithoutGaps();
+		
+		double[] infoScores = new double[alignment.getLength()];
+		
+		for (int pos = 0; pos < alignment.getLength(); pos++)
+		{
+			int symb1 = alignment.str1.segments[pos];
+			int symb2 = alignment.str2.segments[pos];
+			
+			if (symb1 > 1) pos1++;
+			if (symb2 > 1) pos2++;
+
+			if (symb1 == 1)
+			{
+				infoScores[pos] = InformationWeightedSequenceAlignment.getMeanInfoScore(str2Reduced, str2Reduced, pos2, pos2, infoModel2, infoModel2);
+			}
+			else if (symb2 == 1)
+			{
+				infoScores[pos] = InformationWeightedSequenceAlignment.getMeanInfoScore(str1Reduced, str1Reduced, pos1, pos1, infoModel1, infoModel1);
+			}
+			else
+			{
+				infoScores[pos] =  InformationWeightedSequenceAlignment.getMeanInfoScore(str1Reduced, str2Reduced, pos1, pos2, infoModel1, infoModel2);	
+			}
+		}
+		
+		return infoScores;
 	}
 }

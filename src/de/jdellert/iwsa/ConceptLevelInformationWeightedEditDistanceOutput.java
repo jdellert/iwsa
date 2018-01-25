@@ -22,7 +22,7 @@ import de.jdellert.iwsa.sequence.PhoneticString;
 import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
 
 public class ConceptLevelInformationWeightedEditDistanceOutput {
-	public static final boolean ALIGNMENT_OUTPUT = false;
+	public static final boolean ALIGNMENT_OUTPUT = true;
 	public static final boolean USE_LOCAL_MODELS = true;
 
 	public static void main(String[] args) {
@@ -103,7 +103,7 @@ public class ConceptLevelInformationWeightedEditDistanceOutput {
 				if (localCorrModels == null) {
 					System.err.print("Stage 2: Inference of sound correspondence matrices for each language pair\n");
 					localCorrModels = CorrespondenceModelInference.inferLocalCorrespondenceModels(database, symbolTable,
-							relevantLangIDs, globalCorrModel);
+							relevantLangIDs, globalCorrModel, infoModels);
 					CorrespondenceModelStorage.writeLocalModelsToFile(localCorrModels, database.getLanguageCodes(),
 							symbolTable, args[0] + "-local.corr");
 				}
