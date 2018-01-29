@@ -113,7 +113,7 @@ public class InformationWeightedSequenceAlignment extends PhoneticStringAlignmen
 			InformationModel infoModel1, InformationModel infoModel2) {
 		double infoContent1 = infoModel1.informationContent(str1.segments, pos1);
 		double infoContent2 = infoModel2.informationContent(str2.segments, pos2);
-		return Math.sqrt((infoContent1 + infoContent2) / 2);
+		return Math.sqrt((infoContent1 * infoContent1 + infoContent2 * infoContent2) / 2);
 	}
 	
 	public static double getCorrespondenceScore(CorrespondenceModel gloCorrModel, CorrespondenceModel locCorrModel,
