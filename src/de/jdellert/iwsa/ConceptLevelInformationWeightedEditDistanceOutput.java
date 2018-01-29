@@ -22,8 +22,8 @@ import de.jdellert.iwsa.sequence.PhoneticString;
 import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
 
 public class ConceptLevelInformationWeightedEditDistanceOutput {
-	public static final boolean ALIGNMENT_OUTPUT = true;
-	public static final boolean USE_LOCAL_MODELS = true;
+	public static final boolean ALIGNMENT_OUTPUT = false;
+	public static final boolean USE_LOCAL_MODELS = false;
 
 	public static void main(String[] args) {
 		try {
