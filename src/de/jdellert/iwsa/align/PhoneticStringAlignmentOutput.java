@@ -128,7 +128,7 @@ public class PhoneticStringAlignmentOutput {
 			}
 			else
 			{
-				corrScoreSum += corrScoreSum * InformationWeightedSequenceAlignment.getMeanInfoScore(str1Reduced, str2Reduced, pos1, pos2, infoModel1, infoModel2);
+				corrScoreSum += corrScore * InformationWeightedSequenceAlignment.getMeanInfoScore(str1Reduced, str2Reduced, pos1, pos2, infoModel1, infoModel2);
 				selfSimScoreSum1 += selfSimScore1 * InformationWeightedSequenceAlignment.getMeanInfoScore(str1Reduced, str1Reduced, pos1, pos1, infoModel1, infoModel1);
 				selfSimScoreSum2 += selfSimScore2 * InformationWeightedSequenceAlignment.getMeanInfoScore(str2Reduced, str2Reduced, pos2, pos2, infoModel2, infoModel2);		
 			}
