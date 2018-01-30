@@ -6,7 +6,6 @@ import java.util.List;
 import de.jdellert.iwsa.corrmodel.CorrespondenceModel;
 import de.jdellert.iwsa.infomodel.InformationModel;
 import de.jdellert.iwsa.sequence.PhoneticString;
-import de.jdellert.iwsa.util.io.Formatting;
 
 public class InformationWeightedSequenceAlignment extends PhoneticStringAlignment {
 	public static PhoneticStringAlignment constructAlignment(PhoneticString str1, PhoneticString str2, CorrespondenceModel gloCorrModel,
