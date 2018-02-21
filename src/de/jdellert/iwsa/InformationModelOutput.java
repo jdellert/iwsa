@@ -31,9 +31,8 @@ public class InformationModelOutput {
 				System.exit(1);
 			}
 
-			InformationModel model = InformationModelInference.inferInformationModelForLanguage(langID, database,
-					symbolTable);
-			model.printCounts(System.out);
+			InformationModel model = InformationModelInference.inferInformationModelForLanguage(langID, database, symbolTable);
+			model.printCounts(System.out, false);
 
 		} catch (IOException e) {
 			// TODO Auto-generated catch block

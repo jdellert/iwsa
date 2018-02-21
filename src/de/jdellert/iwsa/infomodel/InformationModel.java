@@ -114,7 +114,7 @@ public class InformationModel {
 		return symbolA * numSymbols * numSymbols + symbolB * numSymbols + symbolC;
 	}
 
-	public void printCounts(OutputStream output) throws IOException {
+	public void printCounts(OutputStream output, boolean smoothing) throws IOException {
 		BufferedWriter out = new BufferedWriter(new OutputStreamWriter(output));
 		for (int a = 0; a < symbolTable.getSize(); a++) {
 			if (a == 1)
@@ -122,15 +122,17 @@ public class InformationModel {
 			for (int b = 0; b < symbolTable.getSize(); b++) {
 				if (b == 1)
 					continue;
-				int abCount = trigramCount(a, b, 1);
-				if (abCount > 0) {
+				double abCount = trigramCount(a, b, 1);
+				if (smoothing) abCount = smoothedGappyBigramCount(a, b, 1);
+				if (abCount >= 1.0) {
 					String abString = symbolTable.toSymbol(a) + symbolTable.toSymbol(b);
 					out.write(abString + "-" + ":" + abCount);
 					for (int c = 0; c < symbolTable.getSize(); c++) {
 						if (c == 1)
 							continue;
-						int abcCount = trigramCount(a, b, c);
-						if (abcCount > 0) {
+						double abcCount = trigramCount(a, b, c);
+						if (smoothing) abcCount = smoothedTrigramCount(a, b, c);
+						if (abcCount > 0.002) {
 							out.write(" " + abString + symbolTable.toSymbol(c) + ":" + abcCount);
 						}
 					}
@@ -144,16 +146,18 @@ public class InformationModel {
 			for (int c = 0; c < symbolTable.getSize(); c++) {
 				if (c == 1)
 					continue;
-				int acCount = trigramCount(a, 1, c);
-				if (acCount > 0) {
+				double acCount = trigramCount(a, 1, c);
+				if (smoothing) acCount = smoothedGappyBigramCount(a, 1, c);
+				if (acCount >= 1.0) {
 					String aString = symbolTable.toSymbol(a);
 					String cString = symbolTable.toSymbol(c);
 					out.write(aString + "-" + cString + ":" + acCount);
 					for (int b = 0; b < symbolTable.getSize(); b++) {
 						if (b == 1)
 							continue;
-						int abcCount = trigramCount(a, b, c);
-						if (abcCount > 0) {
+						double abcCount = trigramCount(a, b, c);
+						if (smoothing) abcCount = smoothedTrigramCount(a, b, c);
+						if (abcCount > 0.002) {
 							out.write(" " + aString + symbolTable.toSymbol(b) + cString + ":" + abcCount);
 						}
 					}
@@ -167,15 +171,17 @@ public class InformationModel {
 			for (int c = 0; c < symbolTable.getSize(); c++) {
 				if (c == 1)
 					continue;
-				int bcCount = trigramCount(1, b, c);
-				if (bcCount > 0) {
+				double bcCount = trigramCount(1, b, c);
+				if (smoothing) bcCount = smoothedGappyBigramCount(1, b, c);
+				if (bcCount >= 1.0) {
 					String bcString = symbolTable.toSymbol(b) + symbolTable.toSymbol(c);
 					out.write("-" + bcString + ":" + bcCount);
 					for (int a = 0; a < symbolTable.getSize(); a++) {
 						if (a == 1)
 							continue;
-						int abcCount = trigramCount(a, b, c);
-						if (abcCount > 0) {
+						double abcCount = trigramCount(a, b, c);
+						if (smoothing) abcCount = smoothedTrigramCount(a, b, c);
+						if (abcCount > 0.002) {
 							out.write(" " + symbolTable.toSymbol(a) + bcString + ":" + abcCount);
 						}
 					}
