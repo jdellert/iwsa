@@ -80,13 +80,14 @@ public class AllDistancesForWordPairFile {
 
 			} catch (FileNotFoundException e) {
 				System.err.print(" file not found, need to infer pairwise correspondence models first.\n");
+				
 			} catch (IOException e) {
 				System.err.print(" format error, need to reinfer pairwise correspondence models.\n");
 			} catch (ClassNotFoundException e) {
 				e.printStackTrace();
 				System.exit(0);
 			}
-			if (globalCorrModel == null) {
+			if (localCorrModels == null) {
 				System.err.println("No local PMI scores found! Run local PMI scores inference to create " + args[0]
 						+ "-local.corr\n");
 				System.exit(1);
@@ -98,7 +99,7 @@ public class AllDistancesForWordPairFile {
 				
 				List<String[]> lines = SimpleFormatReader.arrayFromTSV(goldStandardFileName);
 				
-		        System.out.println("concept\tlang1\torth1\tpron1\tid1\tlang2\torth2\tpron2\tid2\tcognacy\tED\tlocalWED\tglobalWED\tcombinedWED\tlocalIWED\tglobalIWED\tcombinedIWED");
+		        System.out.println("concept\tlang1\torth1\tpron1\tid1\tlang2\torth2\tpron2\tid2\tcognacy\tED\tlocalNWD\tglobalNWD\tcombinedNWD\tlocalIWD\tglobalIWD\tcombinedIWD");
 		        
 		        for (String[] line : lines)
 		        {

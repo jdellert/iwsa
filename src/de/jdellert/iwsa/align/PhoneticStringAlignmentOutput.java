@@ -112,8 +112,8 @@ public class PhoneticStringAlignmentOutput {
 			double infoScore2 = 0.0;
 			if (symb2 > 1) infoScore2 = InformationWeightedSequenceAlignment.getInfoScore(str2Reduced, pos2, infoModel2);
 			
-			double selfSimScore1 = selfSimModel1.getScore(symb1, symb1);
-			double selfSimScore2 = selfSimModel2.getScore(symb2, symb2);
+			double selfSimScore1 = getCorrespondenceScore(gloCorrModel, selfSimModel1, symb1, symb1);
+			double selfSimScore2 = getCorrespondenceScore(gloCorrModel, selfSimModel2, symb2, symb2);
 			double corrScore = getCorrespondenceScore(gloCorrModel, locCorrModel, symb1, symb2);
 
 			if (symb1 == 1)

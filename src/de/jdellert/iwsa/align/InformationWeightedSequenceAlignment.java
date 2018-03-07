@@ -65,11 +65,11 @@ public class InformationWeightedSequenceAlignment extends PhoneticStringAlignmen
 		double similarityScore = mtx[m - 1][n - 1];
 		double str1SelfSimilarity = 0.0;
 		for (int i = 0; i < str1.getLength(); i++) {
-			str1SelfSimilarity += selfSimModel1.getScore(str1.segments[i], str1.segments[i]) * getMeanInfoScore(str1, str1, i, i, infoModel1, infoModel1);
+			str1SelfSimilarity += getCorrespondenceScore(gloCorrModel, selfSimModel1, str1.segments[i], str1.segments[i]) * getMeanInfoScore(str1, str1, i, i, infoModel1, infoModel1);
 		}
 		double str2SelfSimilarity = 0.0;
 		for (int j = 0; j < str2.getLength(); j++) {
-			str2SelfSimilarity += selfSimModel2.getScore(str2.segments[j], str2.segments[j]) * getMeanInfoScore(str2, str2, j, j, infoModel2, infoModel2);
+			str2SelfSimilarity += getCorrespondenceScore(gloCorrModel, selfSimModel2, str2.segments[j], str2.segments[j]) * getMeanInfoScore(str2, str2, j, j, infoModel2, infoModel2);
 		}
 		double normalizedDistanceScore = 1 - (2 * similarityScore) / (str1SelfSimilarity + str2SelfSimilarity);
 

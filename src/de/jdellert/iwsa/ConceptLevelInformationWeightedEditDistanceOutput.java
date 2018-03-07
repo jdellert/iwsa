@@ -22,8 +22,8 @@ import de.jdellert.iwsa.sequence.PhoneticString;
 import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
 
 public class ConceptLevelInformationWeightedEditDistanceOutput {
-	public static final boolean ALIGNMENT_OUTPUT = true;
-	public static final boolean USE_LOCAL_MODELS = false;
+	public static final boolean ALIGNMENT_OUTPUT = false;
+	public static final boolean USE_LOCAL_MODELS = true;
 
 	public static void main(String[] args) {
 		try {
@@ -148,13 +148,13 @@ public class ConceptLevelInformationWeightedEditDistanceOutput {
 							if (USE_LOCAL_MODELS) {
 								PhoneticStringAlignment localWeightsAlignment = InformationWeightedSequenceAlignment
 										.constructAlignment(lang1Form, lang2Form, globalCorrModel,
-												localCorrModels[lang1ID][lang2ID], localCorrModels[lang1ID][lang1ID],
-												localCorrModels[lang2ID][lang2ID], infoModels[lang1ID],
+												localCorrModels[lang1ID][lang2ID], localCorrModels[lang1ID][lang2ID],
+												localCorrModels[lang2ID][lang1ID], infoModels[lang1ID],
 												infoModels[lang2ID]);
 								if (ALIGNMENT_OUTPUT)
 									System.out.println(PhoneticStringAlignmentOutput.iwsaToString(localWeightsAlignment,
 											symbolTable, globalCorrModel, localCorrModels[lang1ID][lang2ID],
-											localCorrModels[lang1ID][lang1ID], localCorrModels[lang2ID][lang2ID],
+											localCorrModels[lang1ID][lang2ID], localCorrModels[lang2ID][lang1ID],
 											infoModels[lang1ID], infoModels[lang2ID]));
 								double localWeightDistance = localWeightsAlignment.normalizedDistanceScore;
 								double minDistance = Math.min(globalWeightDistance, localWeightDistance);
@@ -186,8 +186,8 @@ public class ConceptLevelInformationWeightedEditDistanceOutput {
 					double globalWeightDistance = globalWeightsAlignment.normalizedDistanceScore;
 					PhoneticStringAlignment localWeightsAlignment = InformationWeightedSequenceAlignment
 							.constructAlignment(lang1Form, lang2Form, globalCorrModel,
-									localCorrModels[lang1ID][lang2ID], localCorrModels[lang1ID][lang1ID],
-									localCorrModels[lang2ID][lang2ID], infoModels[lang1ID], infoModels[lang2ID]);
+									localCorrModels[lang1ID][lang2ID], localCorrModels[lang1ID][lang2ID],
+									localCorrModels[lang2ID][lang1ID], infoModels[lang1ID], infoModels[lang2ID]);
 					double localWeightDistance = localWeightsAlignment.normalizedDistanceScore;
 					double minDistance = Math.min(globalWeightDistance, localWeightDistance);
 					System.out.print(database.getConceptName(conceptID) + "\t");

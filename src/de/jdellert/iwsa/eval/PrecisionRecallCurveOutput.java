@@ -50,13 +50,27 @@ public class PrecisionRecallCurveOutput {
 				// sort resulting list of distances in ascending order
 				int numCognates = 0;
 				List<RankingEntry<Boolean>> distancesRanking = new ArrayList<RankingEntry<Boolean>>();
-				for (String[] line : lines) {
+				//first the non-cognates (worst possible result if distances are tied)
+				for (String[] line : lines)
+				{
+					boolean cognate = line[startIndex].equals("T") ? true : false;
+					if (!cognate)
+					{
+						Double distanceValue = Double.parseDouble(line[i]);
+						distancesRanking.add(new RankingEntry<Boolean>(cognate, distanceValue));
+					}
+				}
+				for (String[] line : lines)
+				{
 					boolean cognate = line[startIndex].equals("T") ? true : false;
 					if (cognate)
+					{	
 						numCognates++;
-					Double distanceValue = Double.parseDouble(line[i]);
-					distancesRanking.add(new RankingEntry<Boolean>(cognate, distanceValue));
+						Double distanceValue = Double.parseDouble(line[i]);
+						distancesRanking.add(new RankingEntry<Boolean>(cognate, distanceValue));
+					}
 				}
+				//stable sort guaranteed => false instances will come first!
 				Collections.sort(distancesRanking);
 
 				// evaluate precision and recall for the top-k elements in each list (i.e.
@@ -64,7 +78,7 @@ public class PrecisionRecallCurveOutput {
 				double bestFscore = 0.0;
 				double bestThresh = 0.0;
 				double bestRecall = 0.0;
-				double lastRecall = 0.0;
+				double lastRecallThreshold = 0.000;
 				double averagePrecision = 0.0;
 				double tp = 0.0;
 				double tn = distancesRanking.size() - numCognates + 0.0;
@@ -95,8 +109,11 @@ public class PrecisionRecallCurveOutput {
 					}
 
 					// while doing this, also compute the average precision for each method
-					averagePrecision += precision * (recall - lastRecall);
-					lastRecall = recall;
+					while (recall > lastRecallThreshold)
+					{
+						averagePrecision += precision * 0.001;
+						lastRecallThreshold += 0.001;
+					}
 				}
 				System.out.println(variantName + "\t" + String.format("%.3f", averagePrecision).replace(",", ".") + "\t"
 						+ String.format("%.3f", bestFscore).replace(",", ".") + "\t"

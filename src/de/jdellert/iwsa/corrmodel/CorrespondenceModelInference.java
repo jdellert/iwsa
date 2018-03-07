@@ -21,8 +21,10 @@ public class CorrespondenceModelInference {
 	public static boolean VERBOSE = true;
 
 	public static double COGNACY_CANDIDATE_WED_THRESHOLD = 0.8;
-	public static int NUM_LOCAL_CORR_REESTIMATIONS = 2;
+	public static int NUM_LOCAL_CORR_REESTIMATIONS = 5;
 	public static int NUM_RANDOM_PAIRS_LOCAL = 100000;
+	
+	public static double LOCAL_PMI_RATIO = 1.0 / 3;
 
 	public static CorrespondenceModel inferGlobalCorrespondenceModel(LexicalDatabase database,
 			PhoneticSymbolTable symbolTable) {
@@ -343,7 +345,7 @@ public class CorrespondenceModelInference {
 						/ cognateCorrespondenceDistForPair.getObservationCountsSum());
 				double randomSymbolPairProbability = (randomCorrespondenceDistForPair.getBigramCount(symbolPairID)
 						/ randomCorrespondenceDistForPair.getObservationCountsSum());
-				if (randomCorrespondenceDistForPair.getBigramCount(symbolPairID) > 0) {
+				if (cij > 0 && randomCorrespondenceDistForPair.getBigramCount(symbolPairID) > 0) {
 					pmiScore = Math.log(cognateSymbolPairProbability / randomSymbolPairProbability);
 				}
 				// double cognateSymbolPairProbability =
@@ -352,7 +354,8 @@ public class CorrespondenceModelInference {
 				// randomCorrespondenceDistForPair.getProb(symbolPairID);
 				// double pmiScore = Math.log(cognateSymbolPairProbability /
 				// randomSymbolPairProbability);
-				double avgScore = cij / (cij + 5) * pmiScore + 5.0 / (cij + 5) * globalCorr.getScore(symbolPairID);
+				double avgScore = LOCAL_PMI_RATIO * pmiScore + (1 - LOCAL_PMI_RATIO) * globalCorr.getScore(symbolPairID);
+				//double avgScore = cij / (cij + 5) * pmiScore + 5.0 / (cij + 5) * globalCorr.getScore(symbolPairID);
 				// if (pmiScore > avgScore) avgScore = pmiScore;
 				if (Math.abs(avgScore) > 0.1) {
 					localCorr.setScore(symbolPairID, avgScore);

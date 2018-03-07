@@ -39,9 +39,6 @@ public class RankingEntry<T> implements Comparable<RankingEntry<T>> {
 			return -1;
 		if (this.value > otherEntry.value)
 			return 1;
-		if (key instanceof Comparable<?>) {
-			return -((Comparable) this.key).compareTo((Comparable) otherEntry.key);
-		}
 		return 0;
 	}
 
