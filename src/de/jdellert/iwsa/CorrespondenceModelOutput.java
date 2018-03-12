@@ -43,19 +43,19 @@ public class CorrespondenceModelOutput {
 			}
 
 		}
-		//extract local correspondence model for a language pair
+		// extract local correspondence model for a language pair
 		if (args.length == 3) {
 			String lang1 = args[1];
 			String lang2 = args[2];
-			Map<String,Integer> relevantLangToID = new TreeMap<String,Integer>();
+			Map<String, Integer> relevantLangToID = new TreeMap<String, Integer>();
 			relevantLangToID.put(lang1, 0);
 			relevantLangToID.put(lang2, 1);
 			CorrespondenceModel[][] localCorrModels = null;
 			try {
 				System.err.print(
-						"Attempting to load existing global correspondence model from " + args[0] + "-local.corr ... ");
-				localCorrModels = CorrespondenceModelStorage
-						.loadCorrespondenceModels(new ObjectInputStream(new FileInputStream(args[0] + "-local.corr")), relevantLangToID);
+						"Attempting to load existing local correspondence model from " + args[0] + "-local.corr ... ");
+				localCorrModels = CorrespondenceModelStorage.loadCorrespondenceModels(
+						new ObjectInputStream(new FileInputStream(args[0] + "-local.corr")), relevantLangToID);
 				System.err.print(
 						"done.\nStage 2: Pairwise sound correspondences - skipped because previously inferred models were found. Delete model file and rerun to cause re-inference.\n");
 
@@ -67,13 +67,16 @@ public class CorrespondenceModelOutput {
 				e.printStackTrace();
 				System.exit(0);
 			}
-			
+
 			PhoneticSymbolTable symbolTable = localCorrModels[0][1].getSymbolTable();
 			for (int symbol1ID = 0; symbol1ID < symbolTable.getSize(); symbol1ID++) {
 				for (int symbol2ID = 0; symbol2ID < symbolTable.getSize(); symbol2ID++) {
-					System.out.print(symbolTable.toSymbol(symbol1ID) + "\t");
-					System.out.print(symbolTable.toSymbol(symbol2ID) + "\t");
-					System.out.print(localCorrModels[0][1].getScore(symbol1ID, symbol2ID) + "\n");
+					double score = localCorrModels[0][1].getScore(symbol1ID, symbol2ID);
+					if (score != 0.0) {
+						System.out.print(symbolTable.toSymbol(symbol1ID) + "\t");
+						System.out.print(symbolTable.toSymbol(symbol2ID) + "\t");
+						System.out.print(score + "\n");
+					}
 				}
 			}
 		}

@@ -64,7 +64,7 @@ public class ConceptLevelInformationWeightedEditDistanceOutput {
 				System.err.print("Attempting to load existing global correspondence model from " + args[0]
 						+ "-global.corr ... ");
 				globalCorrModel = CorrespondenceModelStorage
-						.loadCorrespondenceModel(new ObjectInputStream(new FileInputStream(args[0] + "-global.corr")));
+						.loadCorrespondenceModel(new ObjectInputStream(new FileInputStream(args[0] + "-global-iw.corr")));
 				System.err.print(
 						"done.\nStage 1: Global sound correspondences - skipped because previously inferred model was found. Delete model file and rerun to cause re-inference.\n");
 			} catch (FileNotFoundException e) {
@@ -77,18 +77,17 @@ public class ConceptLevelInformationWeightedEditDistanceOutput {
 			}
 			if (globalCorrModel == null) {
 				System.err.print("Stage 1: Inference of global PMI scores\n");
-				globalCorrModel = CorrespondenceModelInference.inferGlobalCorrespondenceModel(database, symbolTable);
-				CorrespondenceModelStorage.writeGlobalModelToFile(globalCorrModel, args[0] + "-global.corr");
-
+				globalCorrModel = CorrespondenceModelInference.inferGlobalCorrespondenceModel(database, symbolTable, infoModels);
+				CorrespondenceModelStorage.writeGlobalModelToFile(globalCorrModel, args[0] + "-global-iw.corr");
 			}
 
 			CorrespondenceModel[][] localCorrModels = null;
 			if (USE_LOCAL_MODELS) {
 				try {
 					System.err.print("Attempting to load existing local correspondence models from " + args[0]
-							+ "-local.corr ... ");
+							+ "-local-iw.corr ... ");
 					localCorrModels = CorrespondenceModelStorage.loadCorrespondenceModels(
-							new ObjectInputStream(new FileInputStream(args[0] + "-local.corr")), relevantLangToID);
+							new ObjectInputStream(new FileInputStream(args[0] + "-local-iw.corr")), relevantLangToID);
 					System.err.print(
 							"done.\nStage 2: Pairwise sound correspondences - skipped because previously inferred models were found. Delete model file and rerun to cause re-inference.\n");
 
@@ -105,7 +104,7 @@ public class ConceptLevelInformationWeightedEditDistanceOutput {
 					localCorrModels = CorrespondenceModelInference.inferLocalCorrespondenceModels(database, symbolTable,
 							relevantLangIDs, globalCorrModel, infoModels);
 					CorrespondenceModelStorage.writeLocalModelsToFile(localCorrModels, database.getLanguageCodes(),
-							symbolTable, args[0] + "-local.corr");
+							symbolTable, args[0] + "-local-iw.corr");
 				}
 			}
 

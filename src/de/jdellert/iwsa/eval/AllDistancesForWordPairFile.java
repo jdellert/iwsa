@@ -47,14 +47,13 @@ public class AllDistancesForWordPairFile {
 				relevantLangToID.put(relevantLangCodes[langID], relevantLangIDs[langID]);
 			}
 
-			CorrespondenceModel globalCorrModel = null;
+			CorrespondenceModel globalCorrModelNW = null;
 			try {
-				System.err.print("Attempting to load existing global correspondence model from " + args[0]
-						+ "-global.corr ... ");
-				globalCorrModel = CorrespondenceModelStorage
-						.loadCorrespondenceModel(new ObjectInputStream(new FileInputStream(args[0] + "-global.corr")));
-				System.err.print(
-						"done.\nStage 1: Global sound correspondences - skipped because previously inferred model was found. Delete model file and rerun to cause re-inference.\n");
+				System.err.print("Attempting to load existing global correspondence model without information weighting from " + args[0]
+						+ "-global-nw.corr ... ");
+				globalCorrModelNW = CorrespondenceModelStorage
+						.loadCorrespondenceModel(new ObjectInputStream(new FileInputStream(args[0] + "-global-nw.corr")));
+				System.err.print("done.\n");
 			} catch (FileNotFoundException e) {
 				System.err.print(" file not found, need to infer global model first.\n");
 			} catch (IOException e) {
@@ -63,20 +62,41 @@ public class AllDistancesForWordPairFile {
 				e.printStackTrace();
 				System.exit(0);
 			}
-			if (globalCorrModel == null) {
+			if (globalCorrModelNW == null) {
 				System.err.println("No global PMI scores found! Run global PMI scores inference to create " + args[0]
-						+ "-global.corr\n");
+						+ "-global-nw.corr\n");
+				System.exit(1);
+			}
+			
+			CorrespondenceModel globalCorrModelIW = null;
+			try {
+				System.err.print("Attempting to load existing global correspondence model with information weighting from " + args[0]
+						+ "-global-iw.corr ... ");
+				globalCorrModelIW = CorrespondenceModelStorage
+						.loadCorrespondenceModel(new ObjectInputStream(new FileInputStream(args[0] + "-global-iw.corr")));
+				System.err.print("done.\n");
+			} catch (FileNotFoundException e) {
+				System.err.print(" file not found, need to infer global model first.\n");
+			} catch (IOException e) {
+				System.err.print(" format error, need to reinfer global model.\n");
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
+				System.exit(0);
+			}
+			if (globalCorrModelIW == null) {
+				System.err.println("No global PMI scores found! Run global PMI scores inference to create " + args[0]
+						+ "-global-iw.corr\n");
 				System.exit(1);
 			}
 
-			CorrespondenceModel[][] localCorrModels = null;
+			CorrespondenceModel[][] localCorrModelsNW = null;
 			try {
 				System.err.print(
-						"Attempting to load existing local correspondence models from " + args[0] + "-local.corr ... ");
-				localCorrModels = CorrespondenceModelStorage.loadCorrespondenceModels(
-						new ObjectInputStream(new FileInputStream(args[0] + "-local.corr")), relevantLangToID);
+						"Attempting to load existing local correspondence models without information weighting from " + args[0] + "-local-nw.corr ... ");
+				localCorrModelsNW = CorrespondenceModelStorage.loadCorrespondenceModels(
+						new ObjectInputStream(new FileInputStream(args[0] + "-local-nw.corr")), relevantLangToID);
 				System.err.print(
-						"done.\nStage 2: Pairwise sound correspondences - skipped because previously inferred models were found. Delete model file and rerun to cause re-inference.\n");
+						"done.\n");
 
 			} catch (FileNotFoundException e) {
 				System.err.print(" file not found, need to infer pairwise correspondence models first.\n");
@@ -87,9 +107,33 @@ public class AllDistancesForWordPairFile {
 				e.printStackTrace();
 				System.exit(0);
 			}
-			if (localCorrModels == null) {
+			if (localCorrModelsNW == null) {
 				System.err.println("No local PMI scores found! Run local PMI scores inference to create " + args[0]
-						+ "-local.corr\n");
+						+ "-local-nw.corr\n");
+				System.exit(1);
+			}
+			
+			CorrespondenceModel[][] localCorrModelsIW = null;
+			try {
+				System.err.print(
+						"Attempting to load existing local correspondence models without information weighting from " + args[0] + "-local-iw.corr ... ");
+				localCorrModelsIW = CorrespondenceModelStorage.loadCorrespondenceModels(
+						new ObjectInputStream(new FileInputStream(args[0] + "-local-iw.corr")), relevantLangToID);
+				System.err.print(
+						"done.\n");
+
+			} catch (FileNotFoundException e) {
+				System.err.print(" file not found, need to infer pairwise correspondence models first.\n");
+				
+			} catch (IOException e) {
+				System.err.print(" format error, need to reinfer pairwise correspondence models.\n");
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
+				System.exit(0);
+			}
+			if (localCorrModelsIW == null) {
+				System.err.println("No local PMI scores found! Run local PMI scores inference to create " + args[0]
+						+ "-local-iw.corr\n");
 				System.exit(1);
 			}
 
@@ -134,20 +178,20 @@ public class AllDistancesForWordPairFile {
 		        	
 		        	
 					PhoneticStringAlignment globalWeightsAlignment = NeedlemanWunschAlgorithm
-							.constructAlignment(lang1Form, lang2Form, globalCorrModel, globalCorrModel, globalCorrModel, globalCorrModel);
+							.constructAlignment(lang1Form, lang2Form, globalCorrModelNW, globalCorrModelNW, globalCorrModelNW, globalCorrModelNW);
 					double globalWED = globalWeightsAlignment.normalizedDistanceScore;
-					//System.out.println(PhoneticStringAlignmentOutput.needlemanWunschtoString(globalWeightsAlignment, symbolTable, globalCorrModel, globalCorrModel, globalCorrModel, globalCorrModel));
+					System.out.println(PhoneticStringAlignmentOutput.needlemanWunschtoString(globalWeightsAlignment, symbolTable, globalCorrModelNW, globalCorrModelNW, globalCorrModelNW, globalCorrModelNW));
 					PhoneticStringAlignment localWeightsAlignment = NeedlemanWunschAlgorithm
-							.constructAlignment(lang1Form, lang2Form, globalCorrModel, localCorrModels[lang1ID][lang2ID], localCorrModels[lang1ID][lang1ID], localCorrModels[lang2ID][lang2ID]);
-					//System.out.println(PhoneticStringAlignmentOutput.needlemanWunschtoString(localWeightsAlignment, symbolTable, globalCorrModel, localCorrModels[lang1ID][lang2ID], localCorrModels[lang1ID][lang1ID], localCorrModels[lang2ID][lang2ID]));
+							.constructAlignment(lang1Form, lang2Form, globalCorrModelNW, localCorrModelsNW[lang1ID][lang2ID], localCorrModelsNW[lang1ID][lang1ID], localCorrModelsNW[lang2ID][lang2ID]);
+					System.out.println(PhoneticStringAlignmentOutput.needlemanWunschtoString(localWeightsAlignment, symbolTable, globalCorrModelNW, localCorrModelsNW[lang1ID][lang2ID], localCorrModelsNW[lang1ID][lang1ID], localCorrModelsNW[lang2ID][lang2ID]));
 					double localWED = localWeightsAlignment.normalizedDistanceScore;
 					double combinedWED = Math.min(globalWED, localWED);
 					
 					PhoneticStringAlignment globalInfoWeightsAlignment = InformationWeightedSequenceAlignment
-							.constructAlignment(lang1Form, lang2Form, globalCorrModel, globalCorrModel, globalCorrModel, globalCorrModel, infoModels[lang1ID], infoModels[lang2ID]);
+							.constructAlignment(lang1Form, lang2Form, globalCorrModelIW, globalCorrModelIW, globalCorrModelIW, globalCorrModelIW, infoModels[lang1ID], infoModels[lang2ID]);
 					double globalIWED = globalInfoWeightsAlignment.normalizedDistanceScore;
 					PhoneticStringAlignment localInfoWeightsAlignment = InformationWeightedSequenceAlignment
-							.constructAlignment(lang1Form, lang2Form, globalCorrModel, localCorrModels[lang1ID][lang2ID], localCorrModels[lang1ID][lang1ID], localCorrModels[lang2ID][lang2ID], infoModels[lang1ID], infoModels[lang2ID]);
+							.constructAlignment(lang1Form, lang2Form, globalCorrModelIW, localCorrModelsIW[lang1ID][lang2ID], localCorrModelsIW[lang1ID][lang1ID], localCorrModelsIW[lang2ID][lang2ID], infoModels[lang1ID], infoModels[lang2ID]);
 					double localIWED = localInfoWeightsAlignment.normalizedDistanceScore;
 					double combinedIWED = Math.min(globalIWED, localIWED);
 		        	

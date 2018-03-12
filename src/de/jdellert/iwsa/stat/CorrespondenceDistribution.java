@@ -9,10 +9,6 @@ public class CorrespondenceDistribution {
 	double[] bigramObservations;
 	double observationCountsSum;
 
-	// actual probabilities are computed based on Jelinek-Mercer smoothing
-	SmoothingMethod smoothingMethod = SmoothingMethod.NONE;
-	double smoothingMassRatio = 0.2; // used for SmoothingMethod.LAPLACE
-
 	public CorrespondenceDistribution(int k) {
 		this.k = k;
 		this.unigramObservations1 = new double[k];
@@ -63,8 +59,7 @@ public class CorrespondenceDistribution {
 	}
 
 	/**
-	 * Returns the probability with Jelinek-Mercer smoothing (interpolation of
-	 * unigram and bigram models)
+	 * Returns the probability with Jelinek-Mercer smoothing (interpolation of unigram and bigram models)
 	 * 
 	 * @param i
 	 *            segmentID in lang1, j segmentID in lang2
@@ -76,8 +71,7 @@ public class CorrespondenceDistribution {
 		double ci = unigramObservations1[i];
 		double cj = unigramObservations2[j];
 		double prob = cij / (cij + 1) * (cij / sum) + 1 / (cij + 1) * (ci / sum) * (cj / sum);
-		System.err.println("prob: " + prob + " (sum: " + (int) sum + " cij: " + (int) cij + " ci: " + (int) ci + " cj: "
-				+ (int) cj + ")");
+		//System.err.println("prob: " + prob + " (sum: " + (int) sum + " cij: " + (int) cij + " ci: " + (int) ci + " cj: " + (int) cj + ")");
 		return prob;
 	}
 

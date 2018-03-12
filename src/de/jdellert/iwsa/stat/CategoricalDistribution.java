@@ -6,7 +6,7 @@ public class CategoricalDistribution {
 	double observationCountsSum;
 
 	// actual probabilities are computed based on smoothing
-	SmoothingMethod smoothingMethod = SmoothingMethod.NONE;
+	SmoothingMethod smoothingMethod = SmoothingMethod.LAPLACE;
 	double smoothingMassRatio = 0.2; //used for SmoothingMethod.LAPLACE
 
 	public CategoricalDistribution(int k, SmoothingMethod smoothingMethod) {

@@ -24,10 +24,10 @@ public class PrecisionRecallCurveOutput {
 			System.exit(0);
 		}
 
-		// for cognacy: min precision = 0.85
+		// for cognacy: min precision = 0.9
 		// minPrecision = 0.9;
 
-		double minPrecision = 0.6;
+		double minPrecision = 0.0;
 
 		try {
 			// load the gold standard pairs
@@ -37,7 +37,7 @@ public class PrecisionRecallCurveOutput {
 			// start index determining where the values start
 			int startIndex = Integer.parseInt(args[1]);
 
-			System.out.println("variant\taveP\tFsco\tThre\tReca");
+			System.out.println("variant\taveP\tFsco\tPrec\tReca\tThre");
 
 			String[] columnNames = lines.remove(0);
 			for (int i = startIndex + 1; i < columnNames.length; i++) {
@@ -76,8 +76,9 @@ public class PrecisionRecallCurveOutput {
 				// evaluate precision and recall for the top-k elements in each list (i.e.
 				// assuming that the threshold is at k-th value)
 				double bestFscore = 0.0;
-				double bestThresh = 0.0;
+				double bestPrecision = 0.0;
 				double bestRecall = 0.0;
+				double bestThresh = 0.0;
 				double lastRecallThreshold = 0.000;
 				double averagePrecision = 0.0;
 				double tp = 0.0;
@@ -104,8 +105,9 @@ public class PrecisionRecallCurveOutput {
 
 					if (precision >= minPrecision && fscore > bestFscore) {
 						bestFscore = fscore;
-						bestThresh = entry.value;
+						bestPrecision = precision;
 						bestRecall = recall;
+						bestThresh = entry.value;
 					}
 
 					// while doing this, also compute the average precision for each method
@@ -117,8 +119,9 @@ public class PrecisionRecallCurveOutput {
 				}
 				System.out.println(variantName + "\t" + String.format("%.3f", averagePrecision).replace(",", ".") + "\t"
 						+ String.format("%.3f", bestFscore).replace(",", ".") + "\t"
-						+ String.format("%.3f", bestThresh).replace(",", ".") + "\t"
-						+ String.format("%.3f", bestRecall).replace(",", "."));
+						+ String.format("%.3f", bestPrecision).replace(",", ".") + "\t"
+						+ String.format("%.3f", bestRecall).replace(",", ".") + "\t"
+						+ String.format("%.3f", bestThresh).replace(",", "."));
 				out.close();
 			}
 		} catch (FileNotFoundException e) {

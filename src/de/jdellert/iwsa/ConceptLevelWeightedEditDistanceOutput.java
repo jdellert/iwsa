@@ -22,15 +22,13 @@ import de.jdellert.iwsa.sequence.PhoneticString;
 import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
 
 public class ConceptLevelWeightedEditDistanceOutput {
-	public static final boolean ALIGNMENT_OUTPUT = true;
+	public static final boolean ALIGNMENT_OUTPUT = false;
 	public static final boolean USE_LOCAL_MODELS = true;
 	
 	public static void main(String[] args) {
 		try {
 			LexicalDatabase database = CLDFImport.loadDatabase(args[0], true);
 			PhoneticSymbolTable symbolTable = database.getSymbolTable();
-			
-			InformationModel[] infoModels = InformationModelInference.inferInformationModels(database, symbolTable);
 
 			// default: assume all languages are relevant, and part of the inference
 			String[] relevantLangCodes = database.getLanguageCodes();
@@ -63,9 +61,9 @@ public class ConceptLevelWeightedEditDistanceOutput {
 			CorrespondenceModel globalCorrModel = null;
 			try {
 				System.err.print("Attempting to load existing global correspondence model from " + args[0]
-						+ "-global.corr ... ");
+						+ "-global-nw.corr ... ");
 				globalCorrModel = CorrespondenceModelStorage
-						.loadCorrespondenceModel(new ObjectInputStream(new FileInputStream(args[0] + "-global.corr")));
+						.loadCorrespondenceModel(new ObjectInputStream(new FileInputStream(args[0] + "-global-nw.corr")));
 				System.err.print(
 						"done.\nStage 1: Global sound correspondences - skipped because previously inferred model was found. Delete model file and rerun to cause re-inference.\n");
 			} catch (FileNotFoundException e) {
@@ -79,16 +77,16 @@ public class ConceptLevelWeightedEditDistanceOutput {
 			if (globalCorrModel == null) {
 				System.err.print("Stage 1: Inference of global PMI scores\n");
 				globalCorrModel = CorrespondenceModelInference.inferGlobalCorrespondenceModel(database, symbolTable);
-				CorrespondenceModelStorage.writeGlobalModelToFile(globalCorrModel, args[0] + "-global.corr");
+				CorrespondenceModelStorage.writeGlobalModelToFile(globalCorrModel, args[0] + "-global-nw.corr");
 
 			}
 
 			CorrespondenceModel[][] localCorrModels = null;
 			try {
 				System.err.print(
-						"Attempting to load existing global correspondence model from " + args[0] + "-local.corr ... ");
+						"Attempting to load existing global correspondence model from " + args[0] + "-local-nw.corr ... ");
 				localCorrModels = CorrespondenceModelStorage
-						.loadCorrespondenceModels(new ObjectInputStream(new FileInputStream(args[0] + "-local.corr")), relevantLangToID);
+						.loadCorrespondenceModels(new ObjectInputStream(new FileInputStream(args[0] + "-local-nw.corr")), relevantLangToID);
 				System.err.print(
 						"done.\nStage 2: Pairwise sound correspondences - skipped because previously inferred models were found. Delete model file and rerun to cause re-inference.\n");
 
@@ -102,10 +100,9 @@ public class ConceptLevelWeightedEditDistanceOutput {
 			}
 			if (localCorrModels == null) {
 				System.err.print("Stage 2: Inference of sound correspondence matrices for each language pair\n");
-				localCorrModels = CorrespondenceModelInference.inferLocalCorrespondenceModels(database, symbolTable,
-						relevantLangIDs, globalCorrModel, infoModels);
+				localCorrModels = CorrespondenceModelInference.inferLocalCorrespondenceModels(database, symbolTable, relevantLangIDs, globalCorrModel);
 				CorrespondenceModelStorage.writeLocalModelsToFile(localCorrModels, database.getLanguageCodes(), symbolTable,
-						args[0] + "-local.corr");
+						args[0] + "-local-nw.corr");
 			}
 
 			// finally: output of distances
