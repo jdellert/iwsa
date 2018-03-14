@@ -24,7 +24,7 @@ import de.jdellert.iwsa.tokenize.IPATokenizer;
  */
 
 public class CLDFImport {
-	public static boolean VERBOSE = true;;
+	public static boolean VERBOSE = true;
 
 	public static LexicalDatabase loadDatabase(String fileName, boolean retokenize) throws IOException {
 

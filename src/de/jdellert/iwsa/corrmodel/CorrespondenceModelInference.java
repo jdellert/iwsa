@@ -2,7 +2,6 @@ package de.jdellert.iwsa.corrmodel;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import de.jdellert.iwsa.ConceptLevelWeightedEditDistanceOutput;
 import de.jdellert.iwsa.align.InformationWeightedSequenceAlignment;
@@ -14,19 +13,17 @@ import de.jdellert.iwsa.infomodel.InformationModel;
 import de.jdellert.iwsa.sequence.PhoneticString;
 import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
 import de.jdellert.iwsa.stat.CategoricalDistribution;
-import de.jdellert.iwsa.stat.CorrespondenceDistribution;
-import de.jdellert.iwsa.stat.SmoothingMethod;
 import de.jdellert.iwsa.util.io.Formatting;
 
 public class CorrespondenceModelInference {
 	public static boolean VERBOSE = false;
 
-	public static double COGNACY_CANDIDATE_WED_THRESHOLD = 0.8;
+	public static double COGNACY_CANDIDATE_WED_THRESHOLD = 1.2;
 	public static int NUM_GLOBAL_CORR_REESTIMATIONS = 3;
 	public static int NUM_LOCAL_CORR_REESTIMATIONS = 5;
 	public static int NUM_RANDOM_PAIRS_LOCAL = 100000;
 	
-	public static double LOCAL_PMI_RATIO = 1.0 / 3;
+	public static double LOCAL_PMI_RATIO = 0.5;
 	
 	public static CorrespondenceModel inferGlobalCorrespondenceModel(LexicalDatabase database,
 			PhoneticSymbolTable symbolTable) {
@@ -35,8 +32,8 @@ public class CorrespondenceModelInference {
 
 	public static CorrespondenceModel inferGlobalCorrespondenceModel(LexicalDatabase database,
 			PhoneticSymbolTable symbolTable, InformationModel[] infoModels) {
-		CorrespondenceDistribution randomPairCorrespondenceDist = new CorrespondenceDistribution(
-				symbolTable.getSize());
+		CategoricalDistribution randomPairCorrespondenceDist = new CategoricalDistribution(
+				symbolTable.getSize() * symbolTable.getSize());
 		int numRandomPairs = database.getNumConcepts() * database.getNumLanguages() * database.getNumLanguages();
 		System.err.print("  Step 1: Simulating non-cognates by means of " + numRandomPairs + " random alignments ...");
 		for (int i = 0; i < numRandomPairs; i++) {
@@ -53,15 +50,15 @@ public class CorrespondenceModelInference {
 				infoScores = InformationWeightedSequenceAlignment.combinedInfoScoresForAlignment(alignment, infoModels[randomLang1], infoModels[randomLang2]);
 			}
 			for (int pos = 0; pos < alignment.getLength(); pos++) {
-				randomPairCorrespondenceDist.addBigramObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable), infoScores[pos]);
+				randomPairCorrespondenceDist.addObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable), infoScores[pos]);
 			}
 		}
 		System.err.print(" done.\n");
 
 		int numPairs = 0;
 		int numCognatePairs = 0;
-		CorrespondenceDistribution cognatePairCorrespondenceDist = new CorrespondenceDistribution(
-				symbolTable.getSize());
+		CategoricalDistribution cognatePairCorrespondenceDist = new CategoricalDistribution(
+				symbolTable.getSize() * symbolTable.getSize());
 
 		System.err.print("  Step 2: Finding ED-based cognate candidates ...");
 		for (int conceptID = 0; conceptID < database.getNumConcepts(); conceptID++) {
@@ -84,7 +81,7 @@ public class CorrespondenceModelInference {
 							if (alignment.normalizedDistanceScore <= 0.35) {
 								for (int pos = 0; pos < alignment.getLength(); pos++) {
 									cognatePairCorrespondenceDist
-											.addBigramObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable), infoScores[pos]);
+											.addObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable), infoScores[pos]);
 								}
 								numCognatePairs++;
 							}
@@ -109,7 +106,7 @@ public class CorrespondenceModelInference {
 		System.err.print(
 				"  Step 3: Reestimation based on Needleman-Wunsch (" + NUM_GLOBAL_CORR_REESTIMATIONS + " iterations)\n");
 		for (int iteration = 0; iteration < NUM_GLOBAL_CORR_REESTIMATIONS; iteration++) {
-			cognatePairCorrespondenceDist = new CorrespondenceDistribution(symbolTable.getSize());
+			cognatePairCorrespondenceDist = new CategoricalDistribution(symbolTable.getSize() * symbolTable.getSize());
 			System.err.print("    Iteration 0" + (iteration + 1) + ": Finding WED-based cognate candidates ...");
 			numPairs = 0;
 			numCognatePairs = 0;
@@ -134,7 +131,7 @@ public class CorrespondenceModelInference {
 								if (alignment.normalizedDistanceScore <= 0.6) {
 									for (int pos = 0; pos < alignment.getLength(); pos++) {
 										cognatePairCorrespondenceDist
-												.addBigramObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable), infoScores[pos]);
+												.addObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable), infoScores[pos]);
 									}
 									numCognatePairs++;
 								}
@@ -153,6 +150,16 @@ public class CorrespondenceModelInference {
 				double randomSymbolPairProbability = randomPairCorrespondenceDist.getProb(symbolPairID);
 				double pmiScore = Math.log(cognateSymbolPairProbability / randomSymbolPairProbability);
 				globalCorr.setScore(symbolPairID, pmiScore);
+				if (VERBOSE)
+					System.err.println(" Global correspondence for " + symbolTable.toSymbolPair(symbolPairID) + " in iteration "
+							+ iteration + ": " + Formatting.str3f(globalCorr.getScore(symbolPairID)) + "\t"
+							+ Formatting.str3f(pmiScore) + "\t"
+							+ "\t" + Formatting.str12f(cognateSymbolPairProbability) + " ("
+							+ (int) cognatePairCorrespondenceDist.getObservationCount(symbolPairID) + "/"
+							+ (int) cognatePairCorrespondenceDist.getObservationCountsSum() + ")\t"
+							+ Formatting.str12f(randomSymbolPairProbability) + " ("
+							+ (int) randomPairCorrespondenceDist.getObservationCount(symbolPairID) + "/"
+							+ (int) randomPairCorrespondenceDist.getObservationCountsSum() + ")\t");
 			}
 			System.err.print(" done.\n");
 		}
@@ -197,66 +204,6 @@ public class CorrespondenceModelInference {
 		}
 		return localCorrModels;
 	}
-
-	public static CorrespondenceModel inferSelfSimilarityModel(LexicalDatabase database,
-			PhoneticSymbolTable symbolTable, int langID, CorrespondenceModel globalCorr, InformationModel infoModel) {
-		System.err.print("  Self-similarity for language " + database.getLanguageCode(langID) + ":\n");
-
-		CorrespondenceDistribution randomCorrespondenceDistForPair = new CorrespondenceDistribution(
-				symbolTable.getSize());
-		System.err.print("    Step 1: " + NUM_RANDOM_PAIRS_LOCAL
-				+ " random alignments to model the distribution in absence of correspondences ...");
-		for (int i = 0; i < NUM_RANDOM_PAIRS_LOCAL; i++) {
-			PhoneticString form1 = database.getRandomFormForLanguage(langID);
-			PhoneticString form2 = database.getRandomFormForLanguage(langID);
-			PhoneticStringAlignment alignment = NeedlemanWunschAlgorithm.constructAlignment(form1, form2, globalCorr,
-					globalCorr, globalCorr, globalCorr);
-			double infoScores[] = InformationWeightedSequenceAlignment.combinedInfoScoresForAlignment(alignment, infoModel, infoModel);
-			for (int pos = 0; pos < alignment.getLength(); pos++) {
-				randomCorrespondenceDistForPair.addBigramObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable), infoScores[pos]);
-			}
-		}
-		System.err.print(" done.\n");
-		// first iteration: use global sound correspondences
-		CorrespondenceDistribution cognateCorrespondenceDistForPair = new CorrespondenceDistribution(
-				symbolTable.getSize());
-		System.err.print("    Step 2: Self-alignment based on global WED ...");
-		for (int conceptID = 0; conceptID < database.getNumConcepts(); conceptID++) {
-			List<List<Integer>> formsPerLang = database.getFormIDsForConceptPerLanguage(conceptID);
-			for (int langFormID : formsPerLang.get(langID)) {
-				PhoneticString langForm = database.getForm(langFormID);
-				PhoneticStringAlignment alignment = NeedlemanWunschAlgorithm.constructAlignment(langForm, langForm,
-						globalCorr, globalCorr, globalCorr, globalCorr);
-				double infoScores[] = InformationWeightedSequenceAlignment.combinedInfoScoresForAlignment(alignment, infoModel, infoModel);
-				for (int pos = 0; pos < alignment.getLength(); pos++) {
-					cognateCorrespondenceDistForPair
-							.addBigramObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable), infoScores[pos]);
-				}
-			}
-		}
-		System.err.print(" done.\n");
-
-		System.err.print("          Comparing the distributions of symbol pairs to reestimate PMI scores ...");
-		CorrespondenceModel localCorr = new CorrespondenceModel(symbolTable);
-		for (int symbolPairID = 0; symbolPairID < symbolTable.getSize() * symbolTable.getSize(); symbolPairID++) {
-			double pmiScore = 0.0;
-			double cij = cognateCorrespondenceDistForPair.getBigramCount(symbolPairID);
-			double cognateSymbolPairProbability = (cij / cognateCorrespondenceDistForPair.getObservationCountsSum());
-			double randomSymbolPairProbability = (randomCorrespondenceDistForPair.getBigramCount(symbolPairID)
-					/ randomCorrespondenceDistForPair.getObservationCountsSum());
-			if (randomCorrespondenceDistForPair.getBigramCount(symbolPairID) > 0) {
-				pmiScore = Math.log(cognateSymbolPairProbability / randomSymbolPairProbability);
-			}
-			double avgScore = cij / (cij + 5) * pmiScore + 5.0 / (cij + 5) * globalCorr.getScore(symbolPairID);
-			if (Math.abs(avgScore) > 0.1) {
-				localCorr.setScore(symbolPairID, Math.max(globalCorr.getScore(symbolPairID), pmiScore));
-				// localCorr.setScore(symbolPairID, (globalCorr.getScore(symbolPairID) +
-				// pmiScore) / 2);
-			}
-		}
-		System.err.print(" done.\n");
-		return localCorr;
-	}
 	
 	public static CorrespondenceModel inferCorrModelForPair(LexicalDatabase database, PhoneticSymbolTable symbolTable,
 			int lang1ID, int lang2ID, CorrespondenceModel globalCorr, CorrespondenceModel lang1SelfCorr,
@@ -268,11 +215,10 @@ public class CorrespondenceModelInference {
 	public static CorrespondenceModel inferCorrModelForPair(LexicalDatabase database, PhoneticSymbolTable symbolTable,
 			int lang1ID, int lang2ID, CorrespondenceModel globalCorr, CorrespondenceModel lang1SelfCorr,
 			CorrespondenceModel lang2SelfCorr, InformationModel infoModel1, InformationModel infoModel2) {
-		System.err
-				.print("  Pair " + database.getLanguageCode(lang1ID) + "/" + database.getLanguageCode(lang2ID) + ":\n");
+		System.err.print("  Pair " + database.getLanguageCode(lang1ID) + "/" + database.getLanguageCode(lang2ID) + ":\n");
 
-		CorrespondenceDistribution randomCorrespondenceDistForPair = new CorrespondenceDistribution(
-				symbolTable.getSize());
+		CategoricalDistribution randomCorrespondenceDistForPair = new CategoricalDistribution(
+				symbolTable.getSize() * symbolTable.getSize());
 		System.err.print("    Step 1: " + NUM_RANDOM_PAIRS_LOCAL
 				+ " random alignments to model the distribution in absence of correspondences ...");
 		for (int i = 0; i < NUM_RANDOM_PAIRS_LOCAL; i++) {
@@ -288,14 +234,14 @@ public class CorrespondenceModelInference {
 				infoScores = InformationWeightedSequenceAlignment.combinedInfoScoresForAlignment(alignment, infoModel1, infoModel2);
 			}
 			for (int pos = 0; pos < alignment.getLength(); pos++) {
-				randomCorrespondenceDistForPair.addBigramObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable), infoScores[pos]);
+				randomCorrespondenceDistForPair.addObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable), infoScores[pos]);
 			}
 		}
 		System.err.print(" done.\n");
 
 		// first iteration: use global sound correspondences
-		CorrespondenceDistribution cognateCorrespondenceDistForPair = new CorrespondenceDistribution(
-				symbolTable.getSize());
+		CategoricalDistribution cognateCorrespondenceDistForPair = new CategoricalDistribution(
+				symbolTable.getSize() * symbolTable.getSize());
 		int numPairs = 0;
 		int numCognatePairs = 0;
 		System.err.print("    Step 2: Finding cognate candidates based on global WED ...");
@@ -318,7 +264,7 @@ public class CorrespondenceModelInference {
 					if (alignment.normalizedDistanceScore <= COGNACY_CANDIDATE_WED_THRESHOLD) {
 						for (int pos = 0; pos < alignment.getLength(); pos++) {
 							cognateCorrespondenceDistForPair
-									.addBigramObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable), infoScores[pos]);
+									.addObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable), infoScores[pos]);
 						}
 						numCognatePairs++;
 					}
@@ -331,16 +277,17 @@ public class CorrespondenceModelInference {
 		System.err.print("          Comparing the distributions of symbol pairs to reestimate PMI scores ...");
 		CorrespondenceModel localCorr = new CorrespondenceModel(symbolTable);
 		for (int symbolPairID = 0; symbolPairID < symbolTable.getSize() * symbolTable.getSize(); symbolPairID++) {
-			if (randomCorrespondenceDistForPair.getMinUnigramCount(symbolPairID) == 0)
+			if (getMinUnigramCount(randomCorrespondenceDistForPair, symbolPairID, symbolTable.getSize()) == 0)
 				continue;
-			if (symbolPairID / symbolTable.getSize() == 1)
-				continue; // do not reinfer correspondences for gaps
-			if (symbolPairID % symbolTable.getSize() == 1)
-				continue; // do not reinfer correspondences for gaps
+			//if (symbolPairID / symbolTable.getSize() == 1)
+			//	continue; // do not reinfer correspondences for gaps
+			//if (symbolPairID % symbolTable.getSize() == 1)
+			//	continue; // do not reinfer correspondences for gaps
 			double cognateSymbolPairProbability = cognateCorrespondenceDistForPair.getProb(symbolPairID);
 			double randomSymbolPairProbability = randomCorrespondenceDistForPair.getProb(symbolPairID);
 			double pmiScore = Math.log(cognateSymbolPairProbability / randomSymbolPairProbability);
-			localCorr.setScore(symbolPairID, (globalCorr.getScore(symbolPairID) + pmiScore) / 2);
+			double avgScore = LOCAL_PMI_RATIO * pmiScore + (1 - LOCAL_PMI_RATIO) * globalCorr.getScore(symbolPairID);
+			localCorr.setScore(symbolPairID, avgScore);
 		}
 		System.err.print(" done.\n");
 
@@ -350,7 +297,7 @@ public class CorrespondenceModelInference {
 			System.err.print("    Iteration 0" + iteration + ": Finding WED-based cognate candidates ...");
 			numPairs = 0;
 			numCognatePairs = 0;
-			cognateCorrespondenceDistForPair = new CorrespondenceDistribution(symbolTable.getSize());
+			cognateCorrespondenceDistForPair = new CategoricalDistribution(symbolTable.getSize() * symbolTable.getSize());
 			for (int conceptID = 0; conceptID < database.getNumConcepts(); conceptID++) {
 				List<List<Integer>> formsPerLang = database.getFormIDsForConceptPerLanguage(conceptID);
 				for (int lang1FormID : formsPerLang.get(lang1ID)) {
@@ -370,7 +317,7 @@ public class CorrespondenceModelInference {
 						if (alignment.normalizedDistanceScore <= COGNACY_CANDIDATE_WED_THRESHOLD) {
 							for (int pos = 0; pos < alignment.getLength(); pos++) {
 								cognateCorrespondenceDistForPair
-										.addBigramObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable), infoScores[pos]);
+										.addObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable), infoScores[pos]);
 							}
 							numCognatePairs++;
 						}
@@ -385,19 +332,19 @@ public class CorrespondenceModelInference {
 			System.err.print("          Comparing the distributions of symbol pairs to reestimate PMI scores ...");
 			localCorr = new CorrespondenceModel(symbolTable);
 			for (int symbolPairID = 0; symbolPairID < symbolTable.getSize() * symbolTable.getSize(); symbolPairID++) {
-				if (randomCorrespondenceDistForPair.getMinUnigramCount(symbolPairID) == 0)
+				if (getMinUnigramCount(randomCorrespondenceDistForPair, symbolPairID, symbolTable.getSize()) == 0)
 					continue;
-				if (symbolPairID / symbolTable.getSize() == 1)
-					continue; // do not reinfer correspondences for gaps
-				if (symbolPairID % symbolTable.getSize() == 1)
-					continue; // do not reinfer correspondences for gaps
+				//if (symbolPairID / symbolTable.getSize() == 1)
+				//	continue; // do not reinfer correspondences for gaps
+				//if (symbolPairID % symbolTable.getSize() == 1)
+				//	continue; // do not reinfer correspondences for gaps
 				double pmiScore = 0.0;
-				double cij = cognateCorrespondenceDistForPair.getBigramCount(symbolPairID);
+				double cij = cognateCorrespondenceDistForPair.getObservationCount(symbolPairID);
 				double cognateSymbolPairProbability = (cij
 						/ cognateCorrespondenceDistForPair.getObservationCountsSum());
-				double randomSymbolPairProbability = (randomCorrespondenceDistForPair.getBigramCount(symbolPairID)
+				double randomSymbolPairProbability = (randomCorrespondenceDistForPair.getObservationCount(symbolPairID)
 						/ randomCorrespondenceDistForPair.getObservationCountsSum());
-				if (cij > 0 && randomCorrespondenceDistForPair.getBigramCount(symbolPairID) > 0) {
+				if (cij > 0 && randomCorrespondenceDistForPair.getObservationCount(symbolPairID) > 0) {
 					pmiScore = Math.log(cognateSymbolPairProbability / randomSymbolPairProbability);
 				}
 				double avgScore = LOCAL_PMI_RATIO * pmiScore + (1 - LOCAL_PMI_RATIO) * globalCorr.getScore(symbolPairID);
@@ -410,10 +357,10 @@ public class CorrespondenceModelInference {
 								+ iteration + ": " + Formatting.str3f(globalCorr.getScore(symbolPairID)) + "\t"
 								+ Formatting.str3f(pmiScore) + "\t" + Formatting.str3f(localCorr.getScore(symbolPairID))
 								+ "\t" + Formatting.str3f(cognateSymbolPairProbability) + " ("
-								+ (int) cognateCorrespondenceDistForPair.getBigramCount(symbolPairID) + "/"
+								+ (int) cognateCorrespondenceDistForPair.getObservationCount(symbolPairID) + "/"
 								+ (int) cognateCorrespondenceDistForPair.getObservationCountsSum() + ")\t"
 								+ Formatting.str3f(randomSymbolPairProbability) + " ("
-								+ (int) randomCorrespondenceDistForPair.getBigramCount(symbolPairID) + "/"
+								+ (int) randomCorrespondenceDistForPair.getObservationCount(symbolPairID) + "/"
 								+ (int) randomCorrespondenceDistForPair.getObservationCountsSum() + ")\t");
 				}
 			}
@@ -424,6 +371,23 @@ public class CorrespondenceModelInference {
 						globalCorr, localCorr);
 		}
 		return localCorr;
+	}
+	
+	public static double getMinUnigramCount(CategoricalDistribution dist, int bigramID, int symbolTableSize)
+	{
+		int i = bigramID / symbolTableSize;
+		int j = bigramID % symbolTableSize;
+		double iCount = 0;
+		for (int k = 0; k < symbolTableSize; k++)
+		{
+			iCount += dist.getObservationCount(i * symbolTableSize + k);
+		}
+		double jCount = 0;
+		for (int k = 0; k < symbolTableSize; k++)
+		{
+			jCount += dist.getObservationCount(k * symbolTableSize + j);
+		}
+		return Math.min(iCount, jCount);
 	}
 
 }

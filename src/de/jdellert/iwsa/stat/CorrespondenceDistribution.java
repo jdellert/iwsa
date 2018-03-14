@@ -17,15 +17,15 @@ public class CorrespondenceDistribution {
 		this.observationCountsSum = 0.0;
 	}
 
-	public void addBigramObservation(int bigramID) {
-		addBigramObservation(bigramID, 1.0);
+	public void addObservation(int bigramID) {
+		addObservation(bigramID, 1.0);
 	}
 
 	public void addBigramObservation(int i, int j) {
 		addBigramObservation(i, j, 1.0);
 	}
 
-	public void addBigramObservation(int bigramID, double observationWeight) {
+	public void addObservation(int bigramID, double observationWeight) {
 		int i = bigramID / k;
 		int j = bigramID % k;
 		addBigramObservation(i, j, observationWeight);
@@ -38,13 +38,13 @@ public class CorrespondenceDistribution {
 		observationCountsSum += observationWeight;
 	}
 
-	public double getBigramCount(int bigramID) {
+	public double getObservationCount(int bigramID) {
 		int i = bigramID / k;
 		int j = bigramID % k;
-		return getBigramCount(i, j);
+		return getBigramObservationCount(i, j);
 	}
 
-	public double getBigramCount(int i, int j) {
+	public double getBigramObservationCount(int i, int j) {
 		return bigramObservations[i * k + j];
 	}
 

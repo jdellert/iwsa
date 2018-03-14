@@ -5,6 +5,7 @@ import de.jdellert.iwsa.sequence.PhoneticString;
 import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
 
 public class InformationModelInference {
+	
 	public static InformationModel[] inferInformationModels(LexicalDatabase database, PhoneticSymbolTable symbolTable) {
 		InformationModel[] infoModels = new InformationModel[database.getNumLanguages()];
 		for (int langID = 0; langID < database.getNumLanguages(); langID++) {

@@ -7,6 +7,7 @@ import java.util.Locale;
 public class Formatting {
 	static NumberFormat threeFractionDigitsFormat;
 	static NumberFormat sixFractionDigitsFormat;
+	static NumberFormat twelveFractionDigitsFormat;
 	
 	static {
 		threeFractionDigitsFormat = DecimalFormat.getInstance(Locale.ENGLISH);
@@ -18,6 +19,11 @@ public class Formatting {
 		sixFractionDigitsFormat.setMinimumIntegerDigits(1);
 		sixFractionDigitsFormat.setMinimumFractionDigits(6);
 		sixFractionDigitsFormat.setMaximumFractionDigits(6);
+		
+		twelveFractionDigitsFormat = DecimalFormat.getInstance(Locale.ENGLISH);
+		twelveFractionDigitsFormat.setMinimumIntegerDigits(1);
+		twelveFractionDigitsFormat.setMinimumFractionDigits(12);
+		twelveFractionDigitsFormat.setMaximumFractionDigits(12);
 	}
 	
 	/**
@@ -36,6 +42,10 @@ public class Formatting {
 	public static String str6f(double num)
 	{
 		return sixFractionDigitsFormat.format(num);
+	}
+	
+	public static String str12f(double num) {
+		return twelveFractionDigitsFormat.format(num);
 	}
 	
 	public static String intLPad(int num, int reqLength)
@@ -57,4 +67,6 @@ public class Formatting {
 		}
 		return result;
 	}
+
+
 }

@@ -8,6 +8,11 @@ public class CategoricalDistribution {
 	// actual probabilities are computed based on smoothing
 	SmoothingMethod smoothingMethod = SmoothingMethod.LAPLACE;
 	double smoothingMassRatio = 0.2; //used for SmoothingMethod.LAPLACE
+	
+	public CategoricalDistribution(int k) {
+		this.observationCounts = new double[k];
+		this.observationCountsSum = 0.0;
+	}
 
 	public CategoricalDistribution(int k, SmoothingMethod smoothingMethod) {
 		this.observationCounts = new double[k];
@@ -22,6 +27,11 @@ public class CategoricalDistribution {
 	public void addObservation(int i) {
 		observationCounts[i]++;
 		observationCountsSum++;
+	}
+	
+	public void addObservation(int i, double observationWeight) {
+		observationCounts[i] += observationWeight;
+		observationCountsSum += observationWeight;
 	}
 
 	public double getObservationCount(int i) {

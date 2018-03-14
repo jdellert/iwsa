@@ -96,13 +96,16 @@ public class PhoneticStringAlignmentOutput {
 		//System.err.println(str1Reduced.toString(table));
 		//System.err.println(str2Reduced.toString(table));
 		
+		int l1 = 0;
+		int l2 = 0;
+		
 		for (int pos = 0; pos < alignment.getLength(); pos++)
 		{
 			int symb1 = alignment.str1.segments[pos];
 			int symb2 = alignment.str2.segments[pos];
 			
-			if (symb1 > 1) pos1++;
-			if (symb2 > 1) pos2++;
+			if (symb1 > 1) { pos1++; l1++; }
+			if (symb2 > 1) { pos2++; l2++; }
 
 			string1Line.append(table.toSymbol(symb1) + "\t");
 			string2Line.append(table.toSymbol(symb2) + "\t");
@@ -141,6 +144,14 @@ public class PhoneticStringAlignmentOutput {
 			
 			//System.err.println("(" + pos1 + ","  + pos2 + ")");
 		}
+		
+		selfSim1Line.append(Formatting.str3f(selfSimScoreSum1) + "\t");
+		selfSim2Line.append(Formatting.str3f(selfSimScoreSum2) + "\t");
+		corrLine.append(Formatting.str3f(corrScoreSum) + "\t");
+		
+		selfSimScoreSum1 /= l1;
+		selfSimScoreSum2 /= l2;
+		corrScoreSum /= alignment.getLength();
 		
 		selfSim1Line.append(Formatting.str3f(selfSimScoreSum1));
 		selfSim2Line.append(Formatting.str3f(selfSimScoreSum2));
