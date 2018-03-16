@@ -7,8 +7,6 @@ import de.jdellert.iwsa.util.io.StringUtils;
 /**
  * Simple wrapper around int arrays used internally to compactly represent
  * phonetic strings.
- * 
- * @author jdellert
  *
  */
 

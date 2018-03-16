@@ -12,8 +12,6 @@ import java.util.TreeMap;
  * This class provides an ordered list of common IPA symbols along with their
  * definitions, and various helper methods for output of IPA symbols e.g. in
  * TIPA for LaTeX
- * 
- * @author jdellert
  *
  */
 

@@ -87,14 +87,8 @@ public class PhoneticStringAlignmentOutput {
 		int pos1 = -1;
 		int pos2 = -1;
 		
-		//System.err.println(alignment.str1.toString(table));
-		//System.err.println(alignment.str2.toString(table));
-		
 		PhoneticString str1Reduced = alignment.str1.copyWithoutGaps();
 		PhoneticString str2Reduced = alignment.str2.copyWithoutGaps();
-		
-		//System.err.println(str1Reduced.toString(table));
-		//System.err.println(str2Reduced.toString(table));
 		
 		int l1 = 0;
 		int l2 = 0;
@@ -142,7 +136,6 @@ public class PhoneticStringAlignmentOutput {
 			selfSim2Line.append(Formatting.str3f(selfSimScore2) + "\t");
 			corrLine.append(Formatting.str3f(corrScore) + "\t");
 			
-			//System.err.println("(" + pos1 + ","  + pos2 + ")");
 		}
 		
 		selfSim1Line.append(Formatting.str3f(selfSimScoreSum1) + "\t");

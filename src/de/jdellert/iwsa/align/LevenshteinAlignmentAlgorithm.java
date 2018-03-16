@@ -7,7 +7,6 @@ import de.jdellert.iwsa.sequence.PhoneticString;
 
 public class LevenshteinAlignmentAlgorithm {
 	public static double computeNormalizedEditDistance(PhoneticString str1, PhoneticString str2) {
-		//System.out.println(str1.toString() + "\t" + str2.toString() );
 		int m = str1.getLength() + 1;
 		int n = str2.getLength() + 1;
 

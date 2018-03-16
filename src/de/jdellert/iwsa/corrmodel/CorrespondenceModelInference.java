@@ -279,10 +279,6 @@ public class CorrespondenceModelInference {
 		for (int symbolPairID = 0; symbolPairID < symbolTable.getSize() * symbolTable.getSize(); symbolPairID++) {
 			if (getMinUnigramCount(randomCorrespondenceDistForPair, symbolPairID, symbolTable.getSize()) == 0)
 				continue;
-			//if (symbolPairID / symbolTable.getSize() == 1)
-			//	continue; // do not reinfer correspondences for gaps
-			//if (symbolPairID % symbolTable.getSize() == 1)
-			//	continue; // do not reinfer correspondences for gaps
 			double cognateSymbolPairProbability = cognateCorrespondenceDistForPair.getProb(symbolPairID);
 			double randomSymbolPairProbability = randomCorrespondenceDistForPair.getProb(symbolPairID);
 			double pmiScore = Math.log(cognateSymbolPairProbability / randomSymbolPairProbability);
@@ -334,10 +330,6 @@ public class CorrespondenceModelInference {
 			for (int symbolPairID = 0; symbolPairID < symbolTable.getSize() * symbolTable.getSize(); symbolPairID++) {
 				if (getMinUnigramCount(randomCorrespondenceDistForPair, symbolPairID, symbolTable.getSize()) == 0)
 					continue;
-				//if (symbolPairID / symbolTable.getSize() == 1)
-				//	continue; // do not reinfer correspondences for gaps
-				//if (symbolPairID % symbolTable.getSize() == 1)
-				//	continue; // do not reinfer correspondences for gaps
 				double pmiScore = 0.0;
 				double cij = cognateCorrespondenceDistForPair.getObservationCount(symbolPairID);
 				double cognateSymbolPairProbability = (cij

@@ -2,8 +2,6 @@ package de.jdellert.iwsa.util.ranking;
 
 /**
  * Wrapper around a key-value pair of types T and Double, comparable by value.
- * 
- * @author jdellert
  *
  * @param <T>
  */

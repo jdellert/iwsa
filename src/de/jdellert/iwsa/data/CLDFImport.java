@@ -17,9 +17,7 @@ import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
 import de.jdellert.iwsa.tokenize.IPATokenizer;
 
 /**
- * Building a LexicalDatabase object from a TSV file in CLDF format.
- * 
- * @author jdellert
+ * Building a LexicalDatabase object from a TSV file in CLDF format (extensible, tuned towards NorthEuraLex for now).
  *
  */
 

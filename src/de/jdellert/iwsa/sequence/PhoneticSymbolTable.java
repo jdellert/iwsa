@@ -13,8 +13,6 @@ import java.util.TreeSet;
  * Symbol table for mapping IPA segments to integers for efficient internal
  * representation. The first two integers are always used for special symbols: 0
  * ~ #: the word boundary symbol 1 ~ -: the gap symbol
- * 
- * @author jdellert
  *
  */
 
