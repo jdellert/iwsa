@@ -11,8 +11,6 @@ import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
 /**
  * A class for inspecting language-specific information models. The output
  * gives the observed counts of trigrams organized by gappy bigrams.
- * 
- * @author jdellert
  *
  */
 

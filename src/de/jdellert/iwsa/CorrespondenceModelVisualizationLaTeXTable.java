@@ -23,8 +23,6 @@ import de.jdellert.iwsa.util.ranking.RankingEntry;
  * 
  * The result is LaTeX code consisting of a header and a table
  * which can be pasted into any LaTeX document provided the tipa package is installed.
- * 
- * @author jdellert
  *
  */
 

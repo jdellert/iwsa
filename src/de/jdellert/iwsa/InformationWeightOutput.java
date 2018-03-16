@@ -13,8 +13,6 @@ import de.jdellert.iwsa.util.io.Formatting;
 /**
  * A class for inspecting language-specific information weightings. The output
  * gives the information content values of each segment of all strings for some language.
- * 
- * @author jdellert
  *
  */
 

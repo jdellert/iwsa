@@ -13,11 +13,9 @@ package de.jdellert.iwsa;
  * and visualizes the difference in symbol pair association strength as a drift graph,
  * where green arrows express the situation where the lange-specific correspondence is stronger
  * than globally. The drift graph only includes those symbols for which non-zero PMI scores exist.
- * 
- * @author jdellert
  *
  */
 
 public class CorrespondenceModelVisualizationGraphviz {
-
+	//TODO
 }
