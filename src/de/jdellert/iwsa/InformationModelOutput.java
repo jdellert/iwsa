@@ -15,8 +15,6 @@ import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
  */
 
 public class InformationModelOutput {
-
-	// TODO: change this to work on stored information model files
 	public static void main(String[] args) {
 		try {
 			LexicalDatabase database = CLDFImport.loadDatabase(args[0], true);
