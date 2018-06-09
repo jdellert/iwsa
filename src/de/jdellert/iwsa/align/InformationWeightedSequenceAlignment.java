@@ -8,6 +8,8 @@ import de.jdellert.iwsa.infomodel.InformationModel;
 import de.jdellert.iwsa.sequence.PhoneticString;
 
 public class InformationWeightedSequenceAlignment extends PhoneticStringAlignment {
+	public static boolean NEW_DISTANCE_TRANSFORMATION = true;
+	
 	public static PhoneticStringAlignment constructAlignment(PhoneticString str1, PhoneticString str2, CorrespondenceModel gloCorrModel,
 			CorrespondenceModel locCorrModel, CorrespondenceModel selfSimModel1, CorrespondenceModel selfSimModel2,
 			InformationModel infoModel1, InformationModel infoModel2) {
@@ -94,9 +96,12 @@ public class InformationWeightedSequenceAlignment extends PhoneticStringAlignmen
 			str2SelfSimilarity += getCorrespondenceScore(gloCorrModel, selfSimModel2, str2.segments[j], str2.segments[j]) * getMeanInfoScore(str2, str2, j, j, infoModel2, infoModel2);
 		}
 		
-		similarityScore /= result1.size();
-		str1SelfSimilarity /= m - 1;
-		str2SelfSimilarity /= n - 1;
+		if (NEW_DISTANCE_TRANSFORMATION)
+		{
+			similarityScore /= result1.size();
+			str1SelfSimilarity /= m - 1;
+			str2SelfSimilarity /= n - 1;
+		}
 		
 		double normalizedDistanceScore = 1 - (2 * similarityScore) / (str1SelfSimilarity + str2SelfSimilarity);
 

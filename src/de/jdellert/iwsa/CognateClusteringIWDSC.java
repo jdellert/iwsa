@@ -26,7 +26,8 @@ import de.jdellert.iwsa.sequence.PhoneticString;
 import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
 
 public class CognateClusteringIWDSC {
-	public static final double THRESHOLD = 0.6;
+	public static final double THRESHOLD = 0.75;
+	public static final double MAX_DIST_VAL = 1.5;
 
 	public static void main(String[] args) {
 		try {
@@ -126,8 +127,11 @@ public class CognateClusteringIWDSC {
 				double[][] distanceMatrix = new double[formIDs.size()][formIDs.size()];
 
 				List<List<Integer>> formsPerLang = database.getFormIDsForConceptPerLanguage(conceptID);
-				for (int lang1ID : relevantLangIDs) {
-					for (int lang2ID : relevantLangIDs) {
+				for (int i = 0; i < relevantLangIDs.length; i++)
+				{
+					int lang1ID = relevantLangIDs[i];
+					for (int j = i; j < relevantLangIDs.length; j++) {
+						int lang2ID = relevantLangIDs[j];
 						for (int lang1FormID : formsPerLang.get(lang1ID)) {
 							int index1 = formIDToIndex.get(lang1FormID);
 							PhoneticString lang1Form = database.getForm(lang1FormID);
@@ -140,7 +144,13 @@ public class CognateClusteringIWDSC {
 												localCorrModels[lang2ID][lang2ID], infoModels[lang1ID],
 												infoModels[lang2ID]);
 								double localWeightDistance = localWeightsAlignment.normalizedDistanceScore;
+								if (localWeightDistance < 0.0) localWeightDistance = 0.0;
+								localWeightDistance *= localWeightDistance;
+								if (localWeightDistance > MAX_DIST_VAL) localWeightDistance = MAX_DIST_VAL;
+								localWeightDistance /= MAX_DIST_VAL;
+								if (index1 == index2) localWeightDistance = 0.0;
 								distanceMatrix[index1][index2] = localWeightDistance;
+								distanceMatrix[index2][index1] = localWeightDistance;
 							}
 						}
 					}
