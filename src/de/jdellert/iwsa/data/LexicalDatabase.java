@@ -2,6 +2,7 @@ package de.jdellert.iwsa.data;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -80,6 +81,10 @@ public class LexicalDatabase {
 
 		this.cognateSets = new ArrayList<List<Integer>>();
 		this.cognateSetForForm = new ArrayList<Integer>(numForms);
+		for (int i = 0; i < numForms; i++)
+		{
+			cognateSetForForm.add(0);
+		}
 	}
 
 	public PhoneticSymbolTable getSymbolTable() {
@@ -104,6 +109,14 @@ public class LexicalDatabase {
 		List<Integer> result = new ArrayList<Integer>();
 		for (List<Integer> formList : langAndConceptToForms.get(langID)) {
 			result.addAll(formList);
+		}
+		return result;
+	}
+
+	public List<Integer> getFormIDsForConcept(int conceptID) {
+		List<Integer> result = new ArrayList<Integer>();
+		for (int langID = 0; langID < langCodes.length; langID++) {
+			result.addAll(getFormIDsForLanguageAndConcept(langID, conceptID));
 		}
 		return result;
 	}
@@ -138,6 +151,10 @@ public class LexicalDatabase {
 		return conceptNames[conceptID];
 	}
 
+	public String getConceptNameForForm(int formID) {
+		return conceptNames[formToConcept.get(formID)];
+	}
+
 	public int getNumLanguages() {
 		return langCodes.length;
 	}
@@ -145,21 +162,30 @@ public class LexicalDatabase {
 	public String getLanguageCode(int langID) {
 		return langCodes[langID];
 	}
-	
-	public String[] getLanguageCodes()
-	{
+
+	public String[] getLanguageCodes() {
 		return Arrays.copyOf(langCodes, langCodes.length);
 	}
-	
+
+	public String getLanguageCodeForForm(int formID) {
+		return langCodes[formToLang.get(formID)];
+	}
+
+	public int getNumForms() {
+		return forms.size();
+	}
+
 	/**
 	 * Gets the internal language ID for a given language code.
+	 * 
 	 * @param langCode
-	 * @return the internal ID of that language, or -1 if language code is not in database.
+	 * @return the internal ID of that language, or -1 if language code is not in
+	 *         database.
 	 */
-	public int getIDForLanguageCode(String langCode)
-	{
+	public int getIDForLanguageCode(String langCode) {
 		Integer langID = langCodeToID.get(langCode);
-		if (langID == null) langID = -1;
+		if (langID == null)
+			langID = -1;
 		return langID;
 	}
 
@@ -199,14 +225,28 @@ public class LexicalDatabase {
 
 	public PhoneticString getFormForLangConceptOrth(String lang, String concept, String orth) {
 		int langID = getIDForLanguageCode(lang);
-		if (langID == -1) return null;
+		if (langID == -1)
+			return null;
 		Integer conceptID = conceptNameToID.get(concept);
-		if (conceptID == null) return null;
-		for (int formID : getFormIDsForLanguageAndConcept(langID, conceptID))
-		{
+		if (conceptID == null)
+			return null;
+		for (int formID : getFormIDsForLanguageAndConcept(langID, conceptID)) {
 			String formOrth = getAnnotation("Word_Form", formID);
-			if (formOrth.equals(orth)) return getForm(formID);
+			if (formOrth.equals(orth))
+				return getForm(formID);
 		}
 		return null;
+	}
+
+	public int getCognateSetID(int formID) {
+		return cognateSetForForm.get(formID);
+	}
+
+	public void addCognateSet(List<Integer> cognateSetFormIDs) {
+		int cognateSetID = cognateSets.size() + 1;
+		for (int formID : cognateSetFormIDs) {
+			cognateSetForForm.set(formID, cognateSetID);
+		}
+		cognateSets.add(cognateSetFormIDs);
 	}
 }

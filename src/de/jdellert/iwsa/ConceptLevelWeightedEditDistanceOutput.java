@@ -23,7 +23,6 @@ import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
 
 public class ConceptLevelWeightedEditDistanceOutput {
 	public static final boolean ALIGNMENT_OUTPUT = false;
-	public static final boolean USE_LOCAL_MODELS = true;
 	
 	public static void main(String[] args) {
 		try {
