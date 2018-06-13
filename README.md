@@ -1,6 +1,8 @@
 # iwsa
 Information-Weighted Sequence Alignment (IWSA) for historical linguistics.
 
+I am currently in the process of adding basic usage information to the [Wiki](https://github.com/jdellert/iwsa/wiki).
+
 The behaviour and usage of all classes with main methods is described here.
 The code is largely self-documenting through human-readable names,
 errors will usually be easy to trace to an unmet assumption (undefined language codes, wrong file names, etc.)
