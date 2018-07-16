@@ -28,6 +28,10 @@ public class PhoneticString {
 	public String toString(PhoneticSymbolTable symbolTable) {
 		return String.join(" ", symbolTable.decode(segments));
 	}
+	
+	public String toUntokenizedString(PhoneticSymbolTable symbolTable) {
+		return String.join("", symbolTable.decode(segments));
+	}
 
 	public PhoneticString copyWithoutGaps() {
 		int numGaps = 0;
