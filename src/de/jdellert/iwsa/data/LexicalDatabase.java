@@ -38,7 +38,7 @@ public class LexicalDatabase {
 	// concept ID => lang ID
 	protected ArrayList<Integer> formToConcept;
 	// lang ID => (concept ID => {set of form IDs})
-	protected List<List<List<Integer>>> langAndConceptToForms;
+	public List<List<List<Integer>>> langAndConceptToForms;
 
 	// cognacy model (allows cross-semantic cognate classes)
 	// cognate set ID => {set of form IDs}

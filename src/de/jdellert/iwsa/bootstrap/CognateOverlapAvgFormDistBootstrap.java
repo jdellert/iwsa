@@ -1,13 +1,17 @@
 package de.jdellert.iwsa.bootstrap;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -30,7 +34,10 @@ import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
 import de.jdellert.iwsa.util.io.SimpleFormatReader;
 
 public class CognateOverlapAvgFormDistBootstrap {
-	public static final NumberFormat formatter = new DecimalFormat("0.0000").getInstance(Locale.ENGLISH);
+	public static int START_SAMPLE_ID = 0;
+	public static int LAST_SAMPLE_ID = 100;
+	public static final NumberFormat formatter = new DecimalFormat("0.0000", new DecimalFormatSymbols(Locale.ENGLISH));
+	public static final NumberFormat paddingFormatter = new DecimalFormat("0000", new DecimalFormatSymbols(Locale.ENGLISH));
 	
 	public static void main(String[] args) {
 		try {
@@ -60,6 +67,14 @@ public class CognateOverlapAvgFormDistBootstrap {
 					relevantLangIDs[i] = langID;
 				}
 			}
+			
+			if (args.length > 2) {
+				START_SAMPLE_ID = Integer.parseInt(args[2]);
+			}
+			
+			if (args.length > 3) {
+				LAST_SAMPLE_ID = Integer.parseInt(args[3]);
+			}
 	
 			Map<String, Integer> relevantLangToID = new TreeMap<String, Integer>();
 			for (int langID = 0; langID < relevantLangIDs.length; langID++) {
@@ -88,42 +103,57 @@ public class CognateOverlapAvgFormDistBootstrap {
 				CorrespondenceModelStorage.writeGlobalModelToFile(globalCorrModel, args[0] + "-global-iw.corr");
 			}
 			
-			produceMatricesForSample(args[0] + "matrices-original", database, relevantLangIDs, globalCorrModel, infoModels);
-		
+			if (START_SAMPLE_ID == 0) {
+				produceMatricesForSample(args[0] + "-mtx-originaldata.tsv", database, relevantLangIDs, globalCorrModel, infoModels);
+				START_SAMPLE_ID = 1;
+			}
+			
+			for (int k = START_SAMPLE_ID; k <= LAST_SAMPLE_ID; k++) {
+				LexicalDatabase sample = new LexicalDatabaseConceptBootstrapSample(database);
+				produceMatricesForSample(args[0] + "-mtx-sample" + paddingFormatter.format(k) + ".tsv", sample, relevantLangIDs, globalCorrModel, infoModels);
+			}
+			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 	
-	public static void produceMatricesForSample(String fileName, LexicalDatabase database, int[] relevantLangIDs, CorrespondenceModel globalCorrModel, InformationModel[] infoModels) {
+	public static void produceMatricesForSample(String fileName, LexicalDatabase database, int[] relevantLangIDs, CorrespondenceModel globalCorrModel, InformationModel[] infoModels) throws IOException {
 		//infer local correspondences for all necessary language pairs
-		System.err.print(fileName + ", stage 1: Inference of sound correspondence matrices for each language pair\n");
+		System.err.print(fileName + ", stage 1: inference of sound correspondence matrices for each language pair\n");
 		CorrespondenceModel localCorrModels[][] = CorrespondenceModelInference.inferLocalCorrespondenceModels(database, database.getSymbolTable(), relevantLangIDs, globalCorrModel, infoModels);
 		
 		List<Map<Integer,Integer>> formsToCognateSetPerConcept = new ArrayList<Map<Integer,Integer>>(database.getNumConcepts());
 		List<Double[][]> formDistances = new ArrayList<Double[][]>(database.getNumConcepts());
-		
+		System.err.print(fileName + ", stage 2: computing form distance matrix and cognate clustering\n");
 		aggregateAnalysis(formsToCognateSetPerConcept, formDistances, database, relevantLangIDs, globalCorrModel, localCorrModels, infoModels);
 		
+		FileWriter out = new FileWriter(new File(fileName));
 		for (int i = 0; i < relevantLangIDs.length; i++) {
 			int lang1ID = relevantLangIDs[i];
-			for (int j = i; j < relevantLangIDs.length; j++) {
+			for (int j = 0; j < relevantLangIDs.length; j++) {
 				int lang2ID = relevantLangIDs[j];
 				
 				double cogOverlap = computeCognateOverlap(formsToCognateSetPerConcept, lang1ID, lang2ID, database);
 				double avgFrmDist = computeAverageFormDistance(formDistances, i, j);
-				System.err.println(database.getLanguageCode(lang1ID) + "\t" + database.getLanguageCode(lang2ID) + "\t" + formatter.format(cogOverlap) + "\t" + formatter.format(avgFrmDist));
+				out.write(database.getLanguageCode(lang1ID) + "\t" + database.getLanguageCode(lang2ID) + "\t" + formatter.format(cogOverlap) + "\t" + formatter.format(avgFrmDist) + "\n");
 			}
 		}
+		out.close();
 	}
 	
 	public static void aggregateAnalysis(List<Map<Integer,Integer>> formsToCognateSetPerConcept, List<Double[][]> formDistances, LexicalDatabase database, int[] relevantLangIDs, CorrespondenceModel globalCorrModel, CorrespondenceModel localCorrModels[][], InformationModel[] infoModels) {
 		for (int conceptID = 0; conceptID < database.getNumConcepts(); conceptID++) {
 			System.err.println("Clustering words for concept #" + conceptID + " (" + database.getConceptName(conceptID) + ")");
 			
+			List<List<Integer>> formsPerLang = database.getFormIDsForConceptPerLanguage(conceptID);
+			
 			// build distance matrix
-			List<Integer> formIDs = database.getFormIDsForConcept(conceptID);
+			List<Integer> formIDs = new LinkedList<Integer>();
+			for (int langID : relevantLangIDs) {
+				formIDs.addAll(formsPerLang.get(langID));
+			}
 			Map<Integer, Integer> formIDToIndex = new TreeMap<Integer, Integer>();
 			for (int index = 0; index < formIDs.size(); index++) {
 				formIDToIndex.put(formIDs.get(index), index);
@@ -135,7 +165,6 @@ public class CognateOverlapAvgFormDistBootstrap {
 				Arrays.fill(row, Double.POSITIVE_INFINITY);
 			}
 
-			List<List<Integer>> formsPerLang = database.getFormIDsForConceptPerLanguage(conceptID);
 			for (int i = 0; i < relevantLangIDs.length; i++)
 			{
 				int lang1ID = relevantLangIDs[i];
@@ -179,8 +208,10 @@ public class CognateOverlapAvgFormDistBootstrap {
 			for (Set<Integer> cognateSet : cognateSets) {
 				for (Integer id : cognateSet) {
 					formsToCognateSet.put(formIDs.get(id), cogSetID);
+					//System.err.println(database.getForm(formIDs.get(id)).toUntokenizedString(database.getSymbolTable()));
 				}
 				cogSetID++;
+				//System.err.println();
 			}
 			
 			formsToCognateSetPerConcept.add(formsToCognateSet);

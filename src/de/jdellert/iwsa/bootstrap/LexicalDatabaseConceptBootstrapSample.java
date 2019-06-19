@@ -1,50 +1,60 @@
 package de.jdellert.iwsa.bootstrap;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import de.jdellert.iwsa.data.LexicalDatabase;
 import de.jdellert.iwsa.sequence.PhoneticString;
-import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
 
+/**
+ * This class implements a wrapper around a lexical database which acts just as the original database,
+ * except that concept lookup (by ID, not by name!) is redirected through a table which implements a bootstrap sample.
+ * 
+ * @author jdellert
+ *
+ */
 public class LexicalDatabaseConceptBootstrapSample extends LexicalDatabase {
 	LexicalDatabase origDatabase;
-	Map<Integer,Integer> conceptIDToSampledID;
+	int[] conceptIDToSampledID;
 	
 	public LexicalDatabaseConceptBootstrapSample(LexicalDatabase origDatabase) {
 		super(origDatabase.getSymbolTable(), origDatabase.langCodes, origDatabase.conceptNames);
+		this.origDatabase = origDatabase;
 		
 		//resample concepts with replacement, maintaining the sample-specific mapping in conceptIDToSampledID
-		
-	}
-	
-	public PhoneticSymbolTable getSymbolTable() {
-		return symbolTable;
-	}
-	
-	public int addForm(String langCode, String conceptName, PhoneticString form) {
-		forms.add(form);
-
-		int formID = forms.size() - 1;
-		int langID = langCodeToID.get(langCode);
-		int conceptID = conceptNameToID.get(conceptName);
-
-		formToLang.add(langID);
-		formToConcept.add(conceptID);
-		langAndConceptToForms.get(langID).get(conceptID).add(formID);
-
-		return formID;
-	}
-
-	public List<Integer> getFormIDsForLanguage(int langID) {
-		List<Integer> result = new ArrayList<Integer>();
-		for (List<Integer> formList : langAndConceptToForms.get(langID)) {
-			result.addAll(formList);
+		int numConcepts = origDatabase.getNumConcepts();
+		conceptIDToSampledID = new int[numConcepts];
+		for (int i = 0; i < numConcepts; i++) {
+			conceptIDToSampledID[i] = (int) (Math.random() * numConcepts);
 		}
-		return result;
 	}
+	
+	//blocked methods
+	public int addForm(String langCode, String conceptName, PhoneticString form) {
+		System.err.println("ERROR: attempting to add a form to a bootstrap sample of a database, this should not happen!");
+		return -1;
+	}
+	
+	public void addCognateSet(List<Integer> cognateSetFormIDs) {
+		System.err.println("ERROR: attempting to add a cognate set to a bootstrap sample of a database, this should not happen!");
+	}
+	
+	public void addAnnotation(int formID, String field, String value) {
+		System.err.println("ERROR: attempting to add an annotation to a bootstrap sample of a database, this should not happen!");
+	}
+	
+	//modified methods: redirect concept lookup via the sample ID table
+	
+	public List<Integer> getFormIDsForLanguageAndConcept(int langID, int conceptID) {
+		return origDatabase.langAndConceptToForms.get(langID).get(conceptIDToSampledID[conceptID]);
+	}
+
+	public String getConceptName(int conceptID) {
+		return origDatabase.getConceptName(conceptIDToSampledID[conceptID]);
+	}
+	
+	//methods which retrieve concepts by ID and need to partially rely on the wrapper methods
+	//(these would not actually be necessary, but code is repeated here for clarity)
 
 	public List<Integer> getFormIDsForConcept(int conceptID) {
 		List<Integer> result = new ArrayList<Integer>();
@@ -53,11 +63,7 @@ public class LexicalDatabaseConceptBootstrapSample extends LexicalDatabase {
 		}
 		return result;
 	}
-
-	public List<Integer> getFormIDsForLanguageAndConcept(int langID, int conceptID) {
-		return langAndConceptToForms.get(langID).get(conceptID);
-	}
-
+	
 	public List<List<Integer>> getFormIDsForConceptPerLanguage(int conceptID) {
 		List<List<Integer>> result = new ArrayList<List<Integer>>(langCodes.length);
 		for (int langID = 0; langID < langCodes.length; langID++) {
@@ -65,109 +71,54 @@ public class LexicalDatabaseConceptBootstrapSample extends LexicalDatabase {
 		}
 		return result;
 	}
-
+	
+	//methods which can directly be handed on to the wrapped database
+	
+	public List<Integer> getFormIDsForLanguage(int langID) {
+		return origDatabase.getFormIDsForLanguage(langID);
+	}
+	
 	public PhoneticString getForm(int formID) {
-		return forms.get(formID);
+		return origDatabase.getForm(formID);
 	}
-
+	
 	public List<Integer> lookupFormIDs(String langCode, String conceptName) {
-		int langID = langCodeToID.get(langCode);
-		int conceptID = conceptNameToID.get(conceptName);
-		return getFormIDsForLanguageAndConcept(langID, conceptID);
+		return origDatabase.lookupFormIDs(langCode, conceptName);
 	}
-
-	public int getNumConcepts() {
-		return conceptNames.length;
-	}
-
-	public String getConceptName(int conceptID) {
-		return conceptNames[conceptID];
-	}
-
+	
 	public String getConceptNameForForm(int formID) {
-		return conceptNames[formToConcept.get(formID)];
+		return origDatabase.getConceptNameForForm(formID);
 	}
-
-	public int getNumLanguages() {
-		return langCodes.length;
-	}
-
-	public String getLanguageCode(int langID) {
-		return langCodes[langID];
-	}
-
-	public String[] getLanguageCodes() {
-		return Arrays.copyOf(langCodes, langCodes.length);
-	}
-
+	
 	public String getLanguageCodeForForm(int formID) {
-		return langCodes[formToLang.get(formID)];
+		return origDatabase.getLanguageCodeForForm(formID);
 	}
-
+	
 	public int getNumForms() {
-		return forms.size();
+		return origDatabase.getNumForms();
 	}
-
-	/**
-	 * Gets the internal language ID for a given language code.
-	 * 
-	 * @param langCode
-	 * @return the internal ID of that language, or -1 if language code is not in
-	 *         database.
-	 */
+	
 	public int getIDForLanguageCode(String langCode) {
-		Integer langID = langCodeToID.get(langCode);
-		if (langID == null)
-			langID = -1;
-		return langID;
+		return origDatabase.getIDForLanguageCode(langCode);
 	}
-
-	public String getAnnotation(String field, int formID) {
-		List<String> annotationsPerForm = annotations.get(field);
-		if (annotationsPerForm == null)
-			return "?";
-		return annotationsPerForm.get(formID);
-	}
-
-	public void addAnnotation(int formID, String field, String value) {
-		List<String> annotationsPerForm = annotations.get(field);
-		if (annotationsPerForm == null) {
-			annotationsPerForm = new ArrayList<String>(formToLang.size());
-			annotations.put(field, annotationsPerForm);
-		}
-		String unknown = "?";
-		while (annotationsPerForm.size() <= formID) {
-			annotationsPerForm.add(unknown);
-		}
-		annotationsPerForm.set(formID, value);
-	}
-
+	
 	public PhoneticString getRandomForm() {
-		return forms.get((int) (Math.random() * forms.size()));
+		return origDatabase.getRandomForm();
 	}
-
+	
 	public PhoneticString getRandomFormForLanguage(int langID) {
-		List<List<Integer>> conceptToFormsForLang = langAndConceptToForms.get(langID);
-		List<Integer> formsForRandomConcept = conceptToFormsForLang
-				.get((int) (Math.random() * conceptToFormsForLang.size()));
-		while (formsForRandomConcept.size() == 0) {
-			formsForRandomConcept = conceptToFormsForLang.get((int) (Math.random() * conceptToFormsForLang.size()));
-		}
-		return forms.get(formsForRandomConcept.get((int) (Math.random() * formsForRandomConcept.size())));
+		return origDatabase.getRandomFormForLanguage(langID);
 	}
-
+	
 	public PhoneticString getFormForLangConceptOrth(String lang, String concept, String orth) {
-		int langID = getIDForLanguageCode(lang);
-		if (langID == -1)
-			return null;
-		Integer conceptID = conceptNameToID.get(concept);
-		if (conceptID == null)
-			return null;
-		for (int formID : getFormIDsForLanguageAndConcept(langID, conceptID)) {
-			String formOrth = getAnnotation("Word_Form", formID);
-			if (formOrth.equals(orth))
-				return getForm(formID);
-		}
-		return null;
+		return origDatabase.getFormForLangConceptOrth(lang, concept, orth);
 	}
+	
+	public int getCognateSetID(int formID) {
+		return origDatabase.getCognateSetID(formID);
+	}
+	
+	//all other (minor) methods can be inherited because they operate only on symbolTable, langCodes, or conceptNames,
+	//i.e. the objects references to which had to be copied in order to be able to inherit from LexicalDatabase
+	
 }
