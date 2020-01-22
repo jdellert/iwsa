@@ -1,5 +1,7 @@
 package de.jdellert.iwsa.sequence;
 
+import de.jdellert.iwsa.util.io.StringUtils;
+
 import java.util.Arrays;
 
 /**
@@ -20,7 +22,7 @@ public class PhoneticString {
     }
 
     public String toString() {
-        return "[" + join(segments, ' ') + "]";
+        return "[" + StringUtils.join(" ", segments) + "]";
     }
 
     public String toString(PhoneticSymbolTable symbolTable) {
@@ -44,13 +46,6 @@ public class PhoneticString {
             if (segment > 1) reducedSegments[pos++] = segment;
         }
         return new PhoneticString(reducedSegments);
-    }
-
-    private static String join(int[] a, char c) {
-        StringBuilder s = new StringBuilder();
-        for (int i : a)
-            s.append(i).append(c);
-        return s.deleteCharAt(s.length()-1).toString();
     }
 
     @Override
