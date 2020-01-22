@@ -1,0 +1,4 @@
+[submodule "bin-utils"]
+	path = bin-utils
+	url = https://github.com/tdaneyko/bin-utils.git
+	branch = master
