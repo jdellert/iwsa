@@ -86,7 +86,7 @@ public class CognateOverlapAvgFormDistBootstrap {
 				System.err.print("Attempting to load existing global correspondence model from " + args[0]
 						+ "-global-iw.corr ... ");
 				globalCorrModel = CorrespondenceModelStorage
-						.loadCorrespondenceModel(new ObjectInputStream(new FileInputStream(args[0] + "-global-iw.corr")));
+						.deserializeCorrespondenceModel(new ObjectInputStream(new FileInputStream(args[0] + "-global-iw.corr")));
 				System.err.print(
 						"done.\nStage 1: Global sound correspondences - skipped because previously inferred model was found. Delete model file and rerun to cause re-inference.\n");
 			} catch (FileNotFoundException e) {
