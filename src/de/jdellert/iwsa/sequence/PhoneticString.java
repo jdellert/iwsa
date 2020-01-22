@@ -2,8 +2,6 @@ package de.jdellert.iwsa.sequence;
 
 import java.util.Arrays;
 
-import de.jdellert.iwsa.util.io.StringUtils;
-
 /**
  * Simple wrapper around int arrays used internally to compactly represent
  * phonetic strings.
@@ -11,40 +9,59 @@ import de.jdellert.iwsa.util.io.StringUtils;
  */
 
 public class PhoneticString {
-	public int[] segments;
+    public int[] segments;
 
-	public PhoneticString(int[] segments) {
-		this.segments = segments;
-	}
+    public PhoneticString(int[] segments) {
+        this.segments = segments;
+    }
 
-	public int getLength() {
-		return segments.length;
-	}
-	
-	public String toString() {
-		return "[" + StringUtils.join(" ", segments) + "]";
-	}
+    public int getLength() {
+        return segments.length;
+    }
 
-	public String toString(PhoneticSymbolTable symbolTable) {
-		return String.join(" ", symbolTable.decode(segments));
-	}
-	
-	public String toUntokenizedString(PhoneticSymbolTable symbolTable) {
-		return String.join("", symbolTable.decode(segments));
-	}
+    public String toString() {
+        return "[" + join(segments, ' ') + "]";
+    }
 
-	public PhoneticString copyWithoutGaps() {
-		int numGaps = 0;
-		for (int segment : segments)
-		{
-			if (segment == 1) numGaps++;
-		}
-		int[] reducedSegments = new int[segments.length - numGaps];
-		int pos = 0;
-		for (int segment : segments)
-		{
-			if (segment > 1) reducedSegments[pos++] = segment;
-		}
-		return new PhoneticString(reducedSegments);
-	}
+    public String toString(PhoneticSymbolTable symbolTable) {
+        return String.join(" ", symbolTable.decode(segments));
+    }
+
+    public String toUntokenizedString(PhoneticSymbolTable symbolTable) {
+        return String.join("", symbolTable.decode(segments));
+    }
+
+    public PhoneticString copyWithoutGaps() {
+        int numGaps = 0;
+        for (int segment : segments)
+        {
+            if (segment == 1) numGaps++;
+        }
+        int[] reducedSegments = new int[segments.length - numGaps];
+        int pos = 0;
+        for (int segment : segments)
+        {
+            if (segment > 1) reducedSegments[pos++] = segment;
+        }
+        return new PhoneticString(reducedSegments);
+    }
+
+    private static String join(int[] a, char c) {
+        StringBuilder s = new StringBuilder();
+        for (int i : a)
+            s.append(i).append(c);
+        return s.deleteCharAt(s.length()-1).toString();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof PhoneticString)
+            return Arrays.equals(this.segments, ((PhoneticString) obj).segments);
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return 31 + Arrays.hashCode(this.segments);
+    }
 }
