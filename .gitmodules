@@ -2,3 +2,7 @@
 	path = bin-utils
 	url = https://github.com/tdaneyko/bin-utils.git
 	branch = master
+[submodule "cldf-java"]
+	path = cldf-java
+	url = https://github.com/ketxd/cldf-java.git
+	branch = master

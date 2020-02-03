@@ -17,7 +17,7 @@ public class TCoffee {
     }
 
     public static MultipleAlignment align(List<PhoneticString> sequences, List<String> languages,
-                                          CorrespondenceModel corrModel, LanguageTree guideTree) {
+                                          CorrespondenceModel corrModel, GuideTree guideTree) {
         return (new TCoffee(sequences, languages, corrModel, guideTree)).align();
     }
 
@@ -28,12 +28,12 @@ public class TCoffee {
     private PhoneticSymbolTable symbols;
     private CorrespondenceModel corrModel;
 
-    private LanguageTree guideTree;
+    private GuideTree guideTree;
 
     private TCoffeeLibrary lib;
 
     private TCoffee(List<PhoneticString> sequences, List<String> languages,
-                    CorrespondenceModel corrModel, LanguageTree guideTree) {
+                    CorrespondenceModel corrModel, GuideTree guideTree) {
         this.sequences = sequences;
         this.symbols = corrModel.getSymbolTable();
         this.corrModel = corrModel;
@@ -54,7 +54,7 @@ public class TCoffee {
         languages = new ArrayList<>(languages);
         int n = languages.size();
         Map<String, Set<String>> ancestorOf = new HashMap<>();
-        this.guideTree = new LanguageTree();
+        this.guideTree = new GuideTree();
 
         Map<String, LinkedList<String>> paths = new HashMap<>();
         for (int i = 0; i < n; i++)
@@ -142,11 +142,11 @@ public class TCoffee {
     }
 
     private MultipleAlignment align() {
-        return align(guideTree.root);
+        return align(guideTree.getRoot());
     }
 
     private MultipleAlignment align(String curNode) {
-        Set<String> children = guideTree.children.get(curNode);
+        Set<String> children = guideTree.getChildrenOf(curNode);
         if (children == null || children.isEmpty()) {
             int l = lang2ID.get(curNode);
             return new MultipleAlignment(new String[]{curNode},
