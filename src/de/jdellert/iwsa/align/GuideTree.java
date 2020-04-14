@@ -5,11 +5,11 @@ import java.util.*;
 public class GuideTree {
     // Reduced version of LanguageTree
 
-    private Map<String, List<String>> paths;
+    protected Map<String, List<String>> paths;
     // virtual root node is marked "ROOT"
-    private String root = "ROOT";
-    private Map<String, String> parents;
-    private Map<String, TreeSet<String>> children;
+    protected String root = "ROOT";
+    protected Map<String, String> parents;
+    protected Map<String, TreeSet<String>> children;
 
     public GuideTree() {
         paths = new TreeMap<>();
