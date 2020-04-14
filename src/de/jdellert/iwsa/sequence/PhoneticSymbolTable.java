@@ -18,7 +18,7 @@ public class PhoneticSymbolTable implements Serializable {
     public static final int EMPTY_ID = 1;
     public static final String EMPTY_SYMBOL = "-";
 
-    public static final String UNKNOWN_SYMBOL = "/";
+    public static final String UNKNOWN_SYMBOL = "?";
 
     private String[] idToSymbol;
     private Map<String, Integer> symbolToID;

@@ -48,4 +48,23 @@ public class CorrespondenceModel {
 		int symbolPairID = symbolTable.getSize() * symbol1ID + symbol2ID;
 		return getScoreOrNull(symbolPairID);
 	}
+
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+
+		for (int i = 0; i < symbolTable.getSize(); i++)
+			sb.append("\t").append(symbolTable.toSymbol(i));
+		sb.append("\n");
+
+		for (int i = 0; i < symbolTable.getSize(); i++) {
+			sb.append(symbolTable.toSymbol(i));
+			for (int j = 0; j < symbolTable.getSize(); j++) {
+				sb.append("\t").append(getScore(i, j));
+			}
+			sb.append("\n");
+		}
+
+		return sb.toString();
+	}
 }

@@ -169,14 +169,25 @@ public class MultipleAlignment {
         return toString(false);
     }
 
+    public String toString(List<String> languages) {
+        return toString(languages, false);
+    }
+
     public String toString(boolean includeUnattested) {
+        return toString(null, includeUnattested);
+    }
+
+    public String toString(List<String> languages, boolean includeUnattested) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < msa.length; i++) {
             if (includeUnattested || msa[i][0] >= 0) {
                 for (int j = 0; j < msa[0].length; j++) {
                     sb.append(decode(msa[i][j])).append(' ');
                 }
-                sb.setCharAt(sb.length() - 1, '\n');
+                if (languages != null)
+                    sb.append("(").append(languages.get(i)).append(")\n");
+                else
+                    sb.setCharAt(sb.length() - 1, '\n');
             }
         }
         return sb.toString();

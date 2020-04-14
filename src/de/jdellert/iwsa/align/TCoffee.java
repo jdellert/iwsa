@@ -1,6 +1,7 @@
 package de.jdellert.iwsa.align;
 
 import de.jdellert.iwsa.corrmodel.CorrespondenceModel;
+import de.jdellert.iwsa.corrmodel.CorrespondenceModelStorage;
 import de.jdellert.iwsa.sequence.PhoneticString;
 import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
 
@@ -391,5 +392,33 @@ public class TCoffee {
 
             matrices = ext;
         }
+    }
+
+
+    public static void main(String[] args) {
+        CorrespondenceModel corrModel = CorrespondenceModelStorage.readGlobalModelFromFile(
+                "src/test/resources/northeuralex-0.9/global-nw-retokenized.corr");
+        PhoneticSymbolTable symTable = corrModel.getSymbolTable();
+
+        List<PhoneticString> sequences = new ArrayList<>();
+        sequences.add(new PhoneticString(symTable.encode(new String[]{"m", "ʊ", "l", "d", "ʊ"})));
+        sequences.add(new PhoneticString(symTable.encode(new String[]{"m", "ɔ", "l", "l", "d", "ɛ"})));
+        sequences.add(new PhoneticString(symTable.encode(new String[]{"m", "ʉ", "ɛ", "l", "t", "i", "ɛ"})));
+        sequences.add(new PhoneticString(symTable.encode(new String[]{"f", "ø", "l", "d"})));
+        List<String> languages = Arrays.asList("olo", "smj", "sma", "hun");
+
+        System.err.println(corrModel);
+
+        MultipleAlignment msa = TCoffee.align(sequences, languages, corrModel);
+        msa.orderAndFill(languages);
+        System.err.println(msa.toString(languages));
+
+        MultipleAlignment msa2 = TCoffee.align(sequences.subList(0, 2), languages.subList(0, 2), corrModel);
+        msa2.orderAndFill(languages);
+        System.err.println(msa2.toString(languages));
+
+        PhoneticStringAlignment align = NeedlemanWunschAlgorithm.constructAlignment(
+                sequences.get(0), sequences.get(1), corrModel, corrModel, corrModel, corrModel);
+        System.err.println(align.toString(symTable));
     }
 }
