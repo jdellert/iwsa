@@ -43,4 +43,12 @@ public class PhoneticSimilarityHelper {
 			return new PhoneticString(corrModel.getSymbolTable().encode(ipaTokenizer.tokenizeIPA(form.getForm())));
 	}
 
+	public CorrespondenceModel getCorrModel() {
+		return corrModel;
+	}
+
+	public void setCorrModel(CorrespondenceModel corrModel) {
+		this.corrModel = corrModel;
+	}
+
 }

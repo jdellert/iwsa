@@ -9,6 +9,7 @@ public class CorrespondenceModel {
 	PhoneticSymbolTable symbolTable;
 	// symbol pair ID => PMI score
 	Map<Integer, Double> scores;
+	String dbPath;
 
 	public CorrespondenceModel(PhoneticSymbolTable symbolTable) {
 		this.symbolTable = symbolTable;
@@ -47,6 +48,16 @@ public class CorrespondenceModel {
 	public Double getScoreOrNull(int symbol1ID, int symbol2ID) {
 		int symbolPairID = symbolTable.getSize() * symbol1ID + symbol2ID;
 		return getScoreOrNull(symbolPairID);
+	}
+	
+	
+
+	public String getDbPath() {
+		return dbPath;
+	}
+
+	public void setDbPath(String dbPath) {
+		this.dbPath = dbPath;
 	}
 
 	@Override
