@@ -4,6 +4,7 @@ import de.jdellert.iwsa.corrmodel.CorrespondenceModel;
 import de.jdellert.iwsa.sequence.PhoneticString;
 import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
 
+import javax.print.attribute.IntegerSyntax;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -13,10 +14,20 @@ public class MultipleAlignment {
     public static final String UNKNOWN_SYMBOL = PhoneticSymbolTable.UNKNOWN_SYMBOL;
 
     private String[] langs;
+    private List<Integer> forms;
     private int[][] msa;
     private boolean hasUnattested;
 
     private PhoneticSymbolTable symbolTable;
+
+    public MultipleAlignment() {
+        this.forms=new ArrayList<>();
+    }
+
+    public MultipleAlignment(PhoneticSymbolTable symbolTable) {
+        this.forms=new ArrayList<>();
+        this.symbolTable = symbolTable;
+    }
 
     public MultipleAlignment(String[] langs, int[][] msa, PhoneticSymbolTable symbolTable) {
         this.langs = langs;
@@ -95,6 +106,35 @@ public class MultipleAlignment {
 
         langs = newLangs;
         msa = newMsa;
+    }
+
+    public void setFormIds(List<Integer> formIds) {
+        forms= formIds;
+    }
+
+    public List<Integer> getFormIds() {
+        return forms;
+    }
+
+    public void setAlignments(List<String[]> alignments) {
+        msa=new int[alignments.size()][];
+        for(int i=0; i<alignments.size(); i++) {
+            msa[i] = symbolTable.encode(alignments.get(i));
+        }
+    }
+
+    public void changeAlignment(Set<Integer> rowIndices, String[][] newAlignments) {
+        if(newAlignments[0].length>msa[0].length) {
+            int[][] newMsa = new int[newAlignments.length][newAlignments[0].length];
+            for(Integer rowInd : rowIndices) {
+                newMsa[rowInd] = symbolTable.encode(newAlignments[rowInd]);
+            }
+            msa=newMsa;
+        } else {
+            for(Integer rowInd : rowIndices) {
+                msa[rowInd] = symbolTable.encode(newAlignments[rowInd]);
+            }
+        }
     }
 
     private String decode(int sym) {
