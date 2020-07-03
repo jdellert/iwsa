@@ -7,6 +7,7 @@ import de.jdellert.iwsa.sequence.PhoneticString;
 import de.jdellert.iwsa.tokenize.IPATokenizer;
 import de.tuebingen.sfs.cldfjava.data.CLDFForm;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class PhoneticSimilarityHelper {
@@ -37,8 +38,7 @@ public class PhoneticSimilarityHelper {
 		if (form == null)
 			return new PhoneticString(new int[0]);
 		if (ipaTokenizer == null) {
-			List<String> rootSegments = form.getSegments();
-			return new PhoneticString(corrModel.getSymbolTable().encode(rootSegments.toArray(new String[0])));
+			return new PhoneticString(corrModel.getSymbolTable().encode(form.getSegments()));
 		} else
 			return new PhoneticString(corrModel.getSymbolTable().encode(ipaTokenizer.tokenizeIPA(form.getForm())));
 	}
