@@ -116,6 +116,19 @@ public class MultipleAlignment {
         return forms;
     }
 
+    public List<Integer> getFormIds(List<String> languages) {
+        Map<String, Integer> lang2idx = new HashMap<>();
+        for (int l = 0; l < languages.size(); l++)
+            lang2idx.put(languages.get(l), l);
+        Integer[] filteredFormIds = new Integer[languages.size()];
+        for (int i = 0; i < forms.size(); i++) {
+            Integer l = lang2idx.get(langs[i]);
+            if (l != null)
+                filteredFormIds[l] = forms.get(i);
+        }
+        return Arrays.asList(filteredFormIds);
+    }
+
     public void setAlignments(List<String[]> alignments) {
         msa=new int[alignments.size()][];
         for(int i=0; i<alignments.size(); i++) {
@@ -166,6 +179,10 @@ public class MultipleAlignment {
 
     public Iterator<String[]> getAlignmentsBySegment() {
         return new AlignmentColumnIterator();
+    }
+
+    public Iterator<String[]> getAlignmentsBySegment(List<String> languages) {
+        return new AlignmentColumnIterator(languages);
     }
 
     public String getLanguage(int i) {
@@ -277,9 +294,18 @@ public class MultipleAlignment {
     private class AlignmentColumnIterator implements Iterator<String[]> {
 
         private int j;
+        private Map<String, Integer> lang2idx;
 
         public AlignmentColumnIterator() {
+            this(Arrays.asList(langs));
+        }
+
+        public AlignmentColumnIterator(List<String> languages) {
             j = 0;
+            lang2idx = new HashMap<>();
+            for (int l = 0; l < languages.size(); l++) {
+                lang2idx.put(languages.get(l), l);
+            }
         }
 
         @Override
@@ -289,9 +315,12 @@ public class MultipleAlignment {
 
         @Override
         public String[] next() {
-            String[] algn = new String[msa.length];
-            for (int i = 0; i < algn.length; i++) {
-                algn[i] = decode(msa[i][j]);
+            String[] algn = new String[lang2idx.size()];
+            Arrays.fill(algn, PhoneticSymbolTable.UNKNOWN_SYMBOL);
+            for (int i = 0; i < msa.length; i++) {
+                Integer l = lang2idx.get(langs[i]);
+                if (l != null)
+                    algn[l] = decode(msa[i][j]);
             }
             j++;
             return algn;
