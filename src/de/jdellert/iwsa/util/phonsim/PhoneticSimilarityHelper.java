@@ -5,7 +5,7 @@ import de.jdellert.iwsa.align.PhoneticStringAlignment;
 import de.jdellert.iwsa.corrmodel.CorrespondenceModel;
 import de.jdellert.iwsa.sequence.PhoneticString;
 import de.jdellert.iwsa.tokenize.IPATokenizer;
-import de.tuebingen.sfs.cldfjava.data.CLDFForm;
+import de.tuebingen.sfs.eie.core.IndexedObjectStore;
 
 import java.util.Arrays;
 import java.util.List;
@@ -14,13 +14,15 @@ public class PhoneticSimilarityHelper {
 
 	IPATokenizer ipaTokenizer;
 	CorrespondenceModel corrModel;
+	IndexedObjectStore objectStore;
 
-	public PhoneticSimilarityHelper(IPATokenizer ipaTokenizer, CorrespondenceModel corrModel) {
+	public PhoneticSimilarityHelper(IPATokenizer ipaTokenizer, CorrespondenceModel corrModel, IndexedObjectStore objectStore) {
 		this.ipaTokenizer = ipaTokenizer;
 		this.corrModel = corrModel;
+		this.objectStore = objectStore;
 	}
 
-	public double similarity(CLDFForm lang1Form, CLDFForm lang2Form) {
+	public double similarity(int lang1Form, int lang2Form) {
 		return similarity(extractSegments(lang1Form), extractSegments(lang2Form));
 	}
 
@@ -34,13 +36,13 @@ public class PhoneticSimilarityHelper {
 		return sim;
 	}
 
-	public PhoneticString extractSegments(CLDFForm form) {
-		if (form == null)
+	public PhoneticString extractSegments(int form) {
+		if (form == -1)
 			return new PhoneticString(new int[0]);
 		if (ipaTokenizer == null) {
-			return new PhoneticString(corrModel.getSymbolTable().encode(form.getSegments()));
+			return new PhoneticString(corrModel.getSymbolTable().encode(objectStore.getSegmentsForForm(form)));
 		} else
-			return new PhoneticString(corrModel.getSymbolTable().encode(ipaTokenizer.tokenizeIPA(form.getForm())));
+			return new PhoneticString(corrModel.getSymbolTable().encode(ipaTokenizer.tokenizeIPA(objectStore.getFormForFormId(form))));
 	}
 
 	public CorrespondenceModel getCorrModel() {
