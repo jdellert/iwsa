@@ -1,5 +1,7 @@
 package de.jdellert.iwsa.tokenize;
 
+import de.jdellert.iwsa.util.io.StringUtils;
+
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -22,6 +24,11 @@ public class IPATokenizer {
     public IPATokenizer(IPATokenizerConfiguration config) {
         this.config = config;
         initialize();
+    }
+
+    public IPATokenizer(GreedyIPATokenizerConfiguration config) {
+        this.config = config;
+        ignoredIPASegments = config.ignoredSymbols;
     }
 
     private void initialize() {
@@ -241,6 +248,16 @@ public class IPATokenizer {
      * @return an array of strings, each representing a phonetic segment
      */
     public String[] tokenizeIPA(String ipaString) {
+        if (config instanceof GreedyIPATokenizerConfiguration) {
+            try {
+                String[] tokenization = tokenizeIPAGreedy(ipaString);
+                return tokenization;
+            } catch (UnknownIpaSymbolException e) {
+                System.err.println("ERROR: no greedy IPA tokenization for " + e.getContext() + ", returning empty string!");
+                return new String[] {};
+            }
+        }
+
         List<String> segments = new LinkedList<String>();
 
         boolean coarticulation = false;
@@ -316,5 +333,41 @@ public class IPATokenizer {
             return false;
         char c = segment.charAt(0);
         return vowels.contains(c);
+    }
+
+    public String[] tokenizeIPAGreedy(String ipaString) throws UnknownIpaSymbolException {
+        String cleanedString = "";
+
+        //stage 1: clean-up based on ignored symbols
+        for (char c : ipaString.toCharArray()) {
+            if (ignoredIPASegments.contains(c))
+                continue;
+            else {
+                cleanedString += c;
+            }
+        }
+
+        //stage 2: greedy transformation based on lookahead
+        GreedyIPATokenizerConfiguration greedyConfig = (GreedyIPATokenizerConfiguration) config;
+        List<String> segments = new LinkedList<String>();
+        int currentPos = 0;
+        while (currentPos < cleanedString.length()) {
+            boolean symbolFound = false;
+            for (int i = currentPos + greedyConfig.lookahead; i > currentPos; i--) {
+                String substr = cleanedString.substring(currentPos, i);
+                List<String> replacement = greedyConfig.sequenceToSymbols.get(substr);
+                if (replacement != null) {
+                    segments.addAll(replacement);
+                    currentPos = i;
+                    symbolFound = true;
+                    break;
+                }
+            }
+            if (!symbolFound) {
+                String errorContext = StringUtils.join("", segments) + " " + cleanedString.substring(currentPos);
+                throw new UnknownIpaSymbolException(cleanedString.charAt(currentPos) + "", errorContext);
+            }
+        }
+        return segments.toArray(new String[segments.size()]);
     }
 }
