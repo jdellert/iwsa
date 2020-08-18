@@ -3,6 +3,8 @@ package de.jdellert.iwsa.infomodel;
 import de.jdellert.iwsa.data.LexicalDatabase;
 import de.jdellert.iwsa.sequence.PhoneticString;
 import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
+import de.jdellert.iwsa.tokenize.IPATokenizer;
+import de.tuebingen.sfs.cldfjava.data.CLDFWordlistDatabase;
 
 public class InformationModelInference {
 	
@@ -35,4 +37,27 @@ public class InformationModelInference {
 		}
 		return model;
 	}
+
+	public static InformationModel inferInformationModelForLanguage(String langID, CLDFWordlistDatabase db,
+																	PhoneticSymbolTable symbolTable, IPATokenizer tokenizer) {
+		InformationModel model = new InformationModel(symbolTable);
+		for (int formID : db.listFormIdsForLangId(langID)) {
+			PhoneticString form = tokenizer.extractSegments(db.getFormsMap().get(formID), symbolTable);
+			if (form.getLength() == 0) continue;
+			int k = form.getLength() - 1;
+			model.addTrigramObservation(0, 0, form.segments[0]);
+			model.addTrigramObservation(form.segments[k], 0, 0);
+			if (k == 0) {
+				model.addTrigramObservation(0, form.segments[0], 0);
+			} else {
+				model.addTrigramObservation(0, form.segments[0], form.segments[1]);
+				model.addTrigramObservation(form.segments[k - 1], form.segments[k], 0);
+			}
+			for (int i = 0; i < k - 1; i++) {
+				model.addTrigramObservation(form.segments[i], form.segments[i + 1], form.segments[i + 2]);
+			}
+		}
+		return model;
+	}
+
 }

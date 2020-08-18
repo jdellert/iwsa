@@ -1,6 +1,9 @@
 package de.jdellert.iwsa.tokenize;
 
+import de.jdellert.iwsa.sequence.PhoneticString;
+import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
 import de.jdellert.iwsa.util.io.StringUtils;
+import de.tuebingen.sfs.cldfjava.data.CLDFForm;
 
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -353,7 +356,7 @@ public class IPATokenizer {
         int currentPos = 0;
         while (currentPos < cleanedString.length()) {
             boolean symbolFound = false;
-            for (int i = currentPos + greedyConfig.lookahead; i > currentPos; i--) {
+            for (int i = Math.min(cleanedString.length(), currentPos + greedyConfig.lookahead); i > currentPos; i--) {
                 String substr = cleanedString.substring(currentPos, i);
                 List<String> replacement = greedyConfig.sequenceToSymbols.get(substr);
                 if (replacement != null) {
@@ -369,5 +372,12 @@ public class IPATokenizer {
             }
         }
         return segments.toArray(new String[segments.size()]);
+    }
+
+    public PhoneticString extractSegments(CLDFForm form, PhoneticSymbolTable symTable) {
+        if (form == null)
+            return new PhoneticString(new int[0]);
+        String[] tokens = tokenizeIPA(form.getForm());
+        return new PhoneticString(symTable.encode(tokens));
     }
 }

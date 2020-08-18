@@ -105,8 +105,6 @@ public class InformationWeightedSequenceAlignment extends PhoneticStringAlignmen
 		
 		double normalizedDistanceScore = 1 - (2 * similarityScore) / (str1SelfSimilarity + str2SelfSimilarity);
 
-
-
 		PhoneticStringAlignment alignment = new PhoneticStringAlignment();
 		alignment.str1 = new PhoneticString(result1.stream().mapToInt(Integer::intValue).toArray());
 		alignment.str2 = new PhoneticString(result2.stream().mapToInt(Integer::intValue).toArray());
