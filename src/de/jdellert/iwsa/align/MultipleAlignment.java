@@ -109,11 +109,11 @@ public class MultipleAlignment {
     }
 
     public void setFormIds(List<Integer> formIds) {
-        forms= formIds;
+        this.forms= formIds;
     }
 
     public List<Integer> getFormIds() {
-        return forms;
+        return this.forms;
     }
 
     public List<Integer> getFormIds(List<String> languages) {
