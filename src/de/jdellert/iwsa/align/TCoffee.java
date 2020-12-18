@@ -333,9 +333,8 @@ public class TCoffee {
                         int k = 0;
                         int l = 0;
                         for (int a = 0; a < align.getLength(); a++) {
-                            int symPair = align.getSymbolPairIDAtPos(a, symbols);
-                            int inSym = symPair / symbols.getSize();
-                            int outSym = symPair % symbols.getSize();
+                            int inSym = align.getSymbol1IDAtPos(a);
+                            int outSym = align.getSymbol2IDAtPos(a);
                             if (inSym == EMPTY_SYMBOL)
                                 l++;
                             else if (outSym == EMPTY_SYMBOL)

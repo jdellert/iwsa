@@ -24,6 +24,14 @@ public class PhoneticStringAlignment {
         return str1.segments[pos] * symbolTable.getSize() + str2.segments[pos];
     }
 
+    public int getSymbol1IDAtPos(int pos) {
+        return str1.segments[pos];
+    }
+
+    public int getSymbol2IDAtPos(int pos) {
+        return str2.segments[pos];
+    }
+
     public List<String[]> getSymbolPairs(PhoneticSymbolTable symbolTable) {
         List<String[]> symbolPairs = new ArrayList<>();
         for (int i = 0; i < getLength(); i++) {
