@@ -108,6 +108,10 @@ public class MultipleAlignment {
         msa = newMsa;
     }
 
+    public void setLangs(List<String> languages) {
+        this.langs = languages.toArray(new String[0]);
+    }
+
     public void setFormIds(List<Integer> formIds) {
         this.forms= formIds;
     }
