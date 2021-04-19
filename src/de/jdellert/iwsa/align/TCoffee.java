@@ -40,15 +40,22 @@ public class TCoffee {
         this.corrModel = corrModel;
 
         this.lang2ID = new HashMap<>();
-        for (int i = 0; i < languages.size(); i++)
-            this.lang2ID.put(languages.get(i), i);
+        ArrayList<String> newLangs=new ArrayList<>();
+        for (int i = 0; i < languages.size(); i++) {
+            String language = languages.get(i);
+            if(lang2ID.containsKey(language)) {
+                language+=i;
+            }
+            newLangs.add(language);
+            this.lang2ID.put(language, i);
+        }
 
         this.lib = new TCoffeeLibrary();
         this.lib.extend();
 
         this.guideTree = guideTree;
         if (guideTree == null)
-            createGuideTree(languages);
+            createGuideTree(newLangs);
     }
 
     private void createGuideTree(List<String> languages) {
