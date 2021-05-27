@@ -18,7 +18,10 @@ import de.jdellert.iwsa.corrmodel.CorrespondenceModel;
 import de.jdellert.iwsa.corrmodel.CorrespondenceModelInference;
 import de.jdellert.iwsa.corrmodel.CorrespondenceModelStorage;
 import de.jdellert.iwsa.data.CLDFExport;
-import de.jdellert.iwsa.data.CLDFImport;
+//import de.jdellert.iwsa.data.CLDFImport;
+import de.tuebingen.sfs.cldfjava.data.CLDFLanguage;
+import de.tuebingen.sfs.cldfjava.data.CLDFWordlistDatabase;
+import de.tuebingen.sfs.cldfjava.io.CLDFImport;
 import de.jdellert.iwsa.data.LexicalDatabase;
 import de.jdellert.iwsa.infomodel.InformationModel;
 import de.jdellert.iwsa.infomodel.InformationModelInference;
@@ -33,17 +36,23 @@ public class CognateClusteringIWDSC {
         try {
             String resultFileName = args[1];
 
-            LexicalDatabase database = CLDFImport.loadDatabase(args[0], true);
-            PhoneticSymbolTable symbolTable = database.getSymbolTable();
+            CLDFWordlistDatabase database = CLDFImport.loadDatabase(args[0]);
+            PhoneticSymbolTable symbolTable = PhoneticSymbolTable.symbolTableFromDatabase(database);
 
             InformationModel[] infoModels = InformationModelInference.inferInformationModels(database, symbolTable);
 
             // default: assume all languages are relevant, and part of the inference
-            String[] relevantLangCodes = database.getLanguageCodes();
-            int[] relevantLangIDs = new int[database.getNumLanguages()];
-            for (int i = 0; i < relevantLangIDs.length; i++) {
-                relevantLangIDs[i] = i;
+            Map<String, CLDFLanguage> languageMap = database.getLanguageMap();
+            String[] langIDs = new String[languageMap.size()];
+            CLDFLanguage[] languages = new CLDFLanguage[languageMap.size()];
+            int i = 0;
+            for (Map.Entry<String, CLDFLanguage> languageEntry : languageMap.entrySet()) {
+                langIDs[i] = languageEntry.getKey();
+                languages[i] = languageEntry.getValue();
+                i++;
             }
+
+            /*
 
             // interpret additional arguments as language IDs
             if (args.length > 2) {
@@ -60,10 +69,14 @@ public class CognateClusteringIWDSC {
                 }
             }
 
+
+
             Map<String, Integer> relevantLangToID = new TreeMap<String, Integer>();
             for (int langID = 0; langID < relevantLangIDs.length; langID++) {
                 relevantLangToID.put(relevantLangCodes[langID], relevantLangIDs[langID]);
             }
+
+             */
 
             CorrespondenceModel globalCorrModel = null;
             try {

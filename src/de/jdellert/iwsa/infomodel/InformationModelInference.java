@@ -4,7 +4,10 @@ import de.jdellert.iwsa.data.LexicalDatabase;
 import de.jdellert.iwsa.sequence.PhoneticString;
 import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
 import de.jdellert.iwsa.tokenize.IPATokenizer;
+import de.tuebingen.sfs.cldfjava.data.CLDFLanguage;
 import de.tuebingen.sfs.cldfjava.data.CLDFWordlistDatabase;
+
+import java.util.Map;
 
 public class InformationModelInference {
 	
@@ -36,6 +39,18 @@ public class InformationModelInference {
 			}
 		}
 		return model;
+	}
+
+	public static InformationModel[] inferInformationModels(CLDFWordlistDatabase db, PhoneticSymbolTable symbolTable) {
+		Map<String, CLDFLanguage> languageMap = db.getLanguageMap();
+		InformationModel[] infoModels = new InformationModel[languageMap.size()];
+		IPATokenizer tokenizer = new IPATokenizer();
+		int i = 0;
+		for (Map.Entry<String, CLDFLanguage> languageEntry : languageMap.entrySet()) {
+			infoModels[i] = inferInformationModelForLanguage(languageEntry.getKey(), db, symbolTable, tokenizer);
+			i++;
+		}
+		return infoModels;
 	}
 
 	public static InformationModel inferInformationModelForLanguage(String langID, CLDFWordlistDatabase db,
