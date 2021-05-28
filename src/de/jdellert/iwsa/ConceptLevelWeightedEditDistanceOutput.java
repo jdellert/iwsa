@@ -20,6 +20,9 @@ import de.jdellert.iwsa.infomodel.InformationModel;
 import de.jdellert.iwsa.infomodel.InformationModelInference;
 import de.jdellert.iwsa.sequence.PhoneticString;
 import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
+import de.tuebingen.sfs.cldfjava.data.CLDFForm;
+import de.tuebingen.sfs.cldfjava.data.CLDFParameter;
+import de.tuebingen.sfs.cldfjava.data.CLDFWordlistDatabase;
 
 public class ConceptLevelWeightedEditDistanceOutput {
     public static final boolean ALIGNMENT_OUTPUT = false;
@@ -140,6 +143,37 @@ public class ConceptLevelWeightedEditDistanceOutput {
                     System.out.print(database.getAnnotation("Word_Form", lang1FormID) + "\t"
                             + database.getAnnotation("Word_Form", lang2FormID) + "\t");
                     System.out.print(lang1Form.toString(symbolTable) + "\t" + lang2Form.toString(symbolTable) + "\t");
+                    System.out.println(globalWeightDistance + "\t" + localWeightDistance + "\t" + minDistance);
+                }
+            }
+        }
+    }
+
+    public static void distanceOutput(CLDFWordlistDatabase database, PhoneticSymbolTable symbolTable, String lang1,
+                                      String lang2, CorrespondenceModel globalCorrModel, CorrespondenceModel localCorrModel) {
+        Map<String, CLDFParameter> concepts = database.getConceptMap();
+        for (String paramID : concepts.keySet()) {
+            CLDFParameter concept = concepts.get(paramID);
+            Map<String, List<CLDFForm>> formsByParamID = database.getFormsByLanguageByParamID(paramID);
+            for (CLDFForm form1inCLDF : formsByParamID.get(lang1)) {
+                PhoneticString form1 = new PhoneticString(symbolTable.encode(form1inCLDF.getSegments()));
+                for (CLDFForm form2inCLDF : formsByParamID.get(lang2)) {
+                    PhoneticString form2 = new PhoneticString(symbolTable.encode(form2inCLDF.getSegments()));
+                    PhoneticStringAlignment globalWeightsAlignment = NeedlemanWunschAlgorithm
+                            .constructAlignment(form1, form2, globalCorrModel, globalCorrModel, globalCorrModel, globalCorrModel);
+                    double globalWeightDistance = globalWeightsAlignment.normalizedDistanceScore;
+                    PhoneticStringAlignment localWeightsAlignment = NeedlemanWunschAlgorithm
+                            .constructAlignment(form1, form2, globalCorrModel, localCorrModel, globalCorrModel, globalCorrModel);
+                    double localWeightDistance = localWeightsAlignment.normalizedDistanceScore;
+                    double minDistance = Math.min(globalWeightDistance, localWeightDistance);
+                    System.out.print(concept.getName() + "\t");
+
+
+                    System.out
+                            .print(lang1 + "\t" + lang2 + "\t");
+                    //System.out.print(database.getAnnotation("Word_Form", lang1FormID) + "\t"
+                     //       + database.getAnnotation("Word_Form", lang2FormID) + "\t");
+                    System.out.print(form1.toString(symbolTable) + "\t" + form2.toString(symbolTable) + "\t");
                     System.out.println(globalWeightDistance + "\t" + localWeightDistance + "\t" + minDistance);
                 }
             }

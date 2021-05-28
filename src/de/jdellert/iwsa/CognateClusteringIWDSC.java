@@ -19,6 +19,7 @@ import de.jdellert.iwsa.corrmodel.CorrespondenceModelInference;
 import de.jdellert.iwsa.corrmodel.CorrespondenceModelStorage;
 import de.jdellert.iwsa.data.CLDFExport;
 //import de.jdellert.iwsa.data.CLDFImport;
+import de.tuebingen.sfs.cldfjava.data.CLDFForm;
 import de.tuebingen.sfs.cldfjava.data.CLDFLanguage;
 import de.tuebingen.sfs.cldfjava.data.CLDFWordlistDatabase;
 import de.tuebingen.sfs.cldfjava.io.CLDFImport;
@@ -43,14 +44,22 @@ public class CognateClusteringIWDSC {
 
             // default: assume all languages are relevant, and part of the inference
             Map<String, CLDFLanguage> languageMap = database.getLanguageMap();
-            String[] langIDs = new String[languageMap.size()];
+            List<String> relevantLangIDs = database.getLangIDs();
+            Map<String, Integer> relevantLangToID = new TreeMap<String, Integer>();
+            for (int i = 0; i < relevantLangIDs.size(); i++) {
+                relevantLangToID.put(relevantLangIDs.get(i), i);
+            }
+
+            /*String[] langIDs = new String[languageMap.size()];
             CLDFLanguage[] languages = new CLDFLanguage[languageMap.size()];
             int i = 0;
             for (Map.Entry<String, CLDFLanguage> languageEntry : languageMap.entrySet()) {
                 langIDs[i] = languageEntry.getKey();
                 languages[i] = languageEntry.getValue();
                 i++;
-            }
+            }*/
+
+
 
             /*
 
@@ -123,36 +132,36 @@ public class CognateClusteringIWDSC {
                 System.err.print("Stage 2: Inference of sound correspondence matrices for each language pair\n");
                 localCorrModels = CorrespondenceModelInference.inferLocalCorrespondenceModels(database, symbolTable,
                         relevantLangIDs, globalCorrModel, infoModels);
-                CorrespondenceModelStorage.serializeLocalModelsToFile(localCorrModels, database.getLanguageCodes(),
+                String[] langIDsArray = new String[relevantLangIDs.size()];
+                relevantLangIDs.toArray(langIDsArray);
+                CorrespondenceModelStorage.serializeLocalModelsToFile(localCorrModels, langIDsArray,
                         symbolTable, args[0] + "-local-iw.corr");
             }
 
-            for (int conceptID = 0; conceptID < database.getNumConcepts(); conceptID++) {
-                System.err.println("Clustering words for concept #" + conceptID + " (" + database.getConceptName(conceptID) + ")");
+            int conceptCounter = 0;
+            for (String concept : database.getConceptMap().keySet()) {
+                System.err.println("Clustering words for concept #" + conceptCounter + " (" + concept + ")");
 
                 // build distance matrix
-                List<Integer> formIDs = database.getFormIDsForConcept(conceptID);
-                Map<Integer, Integer> formIDToIndex = new TreeMap<Integer, Integer>();
-                for (int index = 0; index < formIDs.size(); index++) {
-                    formIDToIndex.put(formIDs.get(index), index);
-                }
+                //List<CLDFForm> forms = database.getFormsByParamID(concept);
+                Map<Integer, CLDFForm> formMap = database.getFormsMap();
+                double[][] distanceMatrix = new double[formMap.size()][formMap.size()];
 
-                double[][] distanceMatrix = new double[formIDs.size()][formIDs.size()];
-
-                List<List<Integer>> formsPerLang = database.getFormIDsForConceptPerLanguage(conceptID);
-                for (int i = 0; i < relevantLangIDs.length; i++)
-                {
-                    int lang1ID = relevantLangIDs[i];
-                    for (int j = i; j < relevantLangIDs.length; j++) {
-                        int lang2ID = relevantLangIDs[j];
-                        for (int lang1FormID : formsPerLang.get(lang1ID)) {
-                            int index1 = formIDToIndex.get(lang1FormID);
-                            PhoneticString lang1Form = database.getForm(lang1FormID);
-                            for (int lang2FormID : formsPerLang.get(lang2ID)) {
-                                int index2 = formIDToIndex.get(lang2FormID);
-                                PhoneticString lang2Form = database.getForm(lang2FormID);
+                Map<String, List<CLDFForm>> formsPerLang = database.getFormsByLanguageByParamID(concept);
+                for (int i = 0; i < relevantLangIDs.size(); i++) {
+                    String lang1 = relevantLangIDs.get(i);
+                    int lang1ID = relevantLangIDs.indexOf(lang1);
+                    List<CLDFForm> lang1Forms = formsPerLang.get(lang1);
+                    for (int j = i; j < relevantLangIDs.size(); j++) {
+                        String lang2 = relevantLangIDs.get(j);
+                        int lang2ID = relevantLangIDs.indexOf(lang2);
+                        List<CLDFForm> lang2Forms = formsPerLang.get(lang2);
+                        for (CLDFForm form1inCLDF : lang1Forms) {
+                            PhoneticString form1 = new PhoneticString(symbolTable.encode(form1inCLDF.getSegments()));
+                            for (CLDFForm form2inCLDF : lang2Forms) {
+                                PhoneticString form2 = new PhoneticString(symbolTable.encode(form2inCLDF.getSegments()));
                                 PhoneticStringAlignment localWeightsAlignment = InformationWeightedSequenceAlignment
-                                        .constructAlignment(lang1Form, lang2Form, globalCorrModel,
+                                        .constructAlignment(form1, form2, globalCorrModel,
                                                 localCorrModels[lang1ID][lang2ID], localCorrModels[lang1ID][lang1ID],
                                                 localCorrModels[lang2ID][lang2ID], infoModels[lang1ID],
                                                 infoModels[lang2ID]);
@@ -161,17 +170,18 @@ public class CognateClusteringIWDSC {
                                 localWeightDistance *= localWeightDistance;
                                 if (localWeightDistance > MAX_DIST_VAL) localWeightDistance = MAX_DIST_VAL;
                                 localWeightDistance /= MAX_DIST_VAL;
-                                if (index1 == index2) localWeightDistance = 0.0;
-                                distanceMatrix[index1][index2] = localWeightDistance;
-                                distanceMatrix[index2][index1] = localWeightDistance;
+                                if (lang1ID == lang2ID) localWeightDistance = 0.0;
+                                distanceMatrix[lang1ID][lang2ID] = localWeightDistance;
+                                distanceMatrix[lang2ID][lang1ID] = localWeightDistance;
                             }
                         }
                     }
                 }
-
                 // UPGMA clustering
                 Set<Set<Integer>> cognateSets = FlatClustering.upgma(distanceMatrix, THRESHOLD);
 
+
+                /*
                 // store cluster IDs in database
                 for (Set<Integer> cognateSet : cognateSets) {
                     List<Integer> cognateSetFormIDs = new ArrayList<Integer>(cognateSet.size());
@@ -180,11 +190,15 @@ public class CognateClusteringIWDSC {
                         cognateSetFormIDs.add(formID);
                     }
                     database.addCognateSet(cognateSetFormIDs);
-                }
+                }*/
+
+                conceptCounter++;
             }
 
+
+
             // CLDF output (without header by default)
-            CLDFExport.exportToFile(database, resultFileName, false);
+            // CLDFExport.exportToFile(database, resultFileName, false);
 
         } catch (IOException e) {
             // TODO Auto-generated catch block

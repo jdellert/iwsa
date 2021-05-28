@@ -7,6 +7,7 @@ import de.jdellert.iwsa.tokenize.IPATokenizer;
 import de.tuebingen.sfs.cldfjava.data.CLDFLanguage;
 import de.tuebingen.sfs.cldfjava.data.CLDFWordlistDatabase;
 
+import java.util.List;
 import java.util.Map;
 
 public class InformationModelInference {
@@ -42,13 +43,11 @@ public class InformationModelInference {
 	}
 
 	public static InformationModel[] inferInformationModels(CLDFWordlistDatabase db, PhoneticSymbolTable symbolTable) {
-		Map<String, CLDFLanguage> languageMap = db.getLanguageMap();
-		InformationModel[] infoModels = new InformationModel[languageMap.size()];
+		List<String> languageIDs = db.getLangIDs();
+		InformationModel[] infoModels = new InformationModel[languageIDs.size()];
 		IPATokenizer tokenizer = new IPATokenizer();
-		int i = 0;
-		for (Map.Entry<String, CLDFLanguage> languageEntry : languageMap.entrySet()) {
-			infoModels[i] = inferInformationModelForLanguage(languageEntry.getKey(), db, symbolTable, tokenizer);
-			i++;
+		for (int i = 0; i < languageIDs.size(); i++) {
+			infoModels[i] = inferInformationModelForLanguage(languageIDs.get(i), db, symbolTable, tokenizer);
 		}
 		return infoModels;
 	}
