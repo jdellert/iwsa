@@ -4,8 +4,8 @@ import java.io.*;
 import java.util.*;
 
 import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
-import de.tuebingen.sfs.util.bin.BufferedByteReader;
-import de.tuebingen.sfs.util.bin.IOUtils;
+import de.tuebingen.sfs.eie.shared.util.bin.BufferedByteReader;
+import de.tuebingen.sfs.eie.shared.util.bin.IOUtils;
 
 public class CorrespondenceModelStorage {
 
