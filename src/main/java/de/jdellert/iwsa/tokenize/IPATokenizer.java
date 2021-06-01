@@ -246,8 +246,7 @@ public class IPATokenizer {
      * Tokenizes an ipaString according to the configuration defined during
      * construction.
      *
-     * @param ipaString
-     *            a unicode IPA string, possible pre-tokenized by spaces
+     * @param ipaString a unicode IPA string, possible pre-tokenized by spaces
      * @return an array of strings, each representing a phonetic segment
      */
     public String[] tokenizeIPA(String ipaString) {
@@ -257,7 +256,7 @@ public class IPATokenizer {
                 return tokenization;
             } catch (UnknownIpaSymbolException e) {
                 System.err.println("ERROR: no greedy IPA tokenization for " + e.getContext() + ", returning empty string!");
-                return new String[] {};
+                return new String[]{};
             }
         }
 
@@ -278,8 +277,7 @@ public class IPATokenizer {
                             (config.SINGLE_SEGMENT_GEMINATES && !isVowel && currentSegment.length() == 1)) {
                         currentSegment.append(c);
                         segments.add(currentSegment.toString());
-                    }
-                    else if (currentSegment.toString().equals("̃")) {
+                    } else if (currentSegment.toString().equals("̃")) {
                         segments.add(segments.get(segments.size() - 1));
                         segments.add("̃");
                     } else {

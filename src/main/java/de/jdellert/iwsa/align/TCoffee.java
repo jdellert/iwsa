@@ -5,32 +5,23 @@ import de.jdellert.iwsa.corrmodel.CorrespondenceModelStorage;
 import de.jdellert.iwsa.sequence.PhoneticString;
 import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class TCoffee {
 
     private static final int EMPTY_SYMBOL = PhoneticSymbolTable.EMPTY_ID;
-
-
-    public static MultipleAlignment align(List<PhoneticString> sequences, List<String> languages,
-                                          CorrespondenceModel corrModel) {
-        return align(sequences, languages, corrModel, null);
-    }
-
-    public static MultipleAlignment align(List<PhoneticString> sequences, List<String> languages,
-                                          CorrespondenceModel corrModel, GuideTree guideTree) {
-        return (new TCoffee(sequences, languages, corrModel, guideTree)).align();
-    }
-
-
     private List<PhoneticString> sequences;
     private Map<String, Integer> lang2ID;
-
     private PhoneticSymbolTable symbols;
     private CorrespondenceModel corrModel;
-
     private GuideTree guideTree;
-
     private TCoffeeLibrary lib;
 
     private TCoffee(List<PhoneticString> sequences, List<String> languages,
@@ -40,11 +31,11 @@ public class TCoffee {
         this.corrModel = corrModel;
 
         this.lang2ID = new HashMap<>();
-        ArrayList<String> newLangs=new ArrayList<>();
+        ArrayList<String> newLangs = new ArrayList<>();
         for (int i = 0; i < languages.size(); i++) {
             String language = languages.get(i);
-            if(lang2ID.containsKey(language)) {
-                language+=i;
+            if (lang2ID.containsKey(language)) {
+                language += i;
             }
             newLangs.add(language);
             this.lang2ID.put(language, i);
@@ -58,203 +49,14 @@ public class TCoffee {
             createGuideTree(newLangs);
     }
 
-    private void createGuideTree(List<String> languages) {
-        languages = new ArrayList<>(languages);
-        int n = languages.size();
-        Map<String, Set<String>> ancestorOf = new HashMap<>();
-        this.guideTree = new GuideTree();
-
-        Map<String, LinkedList<String>> paths = new HashMap<>();
-        for (int i = 0; i < n; i++)
-            paths.put(languages.get(i), new LinkedList<>());
-        int node = 0;
-
-        // https://de.wikipedia.org/wiki/Neighbor-Joining-Algorithmus
-
-        // Use lib score matrix as distance estimation
-        double[][] dist = new double[n][n];
-        for (int i = 0; i < n; i++)
-            for (int j = 0; j < n; j++)
-                dist[i][j] = 1.0 - lib.scores[i][j];
-
-        for (int x = 0; x < n-2; x++) {
-            int m = n-x;
-
-            double[] r = new double[m];
-            for (int i = 0; i < m; i++) {
-                for (int j = 0; j < m; j++)
-                    r[i] += dist[i][j];
-                r[i] /= m-2;
-            }
-
-            int minI = -1;
-            int minJ = -1;
-            double minVal = Double.MAX_VALUE;
-            for (int i = 0; i < m; i++) {
-                for (int j = 0; j < m; j++) {
-                    if (i != j) {
-                        double m_ij = dist[i][j] - (r[i] + r[j]);
-                        if (m_ij < minVal) {
-                            minVal = m_ij;
-                            minI = i;
-                            minJ = j;
-                        }
-                    }
-                }
-            }
-
-            String newNode = "proto"+node;
-            String child1 = languages.remove(Math.max(minI, minJ));
-            String child2 = languages.remove(Math.min(minI, minJ));
-            languages.add(newNode);
-            Set<String> descendants = new HashSet<>();
-            if (ancestorOf.containsKey(child1))
-                descendants.addAll(ancestorOf.remove(child1));
-            else
-                descendants.add(child1);
-            if (ancestorOf.containsKey(child2))
-                descendants.addAll(ancestorOf.remove(child2));
-            else
-                descendants.add(child2);
-            ancestorOf.put(newNode, descendants);
-            for (String descendant : descendants) {
-                paths.get(descendant).push(newNode);
-            }
-            node++;
-
-            double[][] newDist = new double[m-1][m-1];
-            int skipI = 0;
-            for (int i = 0; i < m; i++) {
-                if (i == minI || i == minJ)
-                    skipI++;
-                else {
-                    int skipJ = 0;
-                    for (int j = 0; j < m; j++) {
-                        if (j == minI || j == minJ)
-                            skipJ++;
-                        else {
-                            newDist[i-skipI][j-skipJ] = dist[i][j];
-                        }
-                    }
-
-                    newDist[m-3][i-skipI] = (dist[minI][i-skipI]
-                            + dist[minJ][i-skipI] - dist[minI][minJ]) / 2;
-                    newDist[i-skipI][m-3] = newDist[m-3][i-skipI];
-                }
-            }
-            dist = newDist;
-        }
-
-        for (String leaf : paths.keySet())
-            guideTree.enlargeTreeByPath(paths.get(leaf), leaf);
+    public static MultipleAlignment align(List<PhoneticString> sequences, List<String> languages,
+                                          CorrespondenceModel corrModel) {
+        return align(sequences, languages, corrModel, null);
     }
 
-    private MultipleAlignment align() {
-        return align(guideTree.getRoot());
-    }
-
-    private MultipleAlignment align(String curNode) {
-        Set<String> children = guideTree.getChildrenOf(curNode);
-        if (children == null || children.isEmpty()) {
-            int l = lang2ID.get(curNode);
-            return new MultipleAlignment(new String[]{curNode},
-                    new int[][]{sequences.get(l).segments}, symbols);
-        }
-        else {
-            String[] childArray = children.toArray(new String[0]);
-            MultipleAlignment msa1 = align(childArray[0]);
-            if (childArray.length == 1)
-                return msa1;
-            MultipleAlignment msa2 = align(childArray[1]);
-            return nwBlock(msa1, msa2);
-        }
-    }
-
-    private MultipleAlignment nwBlock(MultipleAlignment msa1, MultipleAlignment msa2) {
-        int n = msa1.stringLength();
-        int m = msa2.stringLength();
-        double[][] dp = new double[n+1][m+1];
-        int[][] pointers = new int[n+1][m+1];
-        for (int i = 1; i < n; i++)
-            pointers[i][0] = 1;
-        for (int j = 1; j < m; j++)
-            pointers[0][j] = 2;
-
-        for (int i = 1; i < n+1; i++) {
-            for (int j = 1; j < m+1; j++) {
-                double insert = dp[i-1][j];
-                double delete = dp[i][j-1];
-                double match = dp[i-1][j-1];
-                for (int w1 = 0; w1 < msa1.nOfLanguages(); w1++) {
-                    for (int w2 = 0; w2 < msa2.nOfLanguages(); w2++) {
-                        if (!msa1.hasGapAt(w1, i-1) && !msa2.hasGapAt(w2, j-1)) {
-                            match += lib.matrices[lang2ID.get(msa1.getLanguage(w1))]
-                                    [lang2ID.get(msa2.getLanguage(w2))]
-                                    [msa1.getOriginalPosition(w1, i-1)]
-                                    [msa2.getOriginalPosition(w2, j-1)];
-                        }
-                    }
-                }
-
-                int argmax = argmax(match, insert, delete);
-                dp[i][j] = (argmax == 0) ? match : ((argmax == 1) ? insert : delete);
-                pointers[i][j] = argmax;
-            }
-        }
-
-        int i = n;
-        int j = m;
-        int c1 = msa1.nOfLanguages();
-        int c2 = msa2.nOfLanguages();
-        int colHeight = c1 + c2;
-        List<int[]> alCombined = new ArrayList<>();
-        while (i > 0 || j > 0) {
-            int p = pointers[i][j];
-            int[] newCol = new int[colHeight];
-            if (p == 0) {
-                System.arraycopy(msa1.getColumn(i-1), 0, newCol, 0, c1);
-                System.arraycopy(msa2.getColumn(j-1), 0, newCol, c1, c2);
-                i--;
-                j--;
-            }
-            else if (p == 1) {
-                System.arraycopy(msa1.getColumn(i-1), 0, newCol, 0, c1);
-                Arrays.fill(newCol, c1, colHeight, EMPTY_SYMBOL);
-                i--;
-            }
-            else {
-                Arrays.fill(newCol, 0, c1, EMPTY_SYMBOL);
-                System.arraycopy(msa2.getColumn(j-1), 0, newCol, c1, c2);
-                j--;
-            }
-            alCombined.add(newCol);
-        }
-
-        int syms = alCombined.size();
-        int[][] newMsa = new int[colHeight][syms];
-        for (int l = 0; l < colHeight; l++) {
-            for (int s = 0; s < syms; s++) {
-                newMsa[l][s] = alCombined.get(syms-1 - s)[l];
-            }
-        }
-        String[] newLangs = new String[colHeight];
-        for (int l1 = 0; l1 < c1; l1++)
-            newLangs[l1] = msa1.getLanguage(l1);
-        for (int l2 = 0; l2 < c2; l2++)
-            newLangs[c1+l2] = msa2.getLanguage(l2);
-
-        return new MultipleAlignment(newLangs, newMsa, symbols);
-    }
-
-    private int argmax(double x, double y, double z) {
-        boolean xy = x >= y;
-        boolean xz = x >= z;
-        boolean yz = y >= z;
-        if (xy && xz)
-            return 0;
-        if (!xy && yz)
-            return 1;
-        return 2;
+    public static MultipleAlignment align(List<PhoneticString> sequences, List<String> languages,
+                                          CorrespondenceModel corrModel, GuideTree guideTree) {
+        return (new TCoffee(sequences, languages, corrModel, guideTree)).align();
     }
 
     private static double[][] transpose(double[][] M) {
@@ -310,6 +112,228 @@ public class TCoffee {
         return A;
     }
 
+    public static void main(String[] args) {
+        CorrespondenceModel corrModel = CorrespondenceModelStorage.readGlobalModelFromFile(
+                "src/test/resources/northeuralex-0.9/global-nw-retokenized.corr");
+        PhoneticSymbolTable symTable = corrModel.getSymbolTable();
+
+        List<PhoneticString> sequences = new ArrayList<>();
+        sequences.add(new PhoneticString(symTable.encode(new String[]{"m", "ʊ", "l", "d", "ʊ"})));
+        sequences.add(new PhoneticString(symTable.encode(new String[]{"m", "ɔ", "l", "l", "d", "ɛ"})));
+        sequences.add(new PhoneticString(symTable.encode(new String[]{"m", "ʉ", "ɛ", "l", "t", "i", "ɛ"})));
+        sequences.add(new PhoneticString(symTable.encode(new String[]{"f", "ø", "l", "d"})));
+        List<String> languages = Arrays.asList("olo", "smj", "sma", "hun");
+
+        System.err.println(corrModel);
+
+        MultipleAlignment msa = TCoffee.align(sequences, languages, corrModel);
+        msa.orderAndFill(languages);
+        System.err.println(msa.toString(languages));
+
+        MultipleAlignment msa2 = TCoffee.align(sequences.subList(0, 2), languages.subList(0, 2), corrModel);
+        msa2.orderAndFill(languages);
+        System.err.println(msa2.toString(languages));
+
+        PhoneticStringAlignment align = NeedlemanWunschAlgorithm.constructAlignment(
+                sequences.get(0), sequences.get(1), corrModel, corrModel, corrModel, corrModel);
+        System.err.println(align.toString(symTable));
+    }
+
+    private void createGuideTree(List<String> languages) {
+        languages = new ArrayList<>(languages);
+        int n = languages.size();
+        Map<String, Set<String>> ancestorOf = new HashMap<>();
+        this.guideTree = new GuideTree();
+
+        Map<String, LinkedList<String>> paths = new HashMap<>();
+        for (int i = 0; i < n; i++)
+            paths.put(languages.get(i), new LinkedList<>());
+        int node = 0;
+
+        // https://de.wikipedia.org/wiki/Neighbor-Joining-Algorithmus
+
+        // Use lib score matrix as distance estimation
+        double[][] dist = new double[n][n];
+        for (int i = 0; i < n; i++)
+            for (int j = 0; j < n; j++)
+                dist[i][j] = 1.0 - lib.scores[i][j];
+
+        for (int x = 0; x < n - 2; x++) {
+            int m = n - x;
+
+            double[] r = new double[m];
+            for (int i = 0; i < m; i++) {
+                for (int j = 0; j < m; j++)
+                    r[i] += dist[i][j];
+                r[i] /= m - 2;
+            }
+
+            int minI = -1;
+            int minJ = -1;
+            double minVal = Double.MAX_VALUE;
+            for (int i = 0; i < m; i++) {
+                for (int j = 0; j < m; j++) {
+                    if (i != j) {
+                        double m_ij = dist[i][j] - (r[i] + r[j]);
+                        if (m_ij < minVal) {
+                            minVal = m_ij;
+                            minI = i;
+                            minJ = j;
+                        }
+                    }
+                }
+            }
+
+            String newNode = "proto" + node;
+            String child1 = languages.remove(Math.max(minI, minJ));
+            String child2 = languages.remove(Math.min(minI, minJ));
+            languages.add(newNode);
+            Set<String> descendants = new HashSet<>();
+            if (ancestorOf.containsKey(child1))
+                descendants.addAll(ancestorOf.remove(child1));
+            else
+                descendants.add(child1);
+            if (ancestorOf.containsKey(child2))
+                descendants.addAll(ancestorOf.remove(child2));
+            else
+                descendants.add(child2);
+            ancestorOf.put(newNode, descendants);
+            for (String descendant : descendants) {
+                paths.get(descendant).push(newNode);
+            }
+            node++;
+
+            double[][] newDist = new double[m - 1][m - 1];
+            int skipI = 0;
+            for (int i = 0; i < m; i++) {
+                if (i == minI || i == minJ)
+                    skipI++;
+                else {
+                    int skipJ = 0;
+                    for (int j = 0; j < m; j++) {
+                        if (j == minI || j == minJ)
+                            skipJ++;
+                        else {
+                            newDist[i - skipI][j - skipJ] = dist[i][j];
+                        }
+                    }
+
+                    newDist[m - 3][i - skipI] = (dist[minI][i - skipI]
+                            + dist[minJ][i - skipI] - dist[minI][minJ]) / 2;
+                    newDist[i - skipI][m - 3] = newDist[m - 3][i - skipI];
+                }
+            }
+            dist = newDist;
+        }
+
+        for (String leaf : paths.keySet())
+            guideTree.enlargeTreeByPath(paths.get(leaf), leaf);
+    }
+
+    private MultipleAlignment align() {
+        return align(guideTree.getRoot());
+    }
+
+    private MultipleAlignment align(String curNode) {
+        Set<String> children = guideTree.getChildrenOf(curNode);
+        if (children == null || children.isEmpty()) {
+            int l = lang2ID.get(curNode);
+            return new MultipleAlignment(new String[]{curNode},
+                    new int[][]{sequences.get(l).segments}, symbols);
+        } else {
+            String[] childArray = children.toArray(new String[0]);
+            MultipleAlignment msa1 = align(childArray[0]);
+            if (childArray.length == 1)
+                return msa1;
+            MultipleAlignment msa2 = align(childArray[1]);
+            return nwBlock(msa1, msa2);
+        }
+    }
+
+    private MultipleAlignment nwBlock(MultipleAlignment msa1, MultipleAlignment msa2) {
+        int n = msa1.stringLength();
+        int m = msa2.stringLength();
+        double[][] dp = new double[n + 1][m + 1];
+        int[][] pointers = new int[n + 1][m + 1];
+        for (int i = 1; i < n; i++)
+            pointers[i][0] = 1;
+        for (int j = 1; j < m; j++)
+            pointers[0][j] = 2;
+
+        for (int i = 1; i < n + 1; i++) {
+            for (int j = 1; j < m + 1; j++) {
+                double insert = dp[i - 1][j];
+                double delete = dp[i][j - 1];
+                double match = dp[i - 1][j - 1];
+                for (int w1 = 0; w1 < msa1.nOfLanguages(); w1++) {
+                    for (int w2 = 0; w2 < msa2.nOfLanguages(); w2++) {
+                        if (!msa1.hasGapAt(w1, i - 1) && !msa2.hasGapAt(w2, j - 1)) {
+                            match += lib.matrices[lang2ID.get(msa1.getLanguage(w1))]
+                                    [lang2ID.get(msa2.getLanguage(w2))]
+                                    [msa1.getOriginalPosition(w1, i - 1)]
+                                    [msa2.getOriginalPosition(w2, j - 1)];
+                        }
+                    }
+                }
+
+                int argmax = argmax(match, insert, delete);
+                dp[i][j] = (argmax == 0) ? match : ((argmax == 1) ? insert : delete);
+                pointers[i][j] = argmax;
+            }
+        }
+
+        int i = n;
+        int j = m;
+        int c1 = msa1.nOfLanguages();
+        int c2 = msa2.nOfLanguages();
+        int colHeight = c1 + c2;
+        List<int[]> alCombined = new ArrayList<>();
+        while (i > 0 || j > 0) {
+            int p = pointers[i][j];
+            int[] newCol = new int[colHeight];
+            if (p == 0) {
+                System.arraycopy(msa1.getColumn(i - 1), 0, newCol, 0, c1);
+                System.arraycopy(msa2.getColumn(j - 1), 0, newCol, c1, c2);
+                i--;
+                j--;
+            } else if (p == 1) {
+                System.arraycopy(msa1.getColumn(i - 1), 0, newCol, 0, c1);
+                Arrays.fill(newCol, c1, colHeight, EMPTY_SYMBOL);
+                i--;
+            } else {
+                Arrays.fill(newCol, 0, c1, EMPTY_SYMBOL);
+                System.arraycopy(msa2.getColumn(j - 1), 0, newCol, c1, c2);
+                j--;
+            }
+            alCombined.add(newCol);
+        }
+
+        int syms = alCombined.size();
+        int[][] newMsa = new int[colHeight][syms];
+        for (int l = 0; l < colHeight; l++) {
+            for (int s = 0; s < syms; s++) {
+                newMsa[l][s] = alCombined.get(syms - 1 - s)[l];
+            }
+        }
+        String[] newLangs = new String[colHeight];
+        for (int l1 = 0; l1 < c1; l1++)
+            newLangs[l1] = msa1.getLanguage(l1);
+        for (int l2 = 0; l2 < c2; l2++)
+            newLangs[c1 + l2] = msa2.getLanguage(l2);
+
+        return new MultipleAlignment(newLangs, newMsa, symbols);
+    }
+
+    private int argmax(double x, double y, double z) {
+        boolean xy = x >= y;
+        boolean xz = x >= z;
+        boolean yz = y >= z;
+        if (xy && xz)
+            return 0;
+        if (!xy && yz)
+            return 1;
+        return 2;
+    }
 
     private class TCoffeeLibrary {
 
@@ -328,8 +352,7 @@ public class TCoffee {
                     if (j < i) {
                         matrices[i][j] = transpose(matrices[j][i]);
                         scores[i][j] = scores[j][i];
-                    }
-                    else {
+                    } else {
                         PhoneticString seq1 = sequences.get(i);
                         PhoneticString seq2 = sequences.get(j);
                         PhoneticStringAlignment align = NeedlemanWunschAlgorithm.constructAlignment(
@@ -390,7 +413,7 @@ public class TCoffee {
                         double[][] m2 = matrices[w3][w2];
                         double s1 = scores[w1][w3];
                         double s2 = scores[w3][w2];
-                        matrixAdditionWithScalar(dm, dotProduct(m1, m2), (s1+s2), true);
+                        matrixAdditionWithScalar(dm, dotProduct(m1, m2), (s1 + s2), true);
                     }
                     ext[w1][w2] = dm;
                 }
@@ -398,33 +421,5 @@ public class TCoffee {
 
             matrices = ext;
         }
-    }
-
-
-    public static void main(String[] args) {
-        CorrespondenceModel corrModel = CorrespondenceModelStorage.readGlobalModelFromFile(
-                "src/test/resources/northeuralex-0.9/global-nw-retokenized.corr");
-        PhoneticSymbolTable symTable = corrModel.getSymbolTable();
-
-        List<PhoneticString> sequences = new ArrayList<>();
-        sequences.add(new PhoneticString(symTable.encode(new String[]{"m", "ʊ", "l", "d", "ʊ"})));
-        sequences.add(new PhoneticString(symTable.encode(new String[]{"m", "ɔ", "l", "l", "d", "ɛ"})));
-        sequences.add(new PhoneticString(symTable.encode(new String[]{"m", "ʉ", "ɛ", "l", "t", "i", "ɛ"})));
-        sequences.add(new PhoneticString(symTable.encode(new String[]{"f", "ø", "l", "d"})));
-        List<String> languages = Arrays.asList("olo", "smj", "sma", "hun");
-
-        System.err.println(corrModel);
-
-        MultipleAlignment msa = TCoffee.align(sequences, languages, corrModel);
-        msa.orderAndFill(languages);
-        System.err.println(msa.toString(languages));
-
-        MultipleAlignment msa2 = TCoffee.align(sequences.subList(0, 2), languages.subList(0, 2), corrModel);
-        msa2.orderAndFill(languages);
-        System.err.println(msa2.toString(languages));
-
-        PhoneticStringAlignment align = NeedlemanWunschAlgorithm.constructAlignment(
-                sequences.get(0), sequences.get(1), corrModel, corrModel, corrModel, corrModel);
-        System.err.println(align.toString(symTable));
     }
 }

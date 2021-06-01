@@ -1,20 +1,25 @@
 package de.jdellert.iwsa.tokenize;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 /**
  * Allows to specify a set of multi-character transformations
  * for greedy IPA tokenization with accompanying normalizations.
- *
+ * <p>
  * Serves as an alternative option for configuring an IPATokenizer.
- *
  */
 public class GreedyIPATokenizerConfiguration extends IPATokenizerConfiguration {
     //define a number of characters which are deleted during the first pass (cleanup stage)
     Set<Character> ignoredSymbols;
 
     //structure for greedy lookahead in second pass (the actual transformation)
-    Map<String,List<String>> sequenceToSymbols;
+    Map<String, List<String>> sequenceToSymbols;
     int lookahead;
 
     public GreedyIPATokenizerConfiguration() {
@@ -32,7 +37,7 @@ public class GreedyIPATokenizerConfiguration extends IPATokenizerConfiguration {
     }
 
     public void addUnchangedSymbol(String symbol) {
-        addSequence(symbol, Arrays.asList(new String[] {symbol}));
+        addSequence(symbol, Arrays.asList(new String[]{symbol}));
     }
 
     public void addSequenceTransformation(String sequence, List<String> symbols) {

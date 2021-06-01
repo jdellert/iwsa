@@ -1,18 +1,7 @@
 package de.jdellert.iwsa;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-
 import de.jdellert.iwsa.align.InformationWeightedSequenceAlignment;
 import de.jdellert.iwsa.align.PhoneticStringAlignment;
-import de.jdellert.iwsa.align.PhoneticStringAlignmentOutput;
 import de.jdellert.iwsa.cluster.FlatClustering;
 import de.jdellert.iwsa.corrmodel.CorrespondenceModel;
 import de.jdellert.iwsa.corrmodel.CorrespondenceModelInference;
@@ -24,6 +13,16 @@ import de.jdellert.iwsa.infomodel.InformationModel;
 import de.jdellert.iwsa.infomodel.InformationModelInference;
 import de.jdellert.iwsa.sequence.PhoneticString;
 import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 
 public class CognateClusteringIWDSC {
     public static final double THRESHOLD = 0.75;
@@ -127,8 +126,7 @@ public class CognateClusteringIWDSC {
                 double[][] distanceMatrix = new double[formIDs.size()][formIDs.size()];
 
                 List<List<Integer>> formsPerLang = database.getFormIDsForConceptPerLanguage(conceptID);
-                for (int i = 0; i < relevantLangIDs.length; i++)
-                {
+                for (int i = 0; i < relevantLangIDs.length; i++) {
                     int lang1ID = relevantLangIDs[i];
                     for (int j = i; j < relevantLangIDs.length; j++) {
                         int lang2ID = relevantLangIDs[j];

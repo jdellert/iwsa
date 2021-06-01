@@ -7,10 +7,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PhoneticStringAlignment {
-    PhoneticString str1;
-    PhoneticString str2;
     public double alignmentScore;
     public double normalizedDistanceScore;
+    PhoneticString str1;
+    PhoneticString str2;
 
     public String toString(PhoneticSymbolTable symbolTable) {
         return str1.toString(symbolTable) + "\n" + str2.toString(symbolTable);
@@ -36,7 +36,7 @@ public class PhoneticStringAlignment {
         List<String[]> symbolPairs = new ArrayList<>();
         for (int i = 0; i < getLength(); i++) {
             symbolPairs.add(
-                    new String[] { symbolTable.toSymbol(str1.segments[i]), symbolTable.toSymbol(str2.segments[i]) });
+                    new String[]{symbolTable.toSymbol(str1.segments[i]), symbolTable.toSymbol(str2.segments[i])});
         }
         return symbolPairs;
     }

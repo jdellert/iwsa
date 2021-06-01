@@ -7,7 +7,6 @@ import java.util.Arrays;
 /**
  * Simple wrapper around int arrays used internally to compactly represent
  * phonetic strings.
- *
  */
 
 public class PhoneticString {
@@ -35,14 +34,12 @@ public class PhoneticString {
 
     public PhoneticString copyWithoutGaps() {
         int numGaps = 0;
-        for (int segment : segments)
-        {
+        for (int segment : segments) {
             if (segment == 1) numGaps++;
         }
         int[] reducedSegments = new int[segments.length - numGaps];
         int pos = 0;
-        for (int segment : segments)
-        {
+        for (int segment : segments) {
             if (segment > 1) reducedSegments[pos++] = segment;
         }
         return new PhoneticString(reducedSegments);

@@ -4,15 +4,19 @@ import de.jdellert.iwsa.corrmodel.CorrespondenceModel;
 import de.jdellert.iwsa.sequence.PhoneticString;
 import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
 
-import javax.print.attribute.IntegerSyntax;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class MultipleAlignment {
 
-    private static final int EMPTY_ID = PhoneticSymbolTable.EMPTY_ID;
     public static final String UNKNOWN_SYMBOL = PhoneticSymbolTable.UNKNOWN_SYMBOL;
-
+    private static final int EMPTY_ID = PhoneticSymbolTable.EMPTY_ID;
     private String[] langs;
     private List<Integer> forms;
     private int[][] msa;
@@ -21,11 +25,11 @@ public class MultipleAlignment {
     private PhoneticSymbolTable symbolTable;
 
     public MultipleAlignment() {
-        this.forms=new ArrayList<>();
+        this.forms = new ArrayList<>();
     }
 
     public MultipleAlignment(PhoneticSymbolTable symbolTable) {
-        this.forms=new ArrayList<>();
+        this.forms = new ArrayList<>();
         this.symbolTable = symbolTable;
     }
 
@@ -112,12 +116,12 @@ public class MultipleAlignment {
         this.langs = languages.toArray(new String[0]);
     }
 
-    public void setFormIds(List<Integer> formIds) {
-        this.forms= formIds;
-    }
-
     public List<Integer> getFormIds() {
         return this.forms;
+    }
+
+    public void setFormIds(List<Integer> formIds) {
+        this.forms = formIds;
     }
 
     public List<Integer> getFormIds(List<String> languages) {
@@ -134,21 +138,21 @@ public class MultipleAlignment {
     }
 
     public void setAlignments(List<String[]> alignments) {
-        msa=new int[alignments.size()][];
-        for(int i=0; i<alignments.size(); i++) {
+        msa = new int[alignments.size()][];
+        for (int i = 0; i < alignments.size(); i++) {
             msa[i] = symbolTable.encode(alignments.get(i));
         }
     }
 
     public void changeAlignment(Set<Integer> rowIndices, String[][] newAlignments) {
-        if(newAlignments[0].length>msa[0].length) {
+        if (newAlignments[0].length > msa[0].length) {
             int[][] newMsa = new int[newAlignments.length][newAlignments[0].length];
-            for(Integer rowInd : rowIndices) {
+            for (Integer rowInd : rowIndices) {
                 newMsa[rowInd] = symbolTable.encode(newAlignments[rowInd]);
             }
-            msa=newMsa;
+            msa = newMsa;
         } else {
-            for(Integer rowInd : rowIndices) {
+            for (Integer rowInd : rowIndices) {
                 msa[rowInd] = symbolTable.encode(newAlignments[rowInd]);
             }
         }

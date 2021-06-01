@@ -1,11 +1,24 @@
 package de.jdellert.iwsa.corrmodel;
 
-import java.io.*;
-import java.util.*;
-
 import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
-import de.tuebingen.sfs.eie.shared.util.bin.BufferedByteReader;
-import de.tuebingen.sfs.eie.shared.util.bin.IOUtils;
+import de.jdellert.iwsa.util.io.BufferedByteReader;
+import de.jdellert.iwsa.util.io.IOUtils;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class CorrespondenceModelStorage {
 
@@ -105,32 +118,28 @@ public class CorrespondenceModelStorage {
         return correspondenceModels;
     }
 
-    public static CorrespondenceModel[][] deserializeCorrespondenceModels(ObjectInputStream in, Map<String,Integer> langToID)
+    public static CorrespondenceModel[][] deserializeCorrespondenceModels(ObjectInputStream in, Map<String, Integer> langToID)
             throws IOException, ClassNotFoundException {
         String langIDs[] = (String[]) in.readObject();
         int maxID = 0;
-        for (int langID : langToID.values())
-        {
+        for (int langID : langToID.values()) {
             if (langID > maxID) maxID = langID;
         }
         PhoneticSymbolTable symbolTable = (PhoneticSymbolTable) in.readObject();
         CorrespondenceModel[][] correspondenceModels = new CorrespondenceModel[maxID + 1][maxID + 1];
         for (int fileI = 0; fileI < langIDs.length; fileI++) {
             int i = -1;
-            if (langToID.get(langIDs[fileI]) != null)
-            {
+            if (langToID.get(langIDs[fileI]) != null) {
                 i = langToID.get(langIDs[fileI]);
             }
             for (int fileJ = 0; fileJ < langIDs.length; fileJ++) {
                 int j = -1;
-                if (langToID.get(langIDs[fileJ]) != null)
-                {
+                if (langToID.get(langIDs[fileJ]) != null) {
                     j = langToID.get(langIDs[fileJ]);
                 }
                 CorrespondenceModel correspondenceModel = new CorrespondenceModel(symbolTable);
                 correspondenceModel.scores = (Map<Integer, Double>) in.readObject();
-                if (i >= 0 && j >=0)
-                {
+                if (i >= 0 && j >= 0) {
                     correspondenceModels[i][j] = correspondenceModel;
                 }
             }

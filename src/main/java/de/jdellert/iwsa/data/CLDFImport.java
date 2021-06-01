@@ -1,17 +1,25 @@
 package de.jdellert.iwsa.data;
 
-import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.Map.Entry;
-
 import de.jdellert.iwsa.sequence.PhoneticString;
 import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
 import de.jdellert.iwsa.tokenize.IPATokenizer;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
+
 /**
  * Building a LexicalDatabase object from a TSV file in CLDF format (extensible, tuned towards NorthEuraLex for now).
- *
  */
 
 public class CLDFImport {
@@ -115,9 +123,10 @@ public class CLDFImport {
         String[] langCodesArray = langCodes.toArray(new String[langCodes.size()]);
         String[] conceptNamesArray = conceptNames.toArray(new String[conceptNames.size()]);
 
-        if (VERBOSE) System.out.print("Building database using " + symbolTable.getSize() + " symbols for " + langCodePerLine.size()
-                + " forms covering " + conceptNamesArray.length + " concepts across " + langCodesArray.length
-                + " languages ... ");
+        if (VERBOSE)
+            System.out.print("Building database using " + symbolTable.getSize() + " symbols for " + langCodePerLine.size()
+                    + " forms covering " + conceptNamesArray.length + " concepts across " + langCodesArray.length
+                    + " languages ... ");
         LexicalDatabase database = new LexicalDatabase(symbolTable, langCodesArray, conceptNamesArray,
                 langCodePerLine.size());
         for (int lineNumber = 0; lineNumber < langCodePerLine.size(); lineNumber++) {

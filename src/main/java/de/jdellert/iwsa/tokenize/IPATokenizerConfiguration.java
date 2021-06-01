@@ -3,7 +3,6 @@ package de.jdellert.iwsa.tokenize;
 /**
  * Models a configuration for an IPATokenizer, essentially just a combination of
  * binary flags, with the default configuration tuned towards NorthEuraLex.
- *
  */
 
 public class IPATokenizerConfiguration {

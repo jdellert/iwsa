@@ -1,25 +1,26 @@
 package de.jdellert.iwsa.sequence;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 /**
  * Symbol table for mapping IPA segments to integers for efficient internal
  * representation. The first two integers are always used for special symbols: 0
  * ~ #: the word boundary symbol 1 ~ -: the gap symbol
- *
  */
 
 public class PhoneticSymbolTable implements Serializable {
-    private static final long serialVersionUID = -8825447220839372572L;
-
     public static final int BOUNDARY_ID = 0;
     public static final String BOUNDARY_SYMBOL = "#";
     public static final int EMPTY_ID = 1;
     public static final String EMPTY_SYMBOL = "-";
-
     public static final String UNKNOWN_SYMBOL = "?";
-
+    private static final long serialVersionUID = -8825447220839372572L;
     private String[] idToSymbol;
     private Map<String, Integer> symbolToID;
 
@@ -66,8 +67,7 @@ public class PhoneticSymbolTable implements Serializable {
         return segments;
     }
 
-    public Set<String> getDefinedSymbols()
-    {
+    public Set<String> getDefinedSymbols() {
         return new TreeSet<String>(symbolToID.keySet());
     }
 
@@ -79,12 +79,10 @@ public class PhoneticSymbolTable implements Serializable {
         return "(" + toSymbol(symbolPairID / idToSymbol.length) + "," + toSymbol(symbolPairID % idToSymbol.length) + ")";
     }
 
-    public String toString()
-    {
+    public String toString() {
         StringBuilder line1 = new StringBuilder();
         StringBuilder line2 = new StringBuilder();
-        for (int i = 0; i < idToSymbol.length; i++)
-        {
+        for (int i = 0; i < idToSymbol.length; i++) {
             line1.append(i + "\t");
             line2.append(idToSymbol[i] + "\t");
         }
@@ -105,7 +103,7 @@ public class PhoneticSymbolTable implements Serializable {
 
         @Override
         public boolean hasNext() {
-            return i+1 < idToSymbol.length;
+            return i + 1 < idToSymbol.length;
         }
 
         @Override

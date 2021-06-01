@@ -1,6 +1,10 @@
 package de.jdellert.iwsa.align;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 public class GuideTree {
     // Reduced version of LanguageTree
@@ -22,8 +26,7 @@ public class GuideTree {
         if (path == null) {
             System.err.println(
                     "WARNING: no path found for language " + langID + ", it will not be part of the language tree.");
-        }
-        else {
+        } else {
             paths.put(langID, path);
             String currentNode = root;
             for (String pathElement : path) {

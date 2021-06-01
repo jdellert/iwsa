@@ -1,21 +1,11 @@
 package de.jdellert.iwsa.eval;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.TreeSet;
-
 import de.jdellert.iwsa.align.InformationWeightedSequenceAlignment;
 import de.jdellert.iwsa.align.LevenshteinAlignmentAlgorithm;
 import de.jdellert.iwsa.align.NeedlemanWunschAlgorithm;
 import de.jdellert.iwsa.align.PhoneticStringAlignment;
 import de.jdellert.iwsa.align.PhoneticStringAlignmentOutput;
 import de.jdellert.iwsa.corrmodel.CorrespondenceModel;
-import de.jdellert.iwsa.corrmodel.CorrespondenceModelInference;
 import de.jdellert.iwsa.corrmodel.CorrespondenceModelStorage;
 import de.jdellert.iwsa.data.CLDFImport;
 import de.jdellert.iwsa.data.LexicalDatabase;
@@ -26,6 +16,14 @@ import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
 import de.jdellert.iwsa.util.io.Formatting;
 import de.jdellert.iwsa.util.io.SimpleFormatReader;
 import de.jdellert.iwsa.util.io.StringUtils;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class AllDistancesForWordPairFile {
     public static final boolean ALIGNMENT_OUTPUT = false;
@@ -194,15 +192,17 @@ public class AllDistancesForWordPairFile {
                             lang1Form, lang2Form, globalCorrModelNW, globalCorrModelNW, globalCorrModelNW,
                             globalCorrModelNW);
                     double globalWED = globalWeightsAlignment.normalizedDistanceScore;
-                    if (ALIGNMENT_OUTPUT) System.out.println(PhoneticStringAlignmentOutput.needlemanWunschtoString(globalWeightsAlignment,
-                            symbolTable, globalCorrModelNW, globalCorrModelNW, globalCorrModelNW,
-                            globalCorrModelNW));
+                    if (ALIGNMENT_OUTPUT)
+                        System.out.println(PhoneticStringAlignmentOutput.needlemanWunschtoString(globalWeightsAlignment,
+                                symbolTable, globalCorrModelNW, globalCorrModelNW, globalCorrModelNW,
+                                globalCorrModelNW));
                     PhoneticStringAlignment localWeightsAlignment = NeedlemanWunschAlgorithm.constructAlignment(
                             lang1Form, lang2Form, globalCorrModelNW, localCorrModelsNW[lang1ID][lang2ID],
                             globalCorrModelNW, globalCorrModelNW);
-                    if (ALIGNMENT_OUTPUT) System.out.println(PhoneticStringAlignmentOutput.needlemanWunschtoString(localWeightsAlignment,
-                            symbolTable, globalCorrModelNW, localCorrModelsNW[lang1ID][lang2ID],
-                            localCorrModelsNW[lang1ID][lang1ID], localCorrModelsNW[lang2ID][lang2ID]));
+                    if (ALIGNMENT_OUTPUT)
+                        System.out.println(PhoneticStringAlignmentOutput.needlemanWunschtoString(localWeightsAlignment,
+                                symbolTable, globalCorrModelNW, localCorrModelsNW[lang1ID][lang2ID],
+                                localCorrModelsNW[lang1ID][lang1ID], localCorrModelsNW[lang2ID][lang2ID]));
                     double localWED = localWeightsAlignment.normalizedDistanceScore;
                     double combinedWED = Math.min(globalWED, localWED);
 

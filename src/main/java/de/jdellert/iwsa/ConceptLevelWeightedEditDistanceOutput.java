@@ -1,13 +1,5 @@
 package de.jdellert.iwsa;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-
 import de.jdellert.iwsa.align.NeedlemanWunschAlgorithm;
 import de.jdellert.iwsa.align.PhoneticStringAlignment;
 import de.jdellert.iwsa.align.PhoneticStringAlignmentOutput;
@@ -16,10 +8,16 @@ import de.jdellert.iwsa.corrmodel.CorrespondenceModelInference;
 import de.jdellert.iwsa.corrmodel.CorrespondenceModelStorage;
 import de.jdellert.iwsa.data.CLDFImport;
 import de.jdellert.iwsa.data.LexicalDatabase;
-import de.jdellert.iwsa.infomodel.InformationModel;
-import de.jdellert.iwsa.infomodel.InformationModelInference;
 import de.jdellert.iwsa.sequence.PhoneticString;
 import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class ConceptLevelWeightedEditDistanceOutput {
     public static final boolean ALIGNMENT_OUTPUT = false;
@@ -51,9 +49,8 @@ public class ConceptLevelWeightedEditDistanceOutput {
                 }
             }
 
-            Map<String,Integer> relevantLangToID = new TreeMap<String, Integer>();
-            for (int langID = 0; langID < relevantLangIDs.length; langID++)
-            {
+            Map<String, Integer> relevantLangToID = new TreeMap<String, Integer>();
+            for (int langID = 0; langID < relevantLangIDs.length; langID++) {
                 relevantLangToID.put(relevantLangCodes[langID], relevantLangIDs[langID]);
             }
 

@@ -1,5 +1,11 @@
 package de.jdellert.iwsa;
 
+import de.jdellert.iwsa.corrmodel.CorrespondenceModel;
+import de.jdellert.iwsa.corrmodel.CorrespondenceModelStorage;
+import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
+import de.jdellert.iwsa.sequence.ipa.IpaSymbolInformation;
+import de.jdellert.iwsa.util.ranking.RankingEntry;
+
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -11,24 +17,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import de.jdellert.iwsa.corrmodel.CorrespondenceModel;
-import de.jdellert.iwsa.corrmodel.CorrespondenceModelStorage;
-import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
-import de.jdellert.iwsa.sequence.ipa.IpaSymbolInformation;
-import de.jdellert.iwsa.util.ranking.RankingEntry;
-
 /**
  * A program to output the correspondences encoded in a correspondence file as a table
  * with lines visualizing all associations stronger than a PMI threshold given as a parameter.
- * 
+ * <p>
  * The result is LaTeX code consisting of a header and a table
  * which can be pasted into any LaTeX document provided the tipa package is installed.
- *
  */
 
 public class CorrespondenceModelVisualizationLaTeXTable {
-    public static void main(String[] args)
-    {
+    public static void main(String[] args) {
         if (args.length != 1 && args.length != 3) {
             System.err.println("Usage: CorrespondenceModelVisualizationLaTeXTable [globalCorrespondenceFile]");
             System.err.println("       CorrespondenceModelVisualizationLaTeXTable [localCorrespondenceFile] [langCode1] [langCode2]");
@@ -42,17 +40,14 @@ public class CorrespondenceModelVisualizationLaTeXTable {
                 PhoneticSymbolTable symbolTable = globalCorrModel.getSymbolTable();
                 Set<String> definedSymbols = symbolTable.getDefinedSymbols();
                 List<Integer> symbolIDOrder = new LinkedList<Integer>();
-                for (String ipaSymbol : IpaSymbolInformation.getKnownSymbolsInOrder())
-                {
+                for (String ipaSymbol : IpaSymbolInformation.getKnownSymbolsInOrder()) {
                     Integer id = symbolTable.toInt(ipaSymbol);
-                    if (id != null)
-                    {
+                    if (id != null) {
                         symbolIDOrder.add(id);
                         definedSymbols.remove(ipaSymbol);
                     }
                 }
-                for (String unknownSymbol : definedSymbols)
-                {
+                for (String unknownSymbol : definedSymbols) {
                     symbolIDOrder.add(symbolTable.toInt(unknownSymbol));
                 }
 
@@ -68,19 +63,16 @@ public class CorrespondenceModelVisualizationLaTeXTable {
                 System.out.println("");
                 System.out.println("\\begin{longtable}{|l|l|l|}");
                 System.out.println("\\hline");
-                for (int symbolID1 : symbolIDOrder)
-                {
+                for (int symbolID1 : symbolIDOrder) {
                     String symbol1 = symbolTable.toSymbol(symbolID1);
                     System.out.print("  \\ipa{" + IpaSymbolInformation.getTipaForSymbol(symbol1) + "}" + " & " + IpaSymbolInformation.getDescriptionForSymbol(symbol1) + " & ");
 
                     List<RankingEntry<String>> neighborRanking = new ArrayList<RankingEntry<String>>();
 
-                    for (int symbolID2 : symbolIDOrder)
-                    {
+                    for (int symbolID2 : symbolIDOrder) {
                         String symbol2 = symbolTable.toSymbol(symbolID2);
 
-                        if (symbolID1 != symbolID2)
-                        {
+                        if (symbolID1 != symbolID2) {
                             neighborRanking.add(new RankingEntry<String>(symbol2, globalCorrModel.getScore(symbolID1, symbolID2)));
                         }
                     }
@@ -90,14 +82,10 @@ public class CorrespondenceModelVisualizationLaTeXTable {
                     System.out.print("\\ipa{");
 
                     int i = 0;
-                    while (i < neighborRanking.size())
-                    {
-                        if (neighborRanking.get(i).value < 1.5)
-                        {
+                    while (i < neighborRanking.size()) {
+                        if (neighborRanking.get(i).value < 1.5) {
                             break;
-                        }
-                        else
-                        {
+                        } else {
                             System.out.print(IpaSymbolInformation.getTipaForSymbol(neighborRanking.get(i).key) + "\\ ");
                         }
                         i++;
@@ -105,14 +93,10 @@ public class CorrespondenceModelVisualizationLaTeXTable {
 
                     if (i > 0) System.out.print("\\color{gray}");
 
-                    while (i < neighborRanking.size())
-                    {
-                        if (neighborRanking.get(i).value < 0.8)
-                        {
+                    while (i < neighborRanking.size()) {
+                        if (neighborRanking.get(i).value < 0.8) {
                             break;
-                        }
-                        else
-                        {
+                        } else {
                             System.out.print(IpaSymbolInformation.getTipaForSymbol(neighborRanking.get(i).key) + "\\ ");
                         }
                         i++;

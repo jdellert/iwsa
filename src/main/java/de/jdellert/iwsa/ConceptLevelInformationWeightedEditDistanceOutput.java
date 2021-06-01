@@ -1,15 +1,5 @@
 package de.jdellert.iwsa;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-
 import de.jdellert.iwsa.align.InformationWeightedSequenceAlignment;
 import de.jdellert.iwsa.align.PhoneticStringAlignment;
 import de.jdellert.iwsa.align.PhoneticStringAlignmentOutput;
@@ -22,6 +12,14 @@ import de.jdellert.iwsa.infomodel.InformationModel;
 import de.jdellert.iwsa.infomodel.InformationModelInference;
 import de.jdellert.iwsa.sequence.PhoneticString;
 import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class ConceptLevelInformationWeightedEditDistanceOutput {
     public static final boolean ALIGNMENT_OUTPUT = false;

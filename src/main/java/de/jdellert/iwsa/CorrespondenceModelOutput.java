@@ -1,16 +1,15 @@
 package de.jdellert.iwsa;
 
+import de.jdellert.iwsa.corrmodel.CorrespondenceModel;
+import de.jdellert.iwsa.corrmodel.CorrespondenceModelStorage;
+import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
+
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.Map;
 import java.util.TreeMap;
-
-import de.jdellert.iwsa.corrmodel.CorrespondenceModel;
-import de.jdellert.iwsa.corrmodel.CorrespondenceModelInference;
-import de.jdellert.iwsa.corrmodel.CorrespondenceModelStorage;
-import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
 
 public class CorrespondenceModelOutput {
     public static void main(String[] args) {
