@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import de.jdellert.iwsa.ConceptLevelWeightedEditDistanceOutput;
 import de.jdellert.iwsa.align.InformationWeightedSequenceAlignment;
@@ -174,44 +176,30 @@ public class CorrespondenceModelInference {
 	public static CorrespondenceModel inferGlobalCorrespondenceModel(CLDFWordlistDatabase database,
 																	 PhoneticSymbolTable symbolTable,
 																	 InformationModel[] infoModels) {
+		List<String> langIDs = database.getLangIDs();
+		database.cacheFormsByLanguage();
 		CategoricalDistribution randomPairCorrespondenceDist = new CategoricalDistribution(
 				symbolTable.getSize() * symbolTable.getSize());
 		int numRandomPairs = database.getConceptMap().size() * database.getLanguageMap().size() *
 				database.getLanguageMap().size();
-		//numRandomPairs = Math.min(numRandomPairs, 20000000); // set maximum iterations to 20 million random pairs
-		numRandomPairs = Math.min(numRandomPairs, 1000);
-		int onePercentOfRandomPairs = numRandomPairs / 100;
+		numRandomPairs = Math.min(numRandomPairs, 20000000); // set maximum iterations to 20 million random pairs
 		System.err.print("  Step 1: Simulating non-cognates by means of " + numRandomPairs + " random alignments ...");
-		//ArrayList<String> langIDsAsList = new ArrayList<>(database.getLanguageMap().keySet());
-		List<String> langIDs = database.getLangIDs();
-		for (int i = 0; i < numRandomPairs; i++) {
-			if (i % onePercentOfRandomPairs == 0) {
-				System.err.println("Processed " + i + " of " + numRandomPairs + " random pairs (" + (i * 100) / numRandomPairs + "%)");
-			}
-			int randomLangIdx1 = (int) (Math.random() * database.getLanguageMap().size());
-			int randomLangIdx2 = (int) (Math.random() * database.getLanguageMap().size());
-			String randomLangId1 = langIDs.get(randomLangIdx1);
-			String randomLangId2 = langIDs.get(randomLangIdx2);
-			try {
-				// TODO check why code can crash here -- error in data or code?
-				CLDFForm form1inCLDF = database.getRandomFormForLanguage(randomLangId1);
-				CLDFForm form2inCLDF = database.getRandomFormForLanguage(randomLangId2);
-
-				// get the segments from the CLDFForm, encode them as ints and construct PhoneticString objects
-				PhoneticString form1 = new PhoneticString(symbolTable.encode(form1inCLDF.getSegments()));
-				PhoneticString form2 = new PhoneticString(symbolTable.encode(form2inCLDF.getSegments()));
-				PhoneticStringAlignment alignment = LevenshteinAlignmentAlgorithm.constructAlignment(form1, form2);
-				double[] infoScores = new double[alignment.getLength()];
-				if (infoModels == null) {
-					Arrays.fill(infoScores, 1.0);
-				} else {
-					infoScores = InformationWeightedSequenceAlignment.combinedInfoScoresForAlignment(alignment, infoModels[randomLangIdx1], infoModels[randomLangIdx2]);
-				}
-				for (int pos = 0; pos < alignment.getLength(); pos++) {
-					randomPairCorrespondenceDist.addObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable), infoScores[pos]);
-				}
-			} catch (Exception ignored) { }
+		int numThreads = 8;
+		ExecutorService executor = Executors.newFixedThreadPool(numThreads);
+		CorrespondenceModelInferenceRandomAlignmentsWorker[] workers = new CorrespondenceModelInferenceRandomAlignmentsWorker[numThreads];
+		for (int i = 0; i < numThreads; i++) {
+			CorrespondenceModelInferenceRandomAlignmentsWorker corrModelWorker = new CorrespondenceModelInferenceRandomAlignmentsWorker(database,
+					symbolTable, infoModels, numRandomPairs / numThreads, i == 0);
+			workers[i] = corrModelWorker;
+			executor.execute(corrModelWorker);
 		}
+		executor.shutdown();
+		while(!executor.isTerminated()) {}
+
+		for (int i = 0; i < workers.length; i++) {
+			randomPairCorrespondenceDist.concatenate(workers[i].getRandomPairCorrespondenceDist());
+		}
+
 		System.err.print(" done.\n");
 
 		int numPairs = 0;
@@ -220,38 +208,30 @@ public class CorrespondenceModelInference {
 				symbolTable.getSize() * symbolTable.getSize());
 
 		System.err.print("  Step 2: Finding ED-based cognate candidates ...");
-		for (String param : database.getConceptMap().keySet()) {
-			Map<String, List<CLDFForm>> formsPerLang = database.getFormsByLanguageByParamID(param);
-			for (String lang1 : langIDs) {
-				List<CLDFForm> lang1Forms = formsPerLang.get(lang1);
-				for (String lang2 : langIDs) {
-					List<CLDFForm> lang2Forms = formsPerLang.get(lang2);
-					for (CLDFForm form1inCLDF : lang1Forms) {
-						PhoneticString form1 = new PhoneticString(symbolTable.encode(form1inCLDF.getSegments()));
-						for (CLDFForm form2inCLDF : lang2Forms) {
-							PhoneticString form2 = new PhoneticString(symbolTable.encode(form2inCLDF.getSegments()));
-							PhoneticStringAlignment alignment = LevenshteinAlignmentAlgorithm.constructAlignment(form1, form2);
-							numPairs++;
-							double[] infoScores = new double[alignment.getLength()];
-							if (infoModels == null) {
-								Arrays.fill(infoScores, 1.0);
-							}
-							else {
-								int lang1ID = langIDs.indexOf(lang1);
-								int lang2ID = langIDs.indexOf(lang2);
-								infoScores = InformationWeightedSequenceAlignment.combinedInfoScoresForAlignment(alignment, infoModels[lang1ID], infoModels[lang2ID]);
-							}
-							if (alignment.normalizedDistanceScore <= 0.35) {
-								for (int pos = 0; pos < alignment.getLength(); pos++) {
-									cognatePairCorrespondenceDist
-											.addObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable), infoScores[pos]);
-								}
-								numCognatePairs++;
-							}
-						}
-					}
-				}
+
+		List<String> params = new ArrayList<>(database.getConceptMap().keySet());
+		executor = Executors.newFixedThreadPool(numThreads);
+		CorrespondenceModelInferenceCognateAlignmentsWorker[] cognateAlignmentsWorkers = new CorrespondenceModelInferenceCognateAlignmentsWorker[numThreads];
+		int chunkSize = params.size() / numThreads;
+		for (int i = 0; i < numThreads; i++) {
+			CorrespondenceModelInferenceCognateAlignmentsWorker alignmentsWorker;
+			if (i < numThreads - 1) {
+				alignmentsWorker = new CorrespondenceModelInferenceCognateAlignmentsWorker(database,
+						symbolTable, infoModels, params.subList(i * chunkSize, (i+1) * chunkSize));
+			} else {
+				alignmentsWorker = new CorrespondenceModelInferenceCognateAlignmentsWorker(database,
+						symbolTable, infoModels, params.subList(i * chunkSize, params.size()));
 			}
+			cognateAlignmentsWorkers[i] = alignmentsWorker;
+			executor.execute(alignmentsWorker);
+		}
+		executor.shutdown();
+		while(!executor.isTerminated()) {}
+
+		for (int i = 0; i < cognateAlignmentsWorkers.length; i++) {
+			cognatePairCorrespondenceDist.concatenate(cognateAlignmentsWorkers[i].getCognatePairCorrespondenceDist());
+			numPairs += cognateAlignmentsWorkers[i].getNumPairs();
+			numCognatePairs += cognateAlignmentsWorkers[i].getNumCognatePairs();
 		}
 
 		System.err.print(" done. Aligned " + numPairs + " form pairs, of which " + numCognatePairs
@@ -274,40 +254,28 @@ public class CorrespondenceModelInference {
 			System.err.print("    Iteration 0" + (iteration + 1) + ": Finding WED-based cognate candidates ...");
 			numPairs = 0;
 			numCognatePairs = 0;
-			for (String param : database.getConceptMap().keySet()) {
-				Map<String, List<CLDFForm>> formsPerLang = database.getFormsByLanguageByParamID(param);
-				for (String lang1 : langIDs) {
-					List<CLDFForm> lang1Forms = formsPerLang.get(lang1);
-					for (String lang2 : langIDs) {
-						List<CLDFForm> lang2Forms = formsPerLang.get(lang2);
-						for (CLDFForm form1inCLDF : lang1Forms) {
-							PhoneticString form1 = new PhoneticString(symbolTable.encode(form1inCLDF.getSegments()));
-							for (CLDFForm form2inCLDF : lang2Forms) {
-								PhoneticString form2 = new PhoneticString(symbolTable.encode(form2inCLDF.getSegments()));
-								PhoneticStringAlignment alignment = NeedlemanWunschAlgorithm.constructAlignment(
-										form1, form2, globalCorr, globalCorr, globalCorr, globalCorr);
-								numPairs++;
-								double[] infoScores = new double[alignment.getLength()];
-								if (infoModels == null) {
-									Arrays.fill(infoScores, 1.0);
-								} else {
-									int lang1ID = langIDs.indexOf(lang1);
-									int lang2ID = langIDs.indexOf(lang2);
-									infoScores = InformationWeightedSequenceAlignment.combinedInfoScoresForAlignment(alignment, infoModels[lang1ID], infoModels[lang2ID]);
-								}
-								if (alignment.normalizedDistanceScore <= 0.6) {
-									for (int pos = 0; pos < alignment.getLength(); pos++) {
-										cognatePairCorrespondenceDist
-												.addObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable), infoScores[pos]);
-									}
-									numCognatePairs++;
-								}
-							}
-						}
-					}
-				}
-			}
+			executor = Executors.newFixedThreadPool(numThreads);
 
+			for (int i = 0; i < numThreads; i++) {
+				CorrespondenceModelInferenceCognateAlignmentsWorker alignmentsWorker;
+				if (i < numThreads - 1) {
+					alignmentsWorker = new CorrespondenceModelInferenceCognateAlignmentsWorker(database,
+							symbolTable, infoModels, params.subList(i * chunkSize, (i+1) * chunkSize), globalCorr);
+				} else {
+					alignmentsWorker = new CorrespondenceModelInferenceCognateAlignmentsWorker(database,
+							symbolTable, infoModels, params.subList(i * chunkSize, params.size()), globalCorr);
+				}
+				cognateAlignmentsWorkers[i] = alignmentsWorker;
+				executor.execute(alignmentsWorker);
+			}
+			executor.shutdown();
+			while(!executor.isTerminated()) {}
+
+			for (int i = 0; i < cognateAlignmentsWorkers.length; i++) {
+				cognatePairCorrespondenceDist.concatenate(cognateAlignmentsWorkers[i].getCognatePairCorrespondenceDist());
+				numPairs += cognateAlignmentsWorkers[i].getNumPairs();
+				numCognatePairs += cognateAlignmentsWorkers[i].getNumCognatePairs();
+			}
 
 			System.err.print(
 					" done. " + numCognatePairs + " form pairs look like cognates (normalized aligment score < 0.6)\n");

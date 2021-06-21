@@ -29,7 +29,7 @@ public class CategoricalDistribution {
 		observationCountsSum++;
 	}
 	
-	public void addObservation(int i, double observationWeight) {
+	public synchronized void addObservation(int i, double observationWeight) {
 		observationCounts[i] += observationWeight;
 		observationCountsSum += observationWeight;
 	}
@@ -53,5 +53,20 @@ public class CategoricalDistribution {
 			break;
 		}
 		return 0.0;
+	}
+
+	public void concatenate(CategoricalDistribution otherDistribution) {
+		double[] otherObservationCounts = otherDistribution.observationCounts;
+
+		if (otherObservationCounts.length != observationCounts.length) {
+			throw new IndexOutOfBoundsException("Distributions must be of same size!");
+		}
+
+		for (int i = 0; i < observationCounts.length; i++) {
+			observationCounts[i] += otherDistribution.getObservationCount(i);
+		}
+
+		double otherObservationCountsSum = otherDistribution.getObservationCountsSum();
+		observationCountsSum += otherObservationCountsSum;
 	}
 }
