@@ -178,30 +178,39 @@ public class CorrespondenceModelInference {
 				symbolTable.getSize() * symbolTable.getSize());
 		int numRandomPairs = database.getConceptMap().size() * database.getLanguageMap().size() *
 				database.getLanguageMap().size();
+		//numRandomPairs = Math.min(numRandomPairs, 20000000); // set maximum iterations to 20 million random pairs
+		numRandomPairs = Math.min(numRandomPairs, 1000);
+		int onePercentOfRandomPairs = numRandomPairs / 100;
 		System.err.print("  Step 1: Simulating non-cognates by means of " + numRandomPairs + " random alignments ...");
 		//ArrayList<String> langIDsAsList = new ArrayList<>(database.getLanguageMap().keySet());
 		List<String> langIDs = database.getLangIDs();
 		for (int i = 0; i < numRandomPairs; i++) {
+			if (i % onePercentOfRandomPairs == 0) {
+				System.err.println("Processed " + i + " of " + numRandomPairs + " random pairs (" + (i * 100) / numRandomPairs + "%)");
+			}
 			int randomLangIdx1 = (int) (Math.random() * database.getLanguageMap().size());
 			int randomLangIdx2 = (int) (Math.random() * database.getLanguageMap().size());
 			String randomLangId1 = langIDs.get(randomLangIdx1);
 			String randomLangId2 = langIDs.get(randomLangIdx2);
-			CLDFForm form1inCLDF = database.getRandomFormForLanguage(randomLangId1);
-			CLDFForm form2inCLDF = database.getRandomFormForLanguage(randomLangId2);
-			// get the segments from the CLDFForm, encode them as ints and construct PhoneticString objects
-			PhoneticString form1 = new PhoneticString(symbolTable.encode(form1inCLDF.getSegments()));
-			PhoneticString form2 = new PhoneticString(symbolTable.encode(form2inCLDF.getSegments()));
-			PhoneticStringAlignment alignment = LevenshteinAlignmentAlgorithm.constructAlignment(form1, form2);
-			double[] infoScores = new double[alignment.getLength()];
-			if (infoModels == null) {
-				Arrays.fill(infoScores, 1.0);
-			}
-			else {
-				infoScores = InformationWeightedSequenceAlignment.combinedInfoScoresForAlignment(alignment, infoModels[randomLangIdx1], infoModels[randomLangIdx2]);
-			}
-			for (int pos = 0; pos < alignment.getLength(); pos++) {
-				randomPairCorrespondenceDist.addObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable), infoScores[pos]);
-			}
+			try {
+				// TODO check why code can crash here -- error in data or code?
+				CLDFForm form1inCLDF = database.getRandomFormForLanguage(randomLangId1);
+				CLDFForm form2inCLDF = database.getRandomFormForLanguage(randomLangId2);
+
+				// get the segments from the CLDFForm, encode them as ints and construct PhoneticString objects
+				PhoneticString form1 = new PhoneticString(symbolTable.encode(form1inCLDF.getSegments()));
+				PhoneticString form2 = new PhoneticString(symbolTable.encode(form2inCLDF.getSegments()));
+				PhoneticStringAlignment alignment = LevenshteinAlignmentAlgorithm.constructAlignment(form1, form2);
+				double[] infoScores = new double[alignment.getLength()];
+				if (infoModels == null) {
+					Arrays.fill(infoScores, 1.0);
+				} else {
+					infoScores = InformationWeightedSequenceAlignment.combinedInfoScoresForAlignment(alignment, infoModels[randomLangIdx1], infoModels[randomLangIdx2]);
+				}
+				for (int pos = 0; pos < alignment.getLength(); pos++) {
+					randomPairCorrespondenceDist.addObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable), infoScores[pos]);
+				}
+			} catch (Exception ignored) { }
 		}
 		System.err.print(" done.\n");
 

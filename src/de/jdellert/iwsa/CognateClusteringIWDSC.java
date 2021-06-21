@@ -35,7 +35,7 @@ public class CognateClusteringIWDSC {
 
     public static void main(String[] args) {
         try {
-            String resultFileName = args[1];
+            //String resultFileName = args[1];
 
             CLDFWordlistDatabase database = CLDFImport.loadDatabase(args[0]);
             PhoneticSymbolTable symbolTable = PhoneticSymbolTable.symbolTableFromDatabase(database);
