@@ -28,6 +28,7 @@ public class CorrespondenceModelInference {
 	public static int NUM_GLOBAL_CORR_REESTIMATIONS = 3;
 	public static int NUM_LOCAL_CORR_REESTIMATIONS = 5;
 	public static int NUM_RANDOM_PAIRS_LOCAL = 100000;
+	public static int NUM_THREADS = 8;
 	
 	public static double LOCAL_PMI_RATIO = 0.5;
 	
@@ -184,12 +185,11 @@ public class CorrespondenceModelInference {
 				database.getLanguageMap().size();
 		numRandomPairs = Math.min(numRandomPairs, 20000000); // set maximum iterations to 20 million random pairs
 		System.err.print("  Step 1: Simulating non-cognates by means of " + numRandomPairs + " random alignments ...");
-		int numThreads = 8;
-		ExecutorService executor = Executors.newFixedThreadPool(numThreads);
-		CorrespondenceModelInferenceRandomAlignmentsWorker[] workers = new CorrespondenceModelInferenceRandomAlignmentsWorker[numThreads];
-		for (int i = 0; i < numThreads; i++) {
+		ExecutorService executor = Executors.newFixedThreadPool(NUM_THREADS);
+		CorrespondenceModelInferenceRandomAlignmentsWorker[] workers = new CorrespondenceModelInferenceRandomAlignmentsWorker[NUM_THREADS];
+		for (int i = 0; i < NUM_THREADS; i++) {
 			CorrespondenceModelInferenceRandomAlignmentsWorker corrModelWorker = new CorrespondenceModelInferenceRandomAlignmentsWorker(database,
-					symbolTable, infoModels, numRandomPairs / numThreads, i == 0);
+					symbolTable, infoModels, numRandomPairs / NUM_THREADS, i == 0);
 			workers[i] = corrModelWorker;
 			executor.execute(corrModelWorker);
 		}
@@ -210,12 +210,12 @@ public class CorrespondenceModelInference {
 		System.err.print("  Step 2: Finding ED-based cognate candidates ...");
 
 		List<String> params = new ArrayList<>(database.getConceptMap().keySet());
-		executor = Executors.newFixedThreadPool(numThreads);
-		CorrespondenceModelInferenceCognateAlignmentsWorker[] cognateAlignmentsWorkers = new CorrespondenceModelInferenceCognateAlignmentsWorker[numThreads];
-		int chunkSize = params.size() / numThreads;
-		for (int i = 0; i < numThreads; i++) {
+		executor = Executors.newFixedThreadPool(NUM_THREADS);
+		CorrespondenceModelInferenceCognateAlignmentsWorker[] cognateAlignmentsWorkers = new CorrespondenceModelInferenceCognateAlignmentsWorker[NUM_THREADS];
+		int chunkSize = params.size() / NUM_THREADS;
+		for (int i = 0; i < NUM_THREADS; i++) {
 			CorrespondenceModelInferenceCognateAlignmentsWorker alignmentsWorker;
-			if (i < numThreads - 1) {
+			if (i < NUM_THREADS - 1) {
 				alignmentsWorker = new CorrespondenceModelInferenceCognateAlignmentsWorker(database,
 						symbolTable, infoModels, params.subList(i * chunkSize, (i+1) * chunkSize));
 			} else {
@@ -254,11 +254,11 @@ public class CorrespondenceModelInference {
 			System.err.print("    Iteration 0" + (iteration + 1) + ": Finding WED-based cognate candidates ...");
 			numPairs = 0;
 			numCognatePairs = 0;
-			executor = Executors.newFixedThreadPool(numThreads);
+			executor = Executors.newFixedThreadPool(NUM_THREADS);
 
-			for (int i = 0; i < numThreads; i++) {
+			for (int i = 0; i < NUM_THREADS; i++) {
 				CorrespondenceModelInferenceCognateAlignmentsWorker alignmentsWorker;
-				if (i < numThreads - 1) {
+				if (i < NUM_THREADS - 1) {
 					alignmentsWorker = new CorrespondenceModelInferenceCognateAlignmentsWorker(database,
 							symbolTable, infoModels, params.subList(i * chunkSize, (i+1) * chunkSize), globalCorr);
 				} else {
@@ -345,12 +345,70 @@ public class CorrespondenceModelInference {
 	public static CorrespondenceModel[][] inferLocalCorrespondenceModels(CLDFWordlistDatabase database,
 																		 PhoneticSymbolTable symbolTable, List<String> relevantLangIDs, CorrespondenceModel globalCorr, InformationModel[] infoModels) {
 		CorrespondenceModel[][] localCorrModels = new CorrespondenceModel[relevantLangIDs.size()][relevantLangIDs.size()];
+		CorrespondenceModel[] selfCorrespondences = new CorrespondenceModel[relevantLangIDs.size()];
+		ExecutorService executor = Executors.newFixedThreadPool(NUM_THREADS);
+		SelfCorrespondenceWorker[] selfCorrespondenceWorkers = new SelfCorrespondenceWorker[NUM_THREADS];
+		int chunkSize = relevantLangIDs.size() / NUM_THREADS;
+		for (int i = 0; i < NUM_THREADS; i++) {
+			SelfCorrespondenceWorker selfCorrWorker;
+			if (i != NUM_THREADS - 1) {
+				selfCorrWorker = new SelfCorrespondenceWorker(database, symbolTable,
+						relevantLangIDs.subList(i * chunkSize, (i+1) * chunkSize), globalCorr, infoModels);
+			} else { // make sure that the last chunk contains all remaining languages, in case of odd division
+				selfCorrWorker = new SelfCorrespondenceWorker(database, symbolTable,
+						relevantLangIDs.subList(i * chunkSize, relevantLangIDs.size()), globalCorr, infoModels);
+			}
+			selfCorrespondenceWorkers[i] = selfCorrWorker;
+			executor.execute(selfCorrWorker);
+		}
+
+		executor.shutdown();
+		while(!executor.isTerminated()) {}
+
+		for (int i = 0; i < selfCorrespondenceWorkers.length; i++) {
+			int pos = chunkSize * i;
+			CorrespondenceModel[] selfCorrespondencesSlice = selfCorrespondenceWorkers[i].getSelfCorrespondences();
+			System.arraycopy(selfCorrespondencesSlice, 0, selfCorrespondences, pos, selfCorrespondencesSlice.length);
+		}
+
+		/*
 		for (String langID : relevantLangIDs) {
 			int langIdx = relevantLangIDs.indexOf(langID);
-			System.err.println("Storing localCorrModels[" + langIdx + "][" + langIdx + "]");
-			localCorrModels[langIdx][langIdx] = inferCorrModelForPair(database, symbolTable, langIdx, langIdx, langID, langID,
+			System.err.println("Storing local correspondence model for " + langID + " and " + langID);
+			localCorrModels[langIdx][langIdx] = inferCorrModelForPair(database, symbolTable, langID, langID,
 					globalCorr, globalCorr, globalCorr, infoModels[langIdx], infoModels[langIdx]);
 		}
+		 */
+
+
+		executor = Executors.newFixedThreadPool(NUM_THREADS);
+		LocalCorrespondenceWorker[] localCorrespondenceWorkers = new LocalCorrespondenceWorker[NUM_THREADS];
+		for (int i = 0; i < NUM_THREADS; i++) {
+			LocalCorrespondenceWorker localCorrWorker;
+			if (i != NUM_THREADS - 1) {
+				localCorrWorker = new LocalCorrespondenceWorker(database, symbolTable, relevantLangIDs,
+						relevantLangIDs.subList(i * chunkSize, (i+1) * chunkSize), globalCorr, selfCorrespondences, infoModels);
+			} else { // make sure that the last chunk contains all remaining languages, in case of odd division
+				localCorrWorker = new LocalCorrespondenceWorker(database, symbolTable, relevantLangIDs,
+						relevantLangIDs.subList(i * chunkSize, relevantLangIDs.size()), globalCorr, selfCorrespondences, infoModels);
+			}
+			localCorrespondenceWorkers[i] = localCorrWorker;
+			executor.execute(localCorrWorker);
+		}
+		executor.shutdown();
+		while(!executor.isTerminated()) {}
+
+		for (int i = 0; i < localCorrespondenceWorkers.length; i++) {
+			int pos = chunkSize * i;
+			CorrespondenceModel[][] localCorrModelSlice = localCorrespondenceWorkers[i].getLocalCorrModels();
+			System.arraycopy(localCorrModelSlice, 0, localCorrModels, pos, localCorrModelSlice.length);
+		}
+
+		for (int i = 0; i < selfCorrespondences.length; i++) {
+			localCorrModels[i][i] = selfCorrespondences[i];
+		}
+
+		/*
 
 		for (String lang1ID : relevantLangIDs) {
 			int lang1Idx = relevantLangIDs.indexOf(lang1ID);
@@ -360,10 +418,12 @@ public class CorrespondenceModelInference {
 					continue;
 				}
 				System.err.println("Storing localCorrModels[" + lang1Idx + "][" + lang2Idx + "]");
-				localCorrModels[lang1Idx][lang2Idx] = inferCorrModelForPair(database, symbolTable, lang1Idx, lang2Idx, lang1ID, lang2ID,
+				localCorrModels[lang1Idx][lang2Idx] = inferCorrModelForPair(database, symbolTable, lang1ID, lang2ID,
 						globalCorr, localCorrModels[lang1Idx][lang1Idx], localCorrModels[lang2Idx][lang2Idx], infoModels[lang1Idx], infoModels[lang2Idx]);
 			}
 		}
+
+		 */
 
 		return localCorrModels;
 	}
@@ -530,7 +590,7 @@ public class CorrespondenceModelInference {
 	}
 
 	public static CorrespondenceModel inferCorrModelForPair(CLDFWordlistDatabase database, PhoneticSymbolTable symbolTable,
-															int lang1ID, int lang2ID, String lang1, String lang2, CorrespondenceModel globalCorr, CorrespondenceModel lang1SelfCorr,
+															String lang1, String lang2, CorrespondenceModel globalCorr, CorrespondenceModel lang1SelfCorr,
 															CorrespondenceModel lang2SelfCorr, InformationModel infoModel1, InformationModel infoModel2) {
 		System.err.print("  Pair " + lang1 + "/" + lang2 + ":\n");
 		CategoricalDistribution randomCorrespondenceDistForPair = new CategoricalDistribution(
@@ -540,6 +600,11 @@ public class CorrespondenceModelInference {
 		for (int i = 0; i < NUM_RANDOM_PAIRS_LOCAL; i++) {
 			CLDFForm form1inCLDF = database.getRandomFormForLanguage(lang1);
 			CLDFForm form2inCLDF = database.getRandomFormForLanguage(lang2);
+
+			if (form1inCLDF == null || form2inCLDF == null) {
+				continue;
+			}
+
 			// get the segments from the CLDFForm, encode them as ints and construct PhoneticString objects
 			PhoneticString form1 = new PhoneticString(symbolTable.encode(form1inCLDF.getSegments()));
 			PhoneticString form2 = new PhoneticString(symbolTable.encode(form2inCLDF.getSegments()));
@@ -567,9 +632,17 @@ public class CorrespondenceModelInference {
 
 		for (String paramID : database.getConceptMap().keySet()) {
 			Map<String, List<CLDFForm>> formsByParamID = database.getFormsByLanguageByParamID(paramID);
-			for (CLDFForm form1inCLDF : formsByParamID.get(lang1)) {
+			if (formsByParamID == null) {
+				continue;
+			}
+			List<CLDFForm> lang1Forms = formsByParamID.get(lang1);
+			List<CLDFForm> lang2Forms = formsByParamID.get(lang2);
+			if (lang1Forms == null || lang2Forms == null) {
+				continue;
+			}
+			for (CLDFForm form1inCLDF : lang1Forms) {
 				PhoneticString form1 = new PhoneticString(symbolTable.encode(form1inCLDF.getSegments()));
-				for (CLDFForm form2inCLDF : formsByParamID.get(lang2)) {
+				for (CLDFForm form2inCLDF : lang2Forms) {
 					PhoneticString form2 = new PhoneticString(symbolTable.encode(form2inCLDF.getSegments()));
 					PhoneticStringAlignment alignment = NeedlemanWunschAlgorithm.constructAlignment(form1,
 							form2, globalCorr, globalCorr, globalCorr, globalCorr);
@@ -617,9 +690,17 @@ public class CorrespondenceModelInference {
 			cognateCorrespondenceDistForPair = new CategoricalDistribution(symbolTable.getSize() * symbolTable.getSize());
 			for (String paramID : database.getConceptMap().keySet()) {
 				Map<String, List<CLDFForm>> formsByParamID = database.getFormsByLanguageByParamID(paramID);
-				for (CLDFForm form1inCLDF : formsByParamID.get(lang1)) {
+				if (formsByParamID == null) {
+					continue;
+				}
+				List<CLDFForm> lang1Forms = formsByParamID.get(lang1);
+				List<CLDFForm> lang2Forms = formsByParamID.get(lang2);
+				if (lang1Forms == null || lang2Forms == null) {
+					continue;
+				}
+				for (CLDFForm form1inCLDF : lang1Forms) {
 					PhoneticString form1 = new PhoneticString(symbolTable.encode(form1inCLDF.getSegments()));
-					for (CLDFForm form2inCLDF : formsByParamID.get(lang2)) {
+					for (CLDFForm form2inCLDF : lang2Forms) {
 						PhoneticString form2 = new PhoneticString(symbolTable.encode(form2inCLDF.getSegments()));
 						PhoneticStringAlignment alignment = NeedlemanWunschAlgorithm.constructAlignment(form1,
 								form2, globalCorr, localCorr, lang1SelfCorr, lang2SelfCorr);

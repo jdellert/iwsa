@@ -148,14 +148,23 @@ public class CognateClusteringIWDSC {
                 double[][] distanceMatrix = new double[formMap.size()][formMap.size()];
 
                 Map<String, List<CLDFForm>> formsPerLang = database.getFormsByLanguageByParamID(concept);
+                if (formsPerLang == null) {
+                    continue;
+                }
                 for (int i = 0; i < relevantLangIDs.size(); i++) {
                     String lang1 = relevantLangIDs.get(i);
                     int lang1ID = relevantLangIDs.indexOf(lang1);
                     List<CLDFForm> lang1Forms = formsPerLang.get(lang1);
+                    if (lang1Forms == null) {
+                        continue;
+                    }
                     for (int j = i; j < relevantLangIDs.size(); j++) {
                         String lang2 = relevantLangIDs.get(j);
                         int lang2ID = relevantLangIDs.indexOf(lang2);
                         List<CLDFForm> lang2Forms = formsPerLang.get(lang2);
+                        if (lang2Forms == null) {
+                            continue;
+                        }
                         for (CLDFForm form1inCLDF : lang1Forms) {
                             PhoneticString form1 = new PhoneticString(symbolTable.encode(form1inCLDF.getSegments()));
                             for (CLDFForm form2inCLDF : lang2Forms) {
