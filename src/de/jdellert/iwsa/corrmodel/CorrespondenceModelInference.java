@@ -186,9 +186,9 @@ public class CorrespondenceModelInference {
 		numRandomPairs = Math.min(numRandomPairs, 20000000); // set maximum iterations to 20 million random pairs
 		System.err.print("  Step 1: Simulating non-cognates by means of " + numRandomPairs + " random alignments ...");
 		ExecutorService executor = Executors.newFixedThreadPool(NUM_THREADS);
-		CorrespondenceModelInferenceRandomAlignmentsWorker[] workers = new CorrespondenceModelInferenceRandomAlignmentsWorker[NUM_THREADS];
+		RandomAlignmentsWorker[] workers = new RandomAlignmentsWorker[NUM_THREADS];
 		for (int i = 0; i < NUM_THREADS; i++) {
-			CorrespondenceModelInferenceRandomAlignmentsWorker corrModelWorker = new CorrespondenceModelInferenceRandomAlignmentsWorker(database,
+			RandomAlignmentsWorker corrModelWorker = new RandomAlignmentsWorker(database,
 					symbolTable, infoModels, numRandomPairs / NUM_THREADS, i == 0);
 			workers[i] = corrModelWorker;
 			executor.execute(corrModelWorker);
@@ -211,15 +211,15 @@ public class CorrespondenceModelInference {
 
 		List<String> params = new ArrayList<>(database.getConceptMap().keySet());
 		executor = Executors.newFixedThreadPool(NUM_THREADS);
-		CorrespondenceModelInferenceCognateAlignmentsWorker[] cognateAlignmentsWorkers = new CorrespondenceModelInferenceCognateAlignmentsWorker[NUM_THREADS];
+		CognateAlignmentsWorker[] cognateAlignmentsWorkers = new CognateAlignmentsWorker[NUM_THREADS];
 		int chunkSize = params.size() / NUM_THREADS;
 		for (int i = 0; i < NUM_THREADS; i++) {
-			CorrespondenceModelInferenceCognateAlignmentsWorker alignmentsWorker;
+			CognateAlignmentsWorker alignmentsWorker;
 			if (i < NUM_THREADS - 1) {
-				alignmentsWorker = new CorrespondenceModelInferenceCognateAlignmentsWorker(database,
+				alignmentsWorker = new CognateAlignmentsWorker(database,
 						symbolTable, infoModels, params.subList(i * chunkSize, (i+1) * chunkSize));
 			} else {
-				alignmentsWorker = new CorrespondenceModelInferenceCognateAlignmentsWorker(database,
+				alignmentsWorker = new CognateAlignmentsWorker(database,
 						symbolTable, infoModels, params.subList(i * chunkSize, params.size()));
 			}
 			cognateAlignmentsWorkers[i] = alignmentsWorker;
@@ -257,12 +257,12 @@ public class CorrespondenceModelInference {
 			executor = Executors.newFixedThreadPool(NUM_THREADS);
 
 			for (int i = 0; i < NUM_THREADS; i++) {
-				CorrespondenceModelInferenceCognateAlignmentsWorker alignmentsWorker;
+				CognateAlignmentsWorker alignmentsWorker;
 				if (i < NUM_THREADS - 1) {
-					alignmentsWorker = new CorrespondenceModelInferenceCognateAlignmentsWorker(database,
+					alignmentsWorker = new CognateAlignmentsWorker(database,
 							symbolTable, infoModels, params.subList(i * chunkSize, (i+1) * chunkSize), globalCorr);
 				} else {
-					alignmentsWorker = new CorrespondenceModelInferenceCognateAlignmentsWorker(database,
+					alignmentsWorker = new CognateAlignmentsWorker(database,
 							symbolTable, infoModels, params.subList(i * chunkSize, params.size()), globalCorr);
 				}
 				cognateAlignmentsWorkers[i] = alignmentsWorker;
@@ -371,16 +371,6 @@ public class CorrespondenceModelInference {
 			System.arraycopy(selfCorrespondencesSlice, 0, selfCorrespondences, pos, selfCorrespondencesSlice.length);
 		}
 
-		/*
-		for (String langID : relevantLangIDs) {
-			int langIdx = relevantLangIDs.indexOf(langID);
-			System.err.println("Storing local correspondence model for " + langID + " and " + langID);
-			localCorrModels[langIdx][langIdx] = inferCorrModelForPair(database, symbolTable, langID, langID,
-					globalCorr, globalCorr, globalCorr, infoModels[langIdx], infoModels[langIdx]);
-		}
-		 */
-
-
 		executor = Executors.newFixedThreadPool(NUM_THREADS);
 		LocalCorrespondenceWorker[] localCorrespondenceWorkers = new LocalCorrespondenceWorker[NUM_THREADS];
 		for (int i = 0; i < NUM_THREADS; i++) {
@@ -407,23 +397,6 @@ public class CorrespondenceModelInference {
 		for (int i = 0; i < selfCorrespondences.length; i++) {
 			localCorrModels[i][i] = selfCorrespondences[i];
 		}
-
-		/*
-
-		for (String lang1ID : relevantLangIDs) {
-			int lang1Idx = relevantLangIDs.indexOf(lang1ID);
-			for (String lang2ID : relevantLangIDs) {
-				int lang2Idx = relevantLangIDs.indexOf(lang2ID);
-				if (lang1Idx == lang2Idx) {
-					continue;
-				}
-				System.err.println("Storing localCorrModels[" + lang1Idx + "][" + lang2Idx + "]");
-				localCorrModels[lang1Idx][lang2Idx] = inferCorrModelForPair(database, symbolTable, lang1ID, lang2ID,
-						globalCorr, localCorrModels[lang1Idx][lang1Idx], localCorrModels[lang2Idx][lang2Idx], infoModels[lang1Idx], infoModels[lang2Idx]);
-			}
-		}
-
-		 */
 
 		return localCorrModels;
 	}

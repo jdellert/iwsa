@@ -15,7 +15,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-public class CorrespondenceModelInferenceCognateAlignmentsWorker implements Runnable {
+public class CognateAlignmentsWorker implements Runnable {
     CLDFWordlistDatabase database;
     PhoneticSymbolTable symbolTable;
     InformationModel[] infoModels;
@@ -26,10 +26,10 @@ public class CorrespondenceModelInferenceCognateAlignmentsWorker implements Runn
     int numPairs;
     int numCognatePairs;
 
-    public CorrespondenceModelInferenceCognateAlignmentsWorker(CLDFWordlistDatabase database,
-                                                               PhoneticSymbolTable symbolTable,
-                                                               InformationModel[] infoModels,
-                                                               List<String> relevantParams) {
+    public CognateAlignmentsWorker(CLDFWordlistDatabase database,
+                                   PhoneticSymbolTable symbolTable,
+                                   InformationModel[] infoModels,
+                                   List<String> relevantParams) {
         this.database = database;
         this.symbolTable = symbolTable;
         this.infoModels = infoModels;
@@ -38,11 +38,11 @@ public class CorrespondenceModelInferenceCognateAlignmentsWorker implements Runn
         langIDs = database.getLangIDs();
     }
 
-    public CorrespondenceModelInferenceCognateAlignmentsWorker(CLDFWordlistDatabase database,
-                                                               PhoneticSymbolTable symbolTable,
-                                                               InformationModel[] infoModels,
-                                                               List<String> relevantParams,
-                                                               CorrespondenceModel globalCorr) {
+    public CognateAlignmentsWorker(CLDFWordlistDatabase database,
+                                   PhoneticSymbolTable symbolTable,
+                                   InformationModel[] infoModels,
+                                   List<String> relevantParams,
+                                   CorrespondenceModel globalCorr) {
         this.database = database;
         this.symbolTable = symbolTable;
         this.infoModels = infoModels;

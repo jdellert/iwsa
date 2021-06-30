@@ -13,7 +13,7 @@ import de.tuebingen.sfs.cldfjava.data.CLDFWordlistDatabase;
 import java.util.Arrays;
 import java.util.List;
 
-public class CorrespondenceModelInferenceRandomAlignmentsWorker implements Runnable{
+public class RandomAlignmentsWorker implements Runnable{
     CLDFWordlistDatabase database;
     PhoneticSymbolTable symbolTable;
     InformationModel[] infoModels;
@@ -23,11 +23,11 @@ public class CorrespondenceModelInferenceRandomAlignmentsWorker implements Runna
     List<String> langIDs;
     int onePercentOfRandomPairs;
 
-    public CorrespondenceModelInferenceRandomAlignmentsWorker(CLDFWordlistDatabase database,
-                                                              PhoneticSymbolTable symbolTable,
-                                                              InformationModel[] infoModels,
-                                                              int numRandomPairs,
-                                                              boolean verbose) {
+    public RandomAlignmentsWorker(CLDFWordlistDatabase database,
+                                  PhoneticSymbolTable symbolTable,
+                                  InformationModel[] infoModels,
+                                  int numRandomPairs,
+                                  boolean verbose) {
         this.database = database;
         this.symbolTable = symbolTable;
         this.infoModels = infoModels;
