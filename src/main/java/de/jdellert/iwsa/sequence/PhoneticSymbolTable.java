@@ -4,12 +4,7 @@ import de.tuebingen.sfs.cldfjava.data.CLDFForm;
 import de.tuebingen.sfs.cldfjava.data.CLDFWordlistDatabase;
 
 import java.io.Serializable;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.*;
 
 /**
  * Symbol table for mapping IPA segments to integers for efficient internal

@@ -33,7 +33,7 @@
         <dependency>
             <groupId>de.tuebingen.sfs</groupId>
             <artifactId>cldf-java</artifactId>
-            <version>1.0.0-beta</version>
+            <version>1.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
     <name>Iwsa</name>
