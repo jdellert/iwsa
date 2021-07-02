@@ -1,12 +1,10 @@
 package de.jdellert.iwsa.sequence;
 
+import de.tuebingen.sfs.cldfjava.data.CLDFForm;
+import de.tuebingen.sfs.cldfjava.data.CLDFWordlistDatabase;
+
 import java.io.Serializable;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.*;
 
 /**
  * Symbol table for mapping IPA segments to integers for efficient internal
@@ -112,5 +110,21 @@ public class PhoneticSymbolTable implements Serializable {
                 i++;
             return idToSymbol[i];
         }
+    }
+
+
+    public static PhoneticSymbolTable symbolTableFromDatabase(CLDFWordlistDatabase database) {
+        Set<String> usedIpaTokens = new TreeSet<String>();
+
+        Map<Integer, CLDFForm> formsMap = database.getFormsMap();
+        for (Map.Entry<Integer, CLDFForm> entry : formsMap.entrySet()) {
+            CLDFForm form = entry.getValue();
+            String[] segments = form.getSegments();
+            usedIpaTokens.addAll(Arrays.asList(segments));
+        }
+
+        PhoneticSymbolTable symbolTable = new PhoneticSymbolTable(usedIpaTokens);
+
+        return symbolTable;
     }
 }
