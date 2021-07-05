@@ -5,27 +5,23 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.ml.Pipeline;
-import org.apache.spark.ml.PipelineModel;
-import org.apache.spark.ml.PipelineStage;
-import org.apache.spark.ml.evaluation.RegressionEvaluator;
-import org.apache.spark.ml.feature.VectorIndexer;
-import org.apache.spark.ml.feature.VectorIndexerModel;
-import org.apache.spark.ml.regression.DecisionTreeRegressionModel;
-import org.apache.spark.ml.regression.DecisionTreeRegressor;
+import org.apache.spark.mllib.linalg.DenseVector;
 import org.apache.spark.mllib.regression.LabeledPoint;
 import org.apache.spark.mllib.tree.DecisionTree;
 import org.apache.spark.mllib.tree.model.DecisionTreeModel;
 import org.apache.spark.mllib.util.MLUtils;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
-import org.apache.spark.sql.SparkSession;
-import org.apache.spark.mllib.linalg.DenseVector;
 import scala.Tuple2;
 
-import java.io.*;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.zip.DataFormatException;
 
 public class GeneralizedCorrModelTrainer {
