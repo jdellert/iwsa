@@ -19,6 +19,7 @@ public class TCoffee {
     private static final int EMPTY_SYMBOL = PhoneticSymbolTable.EMPTY_ID;
     private List<PhoneticString> sequences;
     private Map<String, Integer> lang2ID;
+    private ArrayList<String> languageOrder;
     private PhoneticSymbolTable symbols;
     private CorrespondenceModel corrModel;
     private GuideTree guideTree;
@@ -31,13 +32,13 @@ public class TCoffee {
         this.corrModel = corrModel;
 
         this.lang2ID = new HashMap<>();
-        ArrayList<String> newLangs = new ArrayList<>();
+        languageOrder = new ArrayList<>();
         for (int i = 0; i < languages.size(); i++) {
             String language = languages.get(i);
             if (lang2ID.containsKey(language)) {
                 language += i;
             }
-            newLangs.add(language);
+            languageOrder.add(language);
             this.lang2ID.put(language, i);
         }
 
@@ -46,7 +47,7 @@ public class TCoffee {
 
         this.guideTree = guideTree;
         if (guideTree == null)
-            createGuideTree(newLangs);
+            createGuideTree(languageOrder);
     }
 
     public static MultipleAlignment align(List<PhoneticString> sequences, List<String> languages,
@@ -58,6 +59,19 @@ public class TCoffee {
                                           CorrespondenceModel corrModel, GuideTree guideTree) {
         return (new TCoffee(sequences, languages, corrModel, guideTree)).align();
     }
+    
+	public static MultipleAlignment alignAndReorder(List<PhoneticString> sequences, List<String> languages,
+			CorrespondenceModel corrModel) {
+		return alignAndReorder(sequences, languages, corrModel, null);
+	}
+	
+	public static MultipleAlignment alignAndReorder(List<PhoneticString> sequences, List<String> languages,
+			CorrespondenceModel corrModel, GuideTree guideTree) {
+		TCoffee tc = new TCoffee(sequences, languages, corrModel, guideTree);
+		MultipleAlignment msa = tc.align();
+		msa.orderAndFill(tc.languageOrder);
+		return msa;
+	}
 
     private static double[][] transpose(double[][] M) {
         return transpose(M, false);

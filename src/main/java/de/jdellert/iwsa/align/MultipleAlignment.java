@@ -89,27 +89,38 @@ public class MultipleAlignment {
     }
 
     public void orderAndFill(List<String> languages) {
-        Map<String, Integer> id2lang = new HashMap<>();
+        Map<String, Integer> lang2idx = new HashMap<>();
         for (int i = 0; i < langs.length; i++)
-            id2lang.put(langs[i], i);
+            lang2idx.put(langs[i], i);
 
         String[] newLangs = new String[languages.size()];
         int[][] newMsa = new int[languages.size()][];
+        Integer[] newForms = (forms == null || forms.isEmpty()) ? null : new Integer[languages.size()];
         for (int i = 0; i < languages.size(); i++) {
             String lang = languages.get(i);
             newLangs[i] = lang;
-            if (id2lang.containsKey(lang))
-                newMsa[i] = msa[id2lang.get(lang)];
-            else {
+            if (lang2idx.containsKey(lang)) {
+            	int idx = lang2idx.get(lang);
+                newMsa[i] = msa[idx];
+            	if (newForms != null) {
+            		newForms[i] = forms.get(idx);
+            	}
+            } else {
                 int[] empty = new int[msa[0].length];
                 Arrays.fill(empty, -1);
                 newMsa[i] = empty;
+            	if (newForms != null) {
+            		newForms[i] = null;
+            	}
                 hasUnattested = true;
             }
         }
 
         langs = newLangs;
         msa = newMsa;
+        if (newForms != null) {
+        	forms = Arrays.asList(newForms);
+        }
     }
 
     public void setLangs(List<String> languages) {
