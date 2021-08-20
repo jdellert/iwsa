@@ -25,6 +25,7 @@ public class CognateAlignmentsWorker implements Runnable {
     List<String> langIDs;
     int numPairs;
     int numCognatePairs;
+    ConfidenceScore confidenceScore;
 
     public CognateAlignmentsWorker(CLDFWordlistDatabase database,
                                    PhoneticSymbolTable symbolTable,
@@ -36,6 +37,7 @@ public class CognateAlignmentsWorker implements Runnable {
         this.relevantParams = relevantParams;
         cognatePairCorrespondenceDist = new CategoricalDistribution(symbolTable.getSize() * symbolTable.getSize());
         langIDs = database.getLangIDs();
+        confidenceScore = new ConfidenceScore(symbolTable);
     }
 
     public CognateAlignmentsWorker(CLDFWordlistDatabase database,
@@ -50,6 +52,7 @@ public class CognateAlignmentsWorker implements Runnable {
         this.globalCorr = globalCorr;
         cognatePairCorrespondenceDist = new CategoricalDistribution(symbolTable.getSize() * symbolTable.getSize());
         langIDs = database.getLangIDs();
+        confidenceScore = new ConfidenceScore(symbolTable);
     }
 
 
@@ -98,6 +101,7 @@ public class CognateAlignmentsWorker implements Runnable {
                                     cognatePairCorrespondenceDist
                                             .addObservation(alignment.getSymbolPairIDAtPos(pos, symbolTable), infoScores[pos]);
                                 }
+                                confidenceScore.addAlignment(form1inCLDF.getSegments(), form2inCLDF.getSegments());
                                 numCognatePairs++;
                             }
                         }
@@ -117,5 +121,9 @@ public class CognateAlignmentsWorker implements Runnable {
 
     public int getNumPairs() {
         return numPairs;
+    }
+
+    public ConfidenceScore getConfidenceScore() {
+        return confidenceScore;
     }
 }

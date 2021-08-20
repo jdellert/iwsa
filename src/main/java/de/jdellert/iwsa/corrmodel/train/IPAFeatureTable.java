@@ -68,6 +68,23 @@ public class IPAFeatureTable {
         return soundPairFeatures;
     }
 
+    public int[] getCombinedPairFeatures(String sound1, String sound2) {
+        int[] sound1Features = featureTable.get(sound1);
+        int[] sound2Features = featureTable.get(sound2);
+
+        if (sound1Features == null || sound2Features == null) {
+            return null;
+        }
+
+        int[] soundPairFeatures = new int[sound1Features.length];
+
+        for (int i = 0; i < soundPairFeatures.length; i++) {
+            soundPairFeatures[i] = Math.abs(sound1Features[i] - sound2Features[i]);
+        }
+
+        return soundPairFeatures;
+    }
+
     public Map<String, int[]> getFeatureTable() {
         return featureTable;
     }

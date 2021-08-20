@@ -1,5 +1,6 @@
 package de.jdellert.iwsa.corrmodel;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -177,6 +178,13 @@ public class CorrespondenceModelInference {
 	public static CorrespondenceModel inferGlobalCorrespondenceModel(CLDFWordlistDatabase database,
 																	 PhoneticSymbolTable symbolTable,
 																	 InformationModel[] infoModels) {
+		return inferGlobalCorrespondenceModel(database, symbolTable, infoModels, null);
+	}
+
+	public static CorrespondenceModel inferGlobalCorrespondenceModel(CLDFWordlistDatabase database,
+																	 PhoneticSymbolTable symbolTable,
+																	 InformationModel[] infoModels,
+																	 String confidenceScoreFilePath) {
 		List<String> langIDs = database.getLangIDs();
 		database.cacheFormsByLanguage();
 		CategoricalDistribution randomPairCorrespondenceDist = new CategoricalDistribution(
@@ -254,6 +262,7 @@ public class CorrespondenceModelInference {
 			System.err.print("    Iteration 0" + (iteration + 1) + ": Finding WED-based cognate candidates ...");
 			numPairs = 0;
 			numCognatePairs = 0;
+			ConfidenceScore confidenceScore = new ConfidenceScore(symbolTable);
 			executor = Executors.newFixedThreadPool(NUM_THREADS);
 
 			for (int i = 0; i < NUM_THREADS; i++) {
@@ -275,6 +284,15 @@ public class CorrespondenceModelInference {
 				cognatePairCorrespondenceDist.concatenate(cognateAlignmentsWorkers[i].getCognatePairCorrespondenceDist());
 				numPairs += cognateAlignmentsWorkers[i].getNumPairs();
 				numCognatePairs += cognateAlignmentsWorkers[i].getNumCognatePairs();
+				confidenceScore.concatenate(cognateAlignmentsWorkers[i].getConfidenceScore());
+			}
+
+			if (confidenceScoreFilePath != null) {
+				try {
+					confidenceScore.toFile(confidenceScoreFilePath);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
 
 			System.err.print(

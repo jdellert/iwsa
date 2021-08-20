@@ -67,10 +67,11 @@ public class CLDFCognateClusteringIWDSC {
             if (globalCorrModel == null) {
                 System.err.print("Stage 1: Inference of global PMI scores\n");
                 globalCorrModel = CorrespondenceModelInference.inferGlobalCorrespondenceModel(database, symbolTable,
-                        infoModels);
+                        infoModels, args[0] + "-global-iw-corr-conf.tsv");
                 CorrespondenceModelStorage.serializeGlobalModelToFile(globalCorrModel, args[0] + "-global-iw.corr");
             }
 
+            /*
             CorrespondenceModel[][] localCorrModels = null;
             try {
                 System.err.print("Attempting to load existing local correspondence models from " + args[0]
@@ -151,7 +152,7 @@ public class CLDFCognateClusteringIWDSC {
 
 
                 // TODO save output
-                /*
+
                 // store cluster IDs in database
                 for (Set<Integer> cognateSet : cognateSets) {
                     List<Integer> cognateSetFormIDs = new ArrayList<Integer>(cognateSet.size());
@@ -160,10 +161,10 @@ public class CLDFCognateClusteringIWDSC {
                         cognateSetFormIDs.add(formID);
                     }
                     database.addCognateSet(cognateSetFormIDs);
-                }*/
+                }
 
                 conceptCounter++;
-            }
+            }*/
 
         } catch (IOException e) {
             // TODO Auto-generated catch block
