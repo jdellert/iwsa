@@ -1,4 +1,4 @@
-package de.jdellert.iwsa.corrmodel.train;
+package de.jdellert.iwsa.corrmodel.neuralmodel;
 
 import java.io.BufferedReader;
 import java.io.FileReader;

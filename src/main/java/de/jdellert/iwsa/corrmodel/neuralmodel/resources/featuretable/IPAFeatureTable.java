@@ -1,4 +1,4 @@
-package de.jdellert.iwsa.corrmodel.train;
+package de.jdellert.iwsa.corrmodel.neuralmodel.resources.featuretable;
 
 import java.io.*;
 import java.util.HashMap;
