@@ -1,14 +1,18 @@
-package de.jdellert.iwsa.corrmodel.neuralmodel.resources.featuretable;
+package de.jdellert.iwsa.features;
 
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.DataFormatException;
 
-public class IPAFeatureTable {
+public class IpaFeatureTable {
     private Map<String, int[]> featureTable;
 
-    public IPAFeatureTable(String filepath) throws DataFormatException, IOException {
+    public IpaFeatureTable() throws DataFormatException, IOException {
+        this("de/jdellert/iwsa/features/all_ipa_symbols.csv");
+    }
+
+    public IpaFeatureTable(String filepath) throws DataFormatException, IOException {
         featureTable = new HashMap<>();
         BufferedReader br = new BufferedReader(new FileReader(filepath));
         String line;
@@ -51,7 +55,7 @@ public class IPAFeatureTable {
         return featureTable.get(key);
     }
 
-    public int[] getPair(String sound1, String sound2) {
+    public double[] encodePair(String sound1, String sound2) {
         int[] sound1Features = featureTable.get(sound1);
         int[] sound2Features = featureTable.get(sound2);
 
@@ -59,27 +63,16 @@ public class IPAFeatureTable {
             return null;
         }
 
-        int[] soundPairFeatures = new int[sound1Features.length * 2];
+        double[] soundPairFeatures = new double[sound1Features.length];
 
-        // concatenate feature arrays
-        System.arraycopy(sound1Features, 0, soundPairFeatures, 0, sound1Features.length);
-        System.arraycopy(sound2Features, 0, soundPairFeatures, sound1Features.length, sound2Features.length);
-
-        return soundPairFeatures;
-    }
-
-    public int[] getCombinedPairFeatures(String sound1, String sound2) {
-        int[] sound1Features = featureTable.get(sound1);
-        int[] sound2Features = featureTable.get(sound2);
-
-        if (sound1Features == null || sound2Features == null) {
-            return null;
-        }
-
-        int[] soundPairFeatures = new int[sound1Features.length];
-
-        for (int i = 0; i < soundPairFeatures.length; i++) {
-            soundPairFeatures[i] = Math.abs(sound1Features[i] - sound2Features[i]);
+        for (int i = 0; i < sound1Features.length; i++) {
+            if ((sound1Features[i] == 1 && sound2Features[i] == 1) || (sound1Features[i] == -1 && sound2Features[i] == -1)) {
+                soundPairFeatures[i] = 1;
+            } else if (sound1Features[i] == 0 && sound2Features[i] == 0) {
+                soundPairFeatures[i] = 0;
+            } else {
+                soundPairFeatures[i] = -1;
+            }
         }
 
         return soundPairFeatures;

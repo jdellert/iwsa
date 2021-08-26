@@ -1,12 +1,23 @@
 package de.jdellert.iwsa.corrmodel.neuralmodel;
 
+import de.jdellert.iwsa.features.IpaFeatureTable;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.DataFormatException;
 
-public class Model {
+public class PmiScoreModel {
     private List<Layer> layers;
 
-    public Model(String weightsDir, int numHiddenLayers, int hiddenSize, int inputDim) {
+    public PmiScoreModel() {
+        this("de/jdellert/iwsa/corrmodel/neuralmodel/weights", 3, 128, 34);
+    }
+
+    public PmiScoreModel(String weightsDir, int numHiddenLayers, int hiddenSize, int inputDim) {
         layers = new ArrayList<>();
 
         try {
@@ -42,19 +53,15 @@ public class Model {
     }
 
     public static void main(String[] args) {
-        String weightsDir = "/home/arne/HiWi/iwsa/src/main/java/de/jdellert/iwsa/corrmodel/train/weights/";
-        double[] test1 = {-1, -1, -1, -1, -1, -1, -1, 0, -1, -1, -1, 0, -1, 0, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-        double[] test2 = {1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0};
-        double[][] test = new double[2][34];
-        test[0] = test1;
-        test[1] = test2;
-
-        Model model = new Model(weightsDir, 3, 128, 34);
-
-        double[] results = model.predict(test);
-        for (double res : results) {
-            System.out.println(res);
+        try {
+            IpaFeatureTable featureTable = new IpaFeatureTable();
+            PmiScoreModel model = new PmiScoreModel();
+        } catch (DataFormatException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+
 
         /*
         try {
