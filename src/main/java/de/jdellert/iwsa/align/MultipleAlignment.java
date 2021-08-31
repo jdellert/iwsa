@@ -89,6 +89,7 @@ public class MultipleAlignment {
     }
 
     public void orderAndFill(List<String> languages) {
+        //TODO: refactor
         Map<String, Integer> lang2idx = new HashMap<>();
         for (int i = 0; i < langs.length; i++)
             lang2idx.put(langs[i], i);
@@ -136,6 +137,7 @@ public class MultipleAlignment {
     }
 
     public List<Integer> getFormIds(List<String> languages) {
+        //TODO: refactor
         Map<String, Integer> lang2idx = new HashMap<>();
         for (int l = 0; l < languages.size(); l++)
             lang2idx.put(languages.get(l), l);
@@ -146,6 +148,47 @@ public class MultipleAlignment {
                 filteredFormIds[l] = forms.get(i);
         }
         return Arrays.asList(filteredFormIds);
+    }
+
+    public void addEntry(int formId, String[] form, String lang) {
+        int lastInd=forms.size();
+        int[][] newMsa = new int[lastInd+1][];
+        for(int row=0; row<lastInd+1; row++) {
+            if(row==lastInd) {
+                newMsa[lastInd] = symbolTable.encode(form);
+            } else {
+                newMsa[row]=msa[row];
+            }
+        }
+        forms.add(formId);
+        List<String> langsList = new ArrayList<>(Arrays.asList(langs));
+        langsList.add(lang);
+        langs=langsList.toArray(String[]::new);
+        msa=newMsa;
+    }
+
+    public void replaceEntry(int formId, String[] form) {
+        int replaceInd=forms.indexOf(formId);
+        int[][] newMsa = new int[msa.length][];
+        for(int row=0; row<msa.length; row++) {
+            if(row==replaceInd) {
+                newMsa[row] = symbolTable.encode(form);
+            } else {
+                newMsa[row]=msa[row];
+            }
+        }
+        msa=newMsa;
+    }
+
+    public void removeEntry(int formId) {
+        int toRemove=forms.indexOf(formId);
+        List<String> langsList = new ArrayList<>(Arrays.asList(langs));
+        List<int[]> msaList=new ArrayList<>(Arrays.asList(msa));
+        forms.remove(toRemove);
+        langsList.remove(toRemove);
+        msaList.remove(toRemove);
+        langs=langsList.toArray(String[]::new);
+        msa=msaList.toArray(int[][]::new);
     }
 
     public void setAlignments(List<String[]> alignments) {
@@ -311,7 +354,7 @@ public class MultipleAlignment {
     }
 
     private class AlignmentColumnIterator implements Iterator<String[]> {
-
+        //TODO: refactor
         private int j;
         private Map<String, Integer> lang2idx;
 
