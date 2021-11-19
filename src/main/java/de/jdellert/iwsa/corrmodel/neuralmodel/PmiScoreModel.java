@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.zip.DataFormatException;
 
@@ -14,7 +15,7 @@ public class PmiScoreModel {
     private List<Layer> layers;
 
     public PmiScoreModel() {
-        this("de/jdellert/iwsa/corrmodel/neuralmodel/weights", 3, 128, 34);
+        this("iwsa/src/main/resources/de/jdellert/iwsa/corrmodel/neuralmodel/weights", 3, 128, 34);
     }
 
     public PmiScoreModel(String weightsDir, int numHiddenLayers, int hiddenSize, int inputDim) {
@@ -56,6 +57,26 @@ public class PmiScoreModel {
         try {
             IpaFeatureTable featureTable = new IpaFeatureTable();
             PmiScoreModel model = new PmiScoreModel();
+            int[] encodedA = featureTable.get("a");
+            int[] encodedE = featureTable.get("e");
+            System.out.println("encodedA: " + Arrays.toString(encodedA));
+            System.out.println("encodedE: " + Arrays.toString(encodedE));
+            String[] sounds = new String[] {"p", "t", "k", "a", "e", "i", "o", "u", "aː", "eː", "iː", "oː", "uː","au", "ai", "ə", "-"};
+            List<double[]> encodedPairs = new ArrayList<double[]>(sounds.length * sounds.length);
+            for (String sound1 : sounds) {
+                for (String sound2: sounds) {
+                    double[] encodedPair = featureTable.encodePair(sound1, sound2);
+                    encodedPairs.add(encodedPair);
+                }
+            }
+            double[][] inputs = encodedPairs.toArray(new double[encodedPairs.size()][]);
+            double[] predictions = model.predict(inputs);
+            int idx = 0;
+            for (String sound1 : sounds) {
+                for (String sound2 : sounds) {
+                    System.err.println(sound1 + "\t" + sound2 + "\t" + predictions[idx++]);
+                }
+            }
         } catch (DataFormatException e) {
             e.printStackTrace();
         } catch (IOException e) {

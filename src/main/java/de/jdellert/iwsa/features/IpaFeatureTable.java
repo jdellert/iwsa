@@ -9,7 +9,7 @@ public class IpaFeatureTable {
     private Map<String, int[]> featureTable;
 
     public IpaFeatureTable() throws DataFormatException, IOException {
-        this("de/jdellert/iwsa/features/all_ipa_symbols.csv");
+        this("iwsa/src/main/resources/de/jdellert/iwsa/features/all_ipa_symbols.csv");
     }
 
     public IpaFeatureTable(String filepath) throws DataFormatException, IOException {
