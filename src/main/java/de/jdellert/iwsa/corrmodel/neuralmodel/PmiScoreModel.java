@@ -14,10 +14,6 @@ import java.util.zip.DataFormatException;
 public class PmiScoreModel {
     private List<Layer> layers;
 
-    public PmiScoreModel() {
-        this("iwsa/src/main/resources/de/jdellert/iwsa/corrmodel/neuralmodel/weights", 3, 128, 34);
-    }
-
     public PmiScoreModel(String weightsDir, int numHiddenLayers, int hiddenSize, int inputDim) {
         layers = new ArrayList<>();
 
@@ -53,10 +49,14 @@ public class PmiScoreModel {
         return results;
     }
 
+    public static PmiScoreModel loadPairwiseNeuralModel() {
+        return new PmiScoreModel("iwsa/src/main/resources/de/jdellert/iwsa/corrmodel/neuralmodel/weights", 3, 128, 34);
+    }
+
     public static void main(String[] args) {
         try {
             IpaFeatureTable featureTable = new IpaFeatureTable();
-            PmiScoreModel model = new PmiScoreModel();
+            PmiScoreModel model = loadPairwiseNeuralModel();
             int[] encodedA = featureTable.get("a");
             int[] encodedE = featureTable.get("e");
             System.out.println("encodedA: " + Arrays.toString(encodedA));

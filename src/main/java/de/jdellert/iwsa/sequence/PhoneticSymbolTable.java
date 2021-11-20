@@ -22,7 +22,16 @@ public class PhoneticSymbolTable implements Serializable {
     private String[] idToSymbol;
     private Map<String, Integer> symbolToID;
 
+    public PhoneticSymbolTable() {
+        this.idToSymbol = new String[0];
+        this.symbolToID = new TreeMap<String, Integer>();
+    }
+
     public PhoneticSymbolTable(Collection<String> symbols) {
+        defineSymbols(symbols);
+    }
+
+    public void defineSymbols(Collection<String> symbols) {
         this.idToSymbol = new String[symbols.size() + 2];
         this.symbolToID = new TreeMap<String, Integer>();
         idToSymbol[BOUNDARY_ID] = BOUNDARY_SYMBOL;

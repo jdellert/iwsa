@@ -59,7 +59,12 @@ public class IpaFeatureTable {
         int[] sound1Features = featureTable.get(sound1);
         int[] sound2Features = featureTable.get(sound2);
 
-        if (sound1Features == null || sound2Features == null) {
+        if (sound1Features == null) {
+           System.err.println("ERROR: IPA Symbol " + sound1 + " was not defined in feature table");
+            return null;
+        }
+        else if (sound2Features == null) {
+            System.err.println("ERROR: IPA Symbol " + sound2 + " was not defined in feature table");
             return null;
         }
 
