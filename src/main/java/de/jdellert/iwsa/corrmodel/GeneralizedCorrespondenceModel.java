@@ -48,20 +48,20 @@ public class GeneralizedCorrespondenceModel extends CorrespondenceModel {
         //first attempt direct lookup in the older, more limited model
         int symbol1Id = symbolPairId / symbolTable.getSize();
         int symbol2Id = symbolPairId % symbolTable.getSize();
-        String symbol1 = getSymbolTable().toSymbol(symbol1Id);
-        String symbol2 = getSymbolTable().toSymbol(symbol2Id);
+        String symbol1 = symbolTable.toSymbol(symbol1Id);
+        String symbol2 = symbolTable.toSymbol(symbol2Id);
         score = directlyEstimatedScores.getScore(symbol1, symbol2);
-        //System.err.println("computing score for symbol pair " + symbolPairId + " (" + symbol1 + "," + symbol2 + ");" +
-        //                   " NELex says " + ((score != null) ? score : "null, falling back to neural model"));
+        System.err.println("computing score for symbol pair " + symbolPairId + " (" + symbol1 + "," + symbol2 + ");" +
+                           " NELex says " + ((score != null || score == 0.0) ? score : "null/0.0, falling back to neural model"));
         //the case where we need to perform lookup in the neural model
-        if (score == null) {
+        if (score == null || score == 0.0) {
             double[] encodedPair = featureTable.encodePair(symbol1, symbol2);
             if (encodedPair == null) {
-                System.err.println("  ERROR: feature model returned null for symbol pair (" + symbol1 + "," + symbol2 + "), symbolPairId = " + symbolPairId);
+                System.err.println("  ERROR: feature model returned null/0.0 for symbol pair (" + symbol1 + "," + symbol2 + "), symbolPairId = " + symbolPairId);
                 score = 0.0;
             } else {
                 score = pairwiseSimilarityModel.predict(new double[][]{encodedPair})[0];
-                //System.err.println("  pairwiseSimilarityModel predicts " + score);
+                System.err.println("  pairwiseSimilarityModel predicts " + score);
             }
         }
         //cache the result
