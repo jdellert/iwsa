@@ -38,6 +38,7 @@ public class GeneralizedCorrespondenceModel extends CorrespondenceModel {
             similarSymbolRanking.add(new RankingEntry<>(option, score));
         }
         Collections.sort(similarSymbolRanking, Comparator.reverseOrder());
+        System.err.println("Most similar to " + symbol + ": " + similarSymbolRanking);
         return similarSymbolRanking;
     }
 
@@ -50,14 +51,18 @@ public class GeneralizedCorrespondenceModel extends CorrespondenceModel {
         String symbol1 = getSymbolTable().toSymbol(symbol1Id);
         String symbol2 = getSymbolTable().toSymbol(symbol2Id);
         score = directlyEstimatedScores.getScore(symbol1, symbol2);
+        //System.err.println("computing score for symbol pair " + symbolPairId + " (" + symbol1 + "," + symbol2 + ");" +
+        //                   " NELex says " + ((score != null) ? score : "null, falling back to neural model"));
         //the case where we need to perform lookup in the neural model
-        if (score != null) {
+        if (score == null) {
             double[] encodedPair = featureTable.encodePair(symbol1, symbol2);
             if (encodedPair == null) {
-                System.err.println("ERROR: feature model returned null for symbol pair (" + symbol1 + "," + symbol2 + "), symbolPairId = " + symbolPairId);
-                return 0.0;
+                System.err.println("  ERROR: feature model returned null for symbol pair (" + symbol1 + "," + symbol2 + "), symbolPairId = " + symbolPairId);
+                score = 0.0;
+            } else {
+                score = pairwiseSimilarityModel.predict(new double[][]{encodedPair})[0];
+                //System.err.println("  pairwiseSimilarityModel predicts " + score);
             }
-            score = pairwiseSimilarityModel.predict(new double[][]{encodedPair})[0];
         }
         //cache the result
         scores.put(symbolPairId, score);
