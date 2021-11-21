@@ -41,6 +41,10 @@ public class CorrespondenceModel {
 		return getScore(symbolPairID);
 	}
 
+	public double getScore(String symbol1, String symbol2) {
+		return getScore(symbolTable.toInt(symbol1), symbolTable.toInt(symbol2));
+	}
+
 	public Double getScoreOrNull(int symbolPairID) {
 		return scores.get(symbolPairID);
 	}

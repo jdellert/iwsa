@@ -4,8 +4,10 @@ import de.jdellert.iwsa.corrmodel.neuralmodel.PmiScoreModel;
 import de.jdellert.iwsa.features.IpaFeatureTable;
 import de.jdellert.iwsa.sequence.GeneralizedPhoneticSymbolTable;
 import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
+import de.tuebingen.sfs.eie.shared.util.RankingEntry;
 
 import java.io.IOException;
+import java.util.*;
 import java.util.zip.DataFormatException;
 
 /**
@@ -24,18 +26,32 @@ public class GeneralizedCorrespondenceModel extends CorrespondenceModel {
         directlyEstimatedScores = CorrespondenceModelStorage.readGlobalModelFromFile("src/test/resources/northeuralex-0.9/global-nw-retokenized.corr");
     }
 
-    public double getScore(int symbolPairId) {
+    public CorrespondenceModel getDirectlyEstimatedSubmodel() {
+        return directlyEstimatedScores;
+    }
 
+    public List<RankingEntry<String>> mostSimilarSymbols(String symbol, Set<String> options) {
+        List<RankingEntry<String>> similarSymbolRanking = new ArrayList<>();
+        int symbolRep = symbolTable.toInt(symbol) * symbolTable.getSize();
+        for (String option : options) {
+            double score = getScore(symbolRep + symbolTable.toInt(option));
+            similarSymbolRanking.add(new RankingEntry<>(option, score));
+        }
+        Collections.sort(similarSymbolRanking, Comparator.reverseOrder());
+        return similarSymbolRanking;
+    }
+
+    public double getScore(int symbolPairId) {
         Double score = scores.get(symbolPairId);
         if (score != null) return score;
         //first attempt direct lookup in the older, more limited model
         int symbol1Id = symbolPairId / symbolTable.getSize();
         int symbol2Id = symbolPairId % symbolTable.getSize();
-        score = directlyEstimatedScores.getScore(symbol1Id, symbol2Id);
+        String symbol1 = getSymbolTable().toSymbol(symbol1Id);
+        String symbol2 = getSymbolTable().toSymbol(symbol2Id);
+        score = directlyEstimatedScores.getScore(symbol1, symbol2);
         //the case where we need to perform lookup in the neural model
         if (score != null) {
-            String symbol1 = getSymbolTable().toSymbol(symbol1Id);
-            String symbol2 = getSymbolTable().toSymbol(symbol2Id);
             double[] encodedPair = featureTable.encodePair(symbol1, symbol2);
             if (encodedPair == null) {
                 System.err.println("ERROR: feature model returned null for symbol pair (" + symbol1 + "," + symbol2 + "), symbolPairId = " + symbolPairId);
