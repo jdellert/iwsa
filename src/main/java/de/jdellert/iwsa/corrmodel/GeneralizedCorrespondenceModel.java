@@ -32,7 +32,7 @@ public class GeneralizedCorrespondenceModel extends CorrespondenceModel {
 
     public List<RankingEntry<String>> mostSimilarSymbols(String symbol, Set<String> options) {
         List<RankingEntry<String>> similarSymbolRanking = new ArrayList<>();
-        int symbolRep = symbolTable.toInt(symbol) * symbolTable.getSize();
+        long symbolRep = ((long) symbolTable.toInt(symbol)) * symbolTable.getSize();
         for (String option : options) {
             double score = getScore(symbolRep + symbolTable.toInt(option));
             similarSymbolRanking.add(new RankingEntry<>(option, score));
@@ -42,17 +42,17 @@ public class GeneralizedCorrespondenceModel extends CorrespondenceModel {
         return similarSymbolRanking;
     }
 
-    public double getScore(int symbolPairId) {
+    public double getScore(long symbolPairId) {
         Double score = scores.get(symbolPairId);
         if (score != null) return score;
         //first attempt direct lookup in the older, more limited model
-        int symbol1Id = symbolPairId / symbolTable.getSize();
-        int symbol2Id = symbolPairId % symbolTable.getSize();
+        int symbol1Id = (int) (symbolPairId / symbolTable.getSize());
+        int symbol2Id = (int) (symbolPairId % symbolTable.getSize());
         String symbol1 = symbolTable.toSymbol(symbol1Id);
         String symbol2 = symbolTable.toSymbol(symbol2Id);
         score = directlyEstimatedScores.getScore(symbol1, symbol2);
         System.err.println("computing score for symbol pair " + symbolPairId + " (" + symbol1 + "," + symbol2 + ");" +
-                           " NELex says " + ((score != null || score == 0.0) ? score : "null/0.0, falling back to neural model"));
+                           " NELex says " + ((score != null && score != 0.0) ? score : "null/0.0, falling back to neural model"));
         //the case where we need to perform lookup in the neural model
         if (score == null || score == 0.0) {
             double[] encodedPair = featureTable.encodePair(symbol1, symbol2);

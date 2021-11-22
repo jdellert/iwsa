@@ -30,8 +30,9 @@ public class CorrespondenceModelStorage {
                 IOUtils.writeAsBytes(symbolIter.next(), out);
             IOUtils.writeNewline(out);
 
-            for (Map.Entry<Integer, Double> next : globalCorrModel.scores.entrySet()) {
-                IOUtils.writeInt(next.getKey(), out);
+            for (Map.Entry<Long, Double> next : globalCorrModel.scores.entrySet()) {
+                //TODO: this will lead to problems when storing models where keys reach beyond the integer range
+                IOUtils.writeInt(next.getKey().intValue(), out);
                 IOUtils.writeDouble(next.getValue(), out);
             }
         } catch (IOException e) {
@@ -42,7 +43,7 @@ public class CorrespondenceModelStorage {
 
     public static CorrespondenceModel readGlobalModelFromFile(String fileName) {
         List<String> symbols = new ArrayList<>();
-        Map<Integer, Double> scores = new HashMap<>();
+        Map<Long, Double> scores = new HashMap<>();
 
         try (BufferedInputStream in = new BufferedInputStream(new FileInputStream(new File(fileName)))) {
             BufferedByteReader reader = new BufferedByteReader(in);
@@ -52,7 +53,8 @@ public class CorrespondenceModelStorage {
             reader.skip(2);
 
             while (reader.hasNext()) {
-                int sym = reader.popToInt();
+                //TODO: this will lead to problems when storing models where keys reach beyond the integer range
+                long sym = (long) reader.popToInt();
                 double score = reader.popToDouble();
                 scores.put(sym, score);
             }
@@ -97,7 +99,7 @@ public class CorrespondenceModelStorage {
     public static CorrespondenceModel deserializeCorrespondenceModel(ObjectInputStream in)
             throws IOException, ClassNotFoundException {
         PhoneticSymbolTable symbolTable = (PhoneticSymbolTable) in.readObject();
-        Map<Integer, Double> scores = (Map<Integer, Double>) in.readObject();
+        Map<Long, Double> scores = (Map<Long, Double>) in.readObject();
         CorrespondenceModel correspondenceModel = new CorrespondenceModel(symbolTable);
         correspondenceModel.scores = scores;
         return correspondenceModel;
@@ -111,7 +113,7 @@ public class CorrespondenceModelStorage {
         for (int i = 0; i < langIDs.length; i++) {
             for (int j = 0; j < langIDs.length; j++) {
                 CorrespondenceModel correspondenceModel = new CorrespondenceModel(symbolTable);
-                correspondenceModel.scores = (Map<Integer, Double>) in.readObject();
+                correspondenceModel.scores = (Map<Long, Double>) in.readObject();
                 correspondenceModels[i][j] = correspondenceModel;
             }
         }
@@ -138,7 +140,7 @@ public class CorrespondenceModelStorage {
                     j = langToID.get(langIDs[fileJ]);
                 }
                 CorrespondenceModel correspondenceModel = new CorrespondenceModel(symbolTable);
-                correspondenceModel.scores = (Map<Integer, Double>) in.readObject();
+                correspondenceModel.scores = (Map<Long, Double>) in.readObject();
                 if (i >= 0 && j >= 0) {
                     correspondenceModels[i][j] = correspondenceModel;
                 }

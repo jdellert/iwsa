@@ -8,28 +8,28 @@ import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
 public class CorrespondenceModel {
 	PhoneticSymbolTable symbolTable;
 	// symbol pair ID => PMI score
-	Map<Integer, Double> scores;
+	Map<Long, Double> scores;
 	String dbPath;
 
 	public CorrespondenceModel(PhoneticSymbolTable symbolTable) {
 		this.symbolTable = symbolTable;
-		this.scores = new TreeMap<Integer, Double>();
+		this.scores = new TreeMap<Long, Double>();
 	}
 
 	public PhoneticSymbolTable getSymbolTable() {
 		return symbolTable;
 	}
 
-	public void setScore(int symbolPairID, double score) {
+	public void setScore(long symbolPairID, double score) {
 		scores.put(symbolPairID, score);
 	}
 
 	public void setScore(int symbol1ID, int symbol2ID, double score) {
-		int symbolPairID = symbolTable.getSize() * symbol1ID + symbol2ID;
+		long symbolPairID = symbolTable.getSize() * (long) symbol1ID + symbol2ID;
 		setScore(symbolPairID, score);
 	}
 
-	public double getScore(int symbolPairID) {
+	public double getScore(long symbolPairID) {
 		Double score = scores.get(symbolPairID);
 		if (score == null)
 			score = 0.0;
@@ -37,7 +37,7 @@ public class CorrespondenceModel {
 	}
 
 	public double getScore(int symbol1ID, int symbol2ID) {
-		int symbolPairID = symbolTable.getSize() * symbol1ID + symbol2ID;
+		long symbolPairID = symbolTable.getSize() * (long) symbol1ID + symbol2ID;
 		return getScore(symbolPairID);
 	}
 
@@ -45,12 +45,12 @@ public class CorrespondenceModel {
 		return getScore(symbolTable.toInt(symbol1), symbolTable.toInt(symbol2));
 	}
 
-	public Double getScoreOrNull(int symbolPairID) {
+	public Double getScoreOrNull(long symbolPairID) {
 		return scores.get(symbolPairID);
 	}
 
 	public Double getScoreOrNull(int symbol1ID, int symbol2ID) {
-		int symbolPairID = symbolTable.getSize() * symbol1ID + symbol2ID;
+		long symbolPairID = symbolTable.getSize() * (long) symbol1ID + symbol2ID;
 		return getScoreOrNull(symbolPairID);
 	}
 	
