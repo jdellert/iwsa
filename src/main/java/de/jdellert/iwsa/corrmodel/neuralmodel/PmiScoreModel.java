@@ -50,7 +50,11 @@ public class PmiScoreModel {
     }
 
     public static PmiScoreModel loadPairwiseNeuralModel() {
-        return new PmiScoreModel("iwsa/src/main/resources/de/jdellert/iwsa/corrmodel/neuralmodel/weights", 3, 128, 34);
+        return new PmiScoreModel("iwsa/src/main/resources/de/jdellert/iwsa/neuralmodel/corrmodel/weights", 3, 128, 34);
+    }
+
+    public static PmiScoreModel loadGapModel() {
+        return new PmiScoreModel("iwsa/src/main/resources/de/jdellert/iwsa/neuralmodel/gapmodel/weights", 3, 128, 34);
     }
 
     public static void main(String[] args) {

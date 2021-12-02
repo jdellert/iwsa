@@ -17,11 +17,13 @@ import java.util.zip.DataFormatException;
 public class GeneralizedCorrespondenceModel extends CorrespondenceModel {
     CorrespondenceModel directlyEstimatedScores;
     PmiScoreModel pairwiseSimilarityModel;
+    PmiScoreModel gapModel;
     IpaFeatureTable featureTable;
 
     public GeneralizedCorrespondenceModel() throws DataFormatException, IOException {
         super(new GeneralizedPhoneticSymbolTable());
         pairwiseSimilarityModel = PmiScoreModel.loadPairwiseNeuralModel();
+        gapModel = PmiScoreModel.loadGapModel();
         featureTable = new IpaFeatureTable();
         directlyEstimatedScores = CorrespondenceModelStorage.readGlobalModelFromFile("src/test/resources/northeuralex-0.9/global-nw-retokenized.corr");
     }
@@ -55,17 +57,46 @@ public class GeneralizedCorrespondenceModel extends CorrespondenceModel {
                            " NELex says " + ((score != null && score != 0.0) ? score : "null/0.0, falling back to neural model"));
         //the case where we need to perform lookup in the neural model
         if (score == null || score == 0.0) {
-            double[] encodedPair = featureTable.encodePair(symbol1, symbol2);
-            if (encodedPair == null) {
-                System.err.println("  ERROR: feature model returned null/0.0 for symbol pair (" + symbol1 + "," + symbol2 + "), symbolPairId = " + symbolPairId);
-                score = 0.0;
-            } else {
-                score = pairwiseSimilarityModel.predict(new double[][]{encodedPair})[0];
-                System.err.println("  pairwiseSimilarityModel predicts " + score);
+            if (symbol1.equals("-")) {
+                score = getScoreFromNeuralGapModel(symbol2);
+            }
+            else if (symbol2.equals("-")) {
+                score = getScoreFromNeuralGapModel(symbol1);
+            }
+            else {
+                score = getScoreFromNeuralCorrespondenceModel(symbol1, symbol2);
             }
         }
         //cache the result
         scores.put(symbolPairId, score);
+        return score;
+    }
+
+    public double getScoreFromNeuralGapModel(String symbol) {
+        double score = 0.0;
+        int[] encodedSymbol = featureTable.get(symbol);
+        if (encodedSymbol == null) {
+            System.err.println("  ERROR: feature model returned null/0.0 for symbol");
+        } else {
+            double[] transformedEncoding = new double[encodedSymbol.length];
+            for(int i = 0; i < encodedSymbol.length; i++) {
+                transformedEncoding[i] = encodedSymbol[i];
+            }
+            score = gapModel.predict(new double[][]{transformedEncoding})[0];
+            System.err.println("  gapModel predicts " + score);
+        }
+        return score;
+    }
+
+    public double getScoreFromNeuralCorrespondenceModel(String symbol1, String symbol2) {
+        double score = 0.0;
+        double[] encodedPair = featureTable.encodePair(symbol1, symbol2);
+        if (encodedPair == null) {
+            System.err.println("  ERROR: feature model returned null/0.0 for symbol pair (" + symbol1 + "," + symbol2 + ")");
+        } else {
+            score = pairwiseSimilarityModel.predict(new double[][]{encodedPair})[0];
+            System.err.println("  pairwiseSimilarityModel predicts " + score);
+        }
         return score;
     }
 }
