@@ -53,8 +53,6 @@ public class CorrespondenceModel {
 		long symbolPairID = symbolTable.getSize() * (long) symbol1ID + symbol2ID;
 		return getScoreOrNull(symbolPairID);
 	}
-	
-	
 
 	public String getDbPath() {
 		return dbPath;

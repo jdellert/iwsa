@@ -19,6 +19,7 @@ public class GeneralizedCorrespondenceModel extends CorrespondenceModel {
     PmiScoreModel pairwiseSimilarityModel;
     PmiScoreModel gapModel;
     IpaFeatureTable featureTable;
+    Set<String> symbolsEncountered;
 
     public GeneralizedCorrespondenceModel() throws DataFormatException, IOException {
         super(new GeneralizedPhoneticSymbolTable());
@@ -26,6 +27,7 @@ public class GeneralizedCorrespondenceModel extends CorrespondenceModel {
         gapModel = PmiScoreModel.loadGapModel();
         featureTable = new IpaFeatureTable();
         directlyEstimatedScores = CorrespondenceModelStorage.readGlobalModelFromFile("src/test/resources/northeuralex-0.9/global-nw-retokenized.corr");
+        symbolsEncountered = directlyEstimatedScores.symbolTable.getDefinedSymbols();
     }
 
     public CorrespondenceModel getDirectlyEstimatedSubmodel() {
@@ -40,8 +42,32 @@ public class GeneralizedCorrespondenceModel extends CorrespondenceModel {
             similarSymbolRanking.add(new RankingEntry<>(option, score));
         }
         Collections.sort(similarSymbolRanking, Comparator.reverseOrder());
-        System.err.println("Most similar to " + symbol + ": " + similarSymbolRanking);
+        System.err.println("  most similar to " + symbol + ": " + similarSymbolRanking);
         return similarSymbolRanking;
+    }
+
+    public double getScore(int symbol1ID, int symbol2ID) {
+        if (symbol1ID < 0) {
+            return symbol2ID < 0 ? 1.0 : -1.0;
+        } else if (symbol2ID < 0) return -1.0;
+        long symbolPairID = symbolTable.getSize() * (long) symbol1ID + symbol2ID;
+        return getScore(symbolPairID);
+    }
+
+    public double getScore(String symbol1, String symbol2) {
+        return getScore(symbolTable.toInt(symbol1), symbolTable.toInt(symbol2));
+    }
+
+    public Double getScoreOrNull(long symbolPairID) {
+        return getScore(symbolPairID);
+    }
+
+    public Double getScoreOrNull(int symbol1ID, int symbol2ID) {
+        if (symbol1ID < 0) {
+            return symbol2ID < 0 ? 1.0 : -1.0;
+        } else if (symbol2ID < 0) return -1.0;
+        long symbolPairID = symbolTable.getSize() * (long) symbol1ID + symbol2ID;
+        return getScoreOrNull(symbolPairID);
     }
 
     public double getScore(long symbolPairId) {
@@ -54,10 +80,13 @@ public class GeneralizedCorrespondenceModel extends CorrespondenceModel {
         String symbol2 = symbolTable.toSymbol(symbol2Id);
         score = directlyEstimatedScores.getScore(symbol1, symbol2);
         System.err.println("computing score for symbol pair " + symbolPairId + " (" + symbol1 + "," + symbol2 + ");" +
-                           " NELex says " + ((score != null && score != 0.0) ? score : "null/0.0, falling back to neural model"));
+                "\tNorthEuraLex-trained model says " + ((score != null && score != 0.0) ? score : "null/0.0, falling back to neural model"));
         //the case where we need to perform lookup in the neural model
         if (score == null || score == 0.0) {
-            if (symbol1.equals("-")) {
+            if (symbol1.equals(symbol2)) {
+                score = getSelfSimilarityScoreFromNeuralModel(symbol1);
+            }
+            else if (symbol1.equals("-")) {
                 score = getScoreFromNeuralGapModel(symbol2);
             }
             else if (symbol2.equals("-")) {
@@ -66,6 +95,8 @@ public class GeneralizedCorrespondenceModel extends CorrespondenceModel {
             else {
                 score = getScoreFromNeuralCorrespondenceModel(symbol1, symbol2);
             }
+            symbolsEncountered.add(symbol1);
+            symbolsEncountered.add(symbol2);
         }
         //cache the result
         scores.put(symbolPairId, score);
@@ -84,6 +115,32 @@ public class GeneralizedCorrespondenceModel extends CorrespondenceModel {
             }
             score = gapModel.predict(new double[][]{transformedEncoding})[0];
             System.err.println("  gapModel predicts " + score);
+        }
+        return score;
+    }
+
+    /**
+     * Rough estimate because current neural model performed badly;
+     * for now, we only ensure that every symbol is most likely to be aligned with itself,
+     * while attempting to reflect stability by estimating it from existing scores.
+     * @param symbol the symbol to get the self-similarity (PMI) score for
+     * @return
+     */
+    public double getSelfSimilarityScoreFromNeuralModel(String symbol) {
+        double score = 0.0;
+        Set<String> candidateSymbols = new TreeSet<>(symbolsEncountered);
+        candidateSymbols.remove(symbol);
+        List<RankingEntry<String>> mostSimilarSymbols = mostSimilarSymbols(symbol, candidateSymbols);
+        RankingEntry<String> mostSimilar = mostSimilarSymbols.get(0);
+        double mostSimilarScore = mostSimilar.value;
+        double neuralSelfSimilarity = getScoreFromNeuralCorrespondenceModel(symbol, symbol);
+        if (neuralSelfSimilarity > mostSimilarScore) {
+            score = neuralSelfSimilarity;
+            System.err.println("  symbol received highest score with itself in pairwise neural model, returning " + neuralSelfSimilarity);
+        } else {
+            score = mostSimilar.value + 0.5;
+            if (score < 1.5) score = 1.5;
+            System.err.println("  most similar symbol encountered so far was " + mostSimilar.key + " at " + mostSimilarScore + ", returning" + score);
         }
         return score;
     }
