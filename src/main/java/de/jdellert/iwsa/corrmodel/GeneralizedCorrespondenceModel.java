@@ -156,4 +156,8 @@ public class GeneralizedCorrespondenceModel extends CorrespondenceModel {
         }
         return score;
     }
+    
+    public IpaFeatureTable getFeatureTable() {
+    	return featureTable;
+    }
 }

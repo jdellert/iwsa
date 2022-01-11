@@ -54,6 +54,10 @@ public class IpaFeatureTable {
     public int[] get(String key) {
         return featureTable.get(key);
     }
+    
+    public boolean contains(String key) {
+    	return featureTable.containsKey(key);
+    }
 
     public double[] encodePair(String sound1, String sound2) {
         int[] sound1Features = featureTable.get(sound1);
