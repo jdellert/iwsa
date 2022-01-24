@@ -8,8 +8,8 @@ import java.util.*;
 
 /**
  * Symbol table for mapping IPA segments to integers for efficient internal
- * representation. The first two integers are always used for special symbols: 0
- * ~ #: the word boundary symbol 1 ~ -: the gap symbol
+ * representation. The first two integers are always used for special symbols:
+ * 0 ~ #: the word boundary symbol 1 ~ -: the gap symbol
  */
 
 public class PhoneticSymbolTable implements Serializable {
@@ -19,28 +19,33 @@ public class PhoneticSymbolTable implements Serializable {
     public static final String EMPTY_SYMBOL = "-";
     public static final String UNKNOWN_SYMBOL = "?";
     private static final long serialVersionUID = -8825447220839372572L;
-    private String[] idToSymbol;
-    private Map<String, Integer> symbolToID;
+    protected List<String> idToSymbol;
+    protected Map<String, Integer> symbolToID;
+    protected int nextID;
 
     public PhoneticSymbolTable() {
-        this.idToSymbol = new String[0];
-        this.symbolToID = new TreeMap<String, Integer>();
+        this.idToSymbol = new ArrayList<>();
+        this.symbolToID = new TreeMap<>();
+        this.nextID = 0;
     }
 
     public PhoneticSymbolTable(Collection<String> symbols) {
+        this();
         defineSymbols(symbols);
     }
 
-    public void defineSymbols(Collection<String> symbols) {
-        this.idToSymbol = new String[symbols.size() + 2];
+    protected void defineSymbols(Collection<String> symbols) {
+        this.idToSymbol = new ArrayList<>(symbols.size() + 2);
         this.symbolToID = new TreeMap<String, Integer>();
-        idToSymbol[BOUNDARY_ID] = BOUNDARY_SYMBOL;
-        idToSymbol[EMPTY_ID] = EMPTY_SYMBOL;
+        idToSymbol.add("");
+        idToSymbol.add("");
+        idToSymbol.set(BOUNDARY_ID, BOUNDARY_SYMBOL);
+        idToSymbol.set(EMPTY_ID, EMPTY_SYMBOL);
         symbolToID.put(BOUNDARY_SYMBOL, BOUNDARY_ID);
         symbolToID.put(EMPTY_SYMBOL, EMPTY_ID);
-        int nextID = 2;
+        nextID = 2;
         for (String symbol : symbols) {
-            idToSymbol[nextID] = symbol;
+            idToSymbol.add(symbol);
             symbolToID.put(symbol, nextID);
             nextID++;
         }
@@ -55,7 +60,7 @@ public class PhoneticSymbolTable implements Serializable {
     }
 
     public String toSymbol(int id) {
-        return (id < 0) ? UNKNOWN_SYMBOL : idToSymbol[id];
+        return (id < 0) ? UNKNOWN_SYMBOL : idToSymbol.get(id);
     }
 
     public int[] encode(String[] segments) {
@@ -79,19 +84,19 @@ public class PhoneticSymbolTable implements Serializable {
     }
 
     public int getSize() {
-        return idToSymbol.length;
+        return idToSymbol.size();
     }
 
     public String toSymbolPair(int symbolPairID) {
-        return "(" + toSymbol(symbolPairID / idToSymbol.length) + "," + toSymbol(symbolPairID % idToSymbol.length) + ")";
+        return "(" + toSymbol(symbolPairID / idToSymbol.size()) + "," + toSymbol(symbolPairID % idToSymbol.size()) + ")";
     }
 
     public String toString() {
         StringBuilder line1 = new StringBuilder();
         StringBuilder line2 = new StringBuilder();
-        for (int i = 0; i < idToSymbol.length; i++) {
+        for (int i = 0; i < idToSymbol.size(); i++) {
             line1.append(i + "\t");
-            line2.append(idToSymbol[i] + "\t");
+            line2.append(idToSymbol.get(i) + "\t");
         }
         return line1 + "\n" + line2;
     }
@@ -110,14 +115,14 @@ public class PhoneticSymbolTable implements Serializable {
 
         @Override
         public boolean hasNext() {
-            return i + 1 < idToSymbol.length;
+            return i + 1 < idToSymbol.size();
         }
 
         @Override
         public String next() {
             if (hasNext())
                 i++;
-            return idToSymbol[i];
+            return idToSymbol.get(i);
         }
     }
 

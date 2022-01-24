@@ -15,14 +15,19 @@ import java.util.zip.DataFormatException;
  * Result is modifiable by calling setScore(..), this will be placed in the cache and therefore override lookup in the neural model
  */
 public class GeneralizedCorrespondenceModel extends CorrespondenceModel {
+    public static boolean VERBOSE = false;
+
     CorrespondenceModel directlyEstimatedScores;
     PmiScoreModel pairwiseSimilarityModel;
     PmiScoreModel gapModel;
     IpaFeatureTable featureTable;
     Set<String> symbolsEncountered;
 
+    GeneralizedPhoneticSymbolTable generalizedSymbolTable;
+
     public GeneralizedCorrespondenceModel() throws DataFormatException, IOException {
         super(new GeneralizedPhoneticSymbolTable());
+        generalizedSymbolTable = (GeneralizedPhoneticSymbolTable) getSymbolTable();
         pairwiseSimilarityModel = PmiScoreModel.loadPairwiseNeuralModel();
         gapModel = PmiScoreModel.loadGapModel();
         featureTable = new IpaFeatureTable();
@@ -42,7 +47,7 @@ public class GeneralizedCorrespondenceModel extends CorrespondenceModel {
             similarSymbolRanking.add(new RankingEntry<>(option, score));
         }
         Collections.sort(similarSymbolRanking, Comparator.reverseOrder());
-        System.err.println("  most similar to " + symbol + ": " + similarSymbolRanking);
+        if (VERBOSE) System.err.println("  most similar to " + symbol + ": " + similarSymbolRanking);
         return similarSymbolRanking;
     }
 
@@ -55,7 +60,16 @@ public class GeneralizedCorrespondenceModel extends CorrespondenceModel {
     }
 
     public double getScore(String symbol1, String symbol2) {
-        return getScore(symbolTable.toInt(symbol1), symbolTable.toInt(symbol2));
+        if (VERBOSE) System.err.println("Looking up score for symbol pair (" + symbol1 + "," + symbol2 + ")");
+        int symbol1ID = symbolTable.toInt(symbol1);
+        int symbol2ID = symbolTable.toInt(symbol2);
+        if (symbol1ID == -1) {
+            if (VERBOSE) System.err.println("  WARNING: symbolTable returned -1 for \"" + symbol1 + "\", indicating that symbol is undefined");
+        }
+        if (symbol2ID == -1) {
+            if (VERBOSE) System.err.println("  WARNING: symbolTable returned -1 for \"" + symbol2 + "\", indicating that symbol is undefined");
+        }
+        return getScore(symbol1ID, symbol2ID);
     }
 
     public Double getScoreOrNull(long symbolPairID) {
@@ -73,13 +87,41 @@ public class GeneralizedCorrespondenceModel extends CorrespondenceModel {
     public double getScore(long symbolPairId) {
         Double score = scores.get(symbolPairId);
         if (score != null) return score;
-        //first attempt direct lookup in the older, more limited model
         int symbol1Id = (int) (symbolPairId / symbolTable.getSize());
         int symbol2Id = (int) (symbolPairId % symbolTable.getSize());
         String symbol1 = symbolTable.toSymbol(symbol1Id);
         String symbol2 = symbolTable.toSymbol(symbol2Id);
+        //metasymbols and combined symbols need to be interpreted via the overage of their extensions
+        //TODO: coarticulations should count only half, so there should be some way of declaring "half-symbols"
+        //TODO: metasymbols actually need to be interpreted via sets of feature vectors (in order to unify definitions)
+        List<Integer> combinedSymbolComponents1 = generalizedSymbolTable.getCombinedSymbolComponentsOrNull(symbol1Id);
+        List<Integer> combinedSymbolComponents2 = generalizedSymbolTable.getCombinedSymbolComponentsOrNull(symbol2Id);
+        Set<Integer> metasymbolExtensions1 = generalizedSymbolTable.getMetasymbolExtensionsOrNull(symbol1Id);
+        Set<Integer> metasymbolExtensions2 = generalizedSymbolTable.getMetasymbolExtensionsOrNull(symbol2Id);
+        if (combinedSymbolComponents1 != null || combinedSymbolComponents2 != null || metasymbolExtensions1 != null || metasymbolExtensions2 != null) {
+            if (VERBOSE && combinedSymbolComponents1 != null) System.err.println("      " + symbol1 + " is a combined symbol, computing the average score");
+            if (VERBOSE && combinedSymbolComponents2 != null) System.err.println("      " + symbol2 + " is a combined symbol, computing the average score");
+            if (VERBOSE && metasymbolExtensions1 != null) System.err.println("      " + symbol1 + " is a metasymbol, computing the average score");
+            if (VERBOSE && metasymbolExtensions2 != null) System.err.println("      " + symbol2 + " is a metasymbol, computing the average score");
+            Set<Integer> symbols1 = new HashSet<>();
+            symbols1.add(symbol1Id);
+            Set<Integer> symbols2 = new HashSet<>();
+            symbols2.add(symbol2Id);
+            if (combinedSymbolComponents1 != null) symbols1 = new HashSet<>(combinedSymbolComponents1);
+            if (combinedSymbolComponents2 != null) symbols2 = new HashSet<>(combinedSymbolComponents2);
+            if (metasymbolExtensions1 != null) symbols1 = metasymbolExtensions1;
+            if (metasymbolExtensions2 != null) symbols2 = metasymbolExtensions2;
+            score = getAverageScore(symbols1, symbols2);
+            if (VERBOSE) System.err.println("      averaged score for symbol pair " +  + symbolPairId + " (" + symbol1 + "," + symbol2 + ") was " + score);
+            //cache the result
+            scores.put(symbolPairId, score);
+            return score;
+        }
+
+        //base case (no combination symbol and no metasymbol involved)
+        //first attempt: direct lookup in the older, more limited model
         score = directlyEstimatedScores.getScore(symbol1, symbol2);
-        System.err.println("computing score for symbol pair " + symbolPairId + " (" + symbol1 + "," + symbol2 + ");" +
+        if (VERBOSE) System.err.println("    computing score for symbol pair " + symbolPairId + " (" + symbol1 + "," + symbol2 + ");" +
                 "\tNorthEuraLex-trained model says " + ((score != null && score != 0.0) ? score : "null/0.0, falling back to neural model"));
         //the case where we need to perform lookup in the neural model
         if (score == null || score == 0.0) {
@@ -103,18 +145,34 @@ public class GeneralizedCorrespondenceModel extends CorrespondenceModel {
         return score;
     }
 
+    public double getAverageScore(Collection<Integer> symbols1, Collection<Integer> symbols2) {
+        double sum = 0.0;
+        for (int id1 : symbols1) {
+            for (int id2 : symbols2) {
+                double partialScore = getScore(id1, id2);
+                if (VERBOSE) {
+                    String symbol1 = generalizedSymbolTable.toSymbol(id1);
+                    String symbol2 = generalizedSymbolTable.toSymbol(id2);
+                    System.err.println("      partial score for (" + symbol1 + "," + symbol2 + "): " + partialScore);
+                }
+                sum += partialScore;
+            }
+        }
+        return sum/(symbols1.size() * symbols2.size());
+    }
+
     public double getScoreFromNeuralGapModel(String symbol) {
         double score = 0.0;
         int[] encodedSymbol = featureTable.get(symbol);
         if (encodedSymbol == null) {
-            System.err.println("  ERROR: feature model returned null/0.0 for symbol");
+            System.err.println("  ERROR: feature model returned null/0.0 for symbol \"" + symbol + "\"");
         } else {
             double[] transformedEncoding = new double[encodedSymbol.length];
             for(int i = 0; i < encodedSymbol.length; i++) {
                 transformedEncoding[i] = encodedSymbol[i];
             }
             score = gapModel.predict(new double[][]{transformedEncoding})[0];
-            System.err.println("  gapModel predicts " + score);
+            if (VERBOSE) System.err.println("    gapModel predicts " + score);
         }
         return score;
     }
@@ -136,11 +194,11 @@ public class GeneralizedCorrespondenceModel extends CorrespondenceModel {
         double neuralSelfSimilarity = getScoreFromNeuralCorrespondenceModel(symbol, symbol);
         if (neuralSelfSimilarity > mostSimilarScore) {
             score = neuralSelfSimilarity;
-            System.err.println("  symbol received highest score with itself in pairwise neural model, returning " + neuralSelfSimilarity);
+            if (VERBOSE) System.err.println("    symbol received highest score with itself in pairwise neural model, returning " + neuralSelfSimilarity);
         } else {
             score = mostSimilar.value + 0.5;
             if (score < 1.5) score = 1.5;
-            System.err.println("  most similar symbol encountered so far was " + mostSimilar.key + " at " + mostSimilarScore + ", returning" + score);
+            if (VERBOSE) System.err.println("    most similar symbol encountered so far was " + mostSimilar.key + " at " + mostSimilarScore + ", returning" + score);
         }
         return score;
     }
@@ -149,10 +207,10 @@ public class GeneralizedCorrespondenceModel extends CorrespondenceModel {
         double score = 0.0;
         double[] encodedPair = featureTable.encodePair(symbol1, symbol2);
         if (encodedPair == null) {
-            System.err.println("  ERROR: feature model returned null/0.0 for symbol pair (" + symbol1 + "," + symbol2 + ")");
+            if (VERBOSE) System.err.println("    ERROR: feature model returned null/0.0 for symbol pair (" + symbol1 + "," + symbol2 + ")");
         } else {
             score = pairwiseSimilarityModel.predict(new double[][]{encodedPair})[0];
-            System.err.println("  pairwiseSimilarityModel predicts " + score);
+            if (VERBOSE) System.err.println("    pairwiseSimilarityModel predicts " + score);
         }
         return score;
     }
