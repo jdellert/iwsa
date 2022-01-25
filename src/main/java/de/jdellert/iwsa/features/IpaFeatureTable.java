@@ -80,8 +80,8 @@ public class IpaFeatureTable {
     }
 
     public double[] encodePair(String sound1, String sound2) {
-        int[] sound1Features = featureTable.get(sound1);
-        int[] sound2Features = featureTable.get(sound2);
+        int[] sound1Features = get(sound1);
+        int[] sound2Features = get(sound2);
 
         if (sound1Features == null) {
            System.err.println("ERROR: IPA Symbol " + sound1 + " was not defined in feature table");

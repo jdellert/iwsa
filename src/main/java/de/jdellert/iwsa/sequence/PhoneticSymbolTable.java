@@ -13,6 +13,8 @@ import java.util.*;
  */
 
 public class PhoneticSymbolTable implements Serializable {
+	public static boolean VERBOSE = false;
+	
     public static final int BOUNDARY_ID = 0;
     public static final String BOUNDARY_SYMBOL = "#";
     public static final int EMPTY_ID = 1;
@@ -51,7 +53,10 @@ public class PhoneticSymbolTable implements Serializable {
 
     public int defineSymbol(String symbol) {
         if (symbolToID.containsKey(symbol)) {
-            System.err.println("WARNING from PhoneticSymbolTable: symbol \"symbol\" is already defined, returning the existing ID.");
+			if (VERBOSE) {
+				System.err.println("WARNING from PhoneticSymbolTable: symbol " + symbol
+						+ " is already defined, returning the existing ID.");
+			}
             return symbolToID.get(symbol);
         } else {
             idToSymbol.add(symbol);
