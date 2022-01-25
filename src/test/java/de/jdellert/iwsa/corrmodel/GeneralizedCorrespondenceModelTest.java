@@ -8,7 +8,7 @@ public class GeneralizedCorrespondenceModelTest {
                     {"aʊ", "ɑɪ"}, {"ʊu", "ʉː"}, {"aʊ", "oː"},  {"p", "p͡f"},  {"pʰ", "p͡f"}, {"t͡ʃ", "tʲ"}, {"t͡ʃ", "t"},
                     {"kn", "n"},  {"kn", "xn"}, {"kn", "kr"},  {"ᵐp", "p"},   {"ᵐp", "b"},   {"ᵐp", "f"},   {"ᵐp", "ⁿd"},
                     {"h₁", "h"},  {"h₁", "e"},  {"h₁", "a"},   {"h₂", "e"},   {"h₂", "a"},   {"h₁", "h₂"},  {"h₁", "h₃"},
-                    {"H", "h"},   {"H", "h₁"},  {"H", "h₂"},   {"H", "a"},    {"H", "e"},    {"H", "-"},    {"H", "h"}
+                    {"H", "h"},   {"H", "h₁"},  {"H", "h₂"},   {"H", "a"},    {"H", "e"},    {"H", "-"},    {"h", "-"}
             };
 
     public static void main(String[] args) {

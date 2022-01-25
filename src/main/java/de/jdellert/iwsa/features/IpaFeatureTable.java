@@ -1,6 +1,7 @@
 package de.jdellert.iwsa.features;
 
 import java.io.*;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.DataFormatException;
@@ -52,11 +53,30 @@ public class IpaFeatureTable {
     }
 
     public int[] get(String key) {
-        return featureTable.get(key);
+        int[] result = featureTable.get(key);
+        if (result == null) {
+            if (key.contains("̥")) return handleVoicelessDiacritic(key);
+        }
+        return result;
+    }
+
+    /**
+     * Strips the voiceless diacritic from key for lookup, modifies voicedness feature in result.
+     * Result is cached for more efficient lookup the next time.
+     * @return the modified feature vector, which will be cached for easier retrieval in the future.
+     */
+    public int[] handleVoicelessDiacritic(String symbolWithvoicelessDiacritic) {
+        String voicedEquivalent = symbolWithvoicelessDiacritic.replaceAll("̥", "");
+        int[] voicedEquivalentVector = get(voicedEquivalent);
+        if (voicedEquivalentVector == null) return null;
+        int[] voicelessVector = Arrays.copyOf(voicedEquivalentVector, voicedEquivalentVector.length);
+        voicelessVector[8] = -1;
+        featureTable.put(symbolWithvoicelessDiacritic, voicelessVector);
+        return voicelessVector;
     }
     
     public boolean contains(String key) {
-    	return featureTable.containsKey(key);
+    	return get(key) != null;
     }
 
     public double[] encodePair(String sound1, String sound2) {
