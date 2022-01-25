@@ -45,9 +45,19 @@ public class PhoneticSymbolTable implements Serializable {
         symbolToID.put(EMPTY_SYMBOL, EMPTY_ID);
         nextID = 2;
         for (String symbol : symbols) {
+            defineSymbol(symbol);
+        }
+    }
+
+    public int defineSymbol(String symbol) {
+        if (symbolToID.containsKey(symbol)) {
+            System.err.println("WARNING from PhoneticSymbolTable: symbol \"symbol\" is already defined, returning the existing ID.");
+            return symbolToID.get(symbol);
+        } else {
             idToSymbol.add(symbol);
             symbolToID.put(symbol, nextID);
             nextID++;
+            return nextID - 1;
         }
     }
 
