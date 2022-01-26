@@ -1,10 +1,10 @@
 package de.jdellert.iwsa.align;
 
-import java.util.LinkedList;
-import java.util.List;
-
 import de.jdellert.iwsa.corrmodel.CorrespondenceModel;
 import de.jdellert.iwsa.sequence.PhoneticString;
+
+import java.util.LinkedList;
+import java.util.List;
 
 public class NeedlemanWunschAlgorithm {
 	public static boolean NEW_DISTANCE_TRANSFORMATION = true;
