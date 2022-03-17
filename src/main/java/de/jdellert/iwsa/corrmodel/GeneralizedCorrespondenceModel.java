@@ -218,4 +218,11 @@ public class GeneralizedCorrespondenceModel extends CorrespondenceModel {
     public IpaFeatureTable getFeatureTable() {
     	return featureTable;
     }
+    
+	public boolean canEncodePhoneme(String phoneme) {
+		// TODO once we have support for creating weighted combinations of different
+		// vectors to represent certain phone(me) sequences, update this method
+		// accordingly
+		return featureTable.contains(phoneme);
+	}
 }
