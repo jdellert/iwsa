@@ -1,25 +1,33 @@
 package de.jdellert.iwsa.features;
 
 import java.io.*;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.zip.DataFormatException;
 
 public class IpaFeatureTable {
-    private Map<String, int[]> featureTable;
+    private final Map<String, int[]> featureTable;
+    private ArrayList<String> features;
+    private Map<String, String[]> modifierTable;
 
     public IpaFeatureTable() throws DataFormatException, IOException {
         this("iwsa/src/main/resources/de/jdellert/iwsa/features/all_ipa_symbols.csv");
     }
 
     public IpaFeatureTable(String filepath) throws DataFormatException, IOException {
+        this(filepath, "iwsa/src/test/resources/de/jdellert/iwsa/features/dummy_modifier_rules.csv");
+    }
+
+    public IpaFeatureTable(String filepath, String modifierFilepath) throws DataFormatException, IOException {
         featureTable = new HashMap<>();
         BufferedReader br = new BufferedReader(new FileReader(filepath));
         String line;
+        boolean firstLine = true;
         while ((line = br.readLine()) != null) {
             String[] fields = line.split(",");
-            if (fields[0].equals("")) {
+            if (firstLine) {
+                features = new ArrayList<>(Arrays.asList(fields));
+                features.remove(0); // remove empty string from index 0
+                firstLine = false;
                 continue;
             }
             int[] features = new int[fields.length - 1];
@@ -50,14 +58,28 @@ public class IpaFeatureTable {
             featureTable.put(fields[0], features);
         }
         br.close();
+
+        br = new BufferedReader(new FileReader(modifierFilepath));
+        modifierTable = new HashMap<>();
+
+        while ((line = br.readLine()) != null) {
+            String[] fields = line.split("\\s+");
+            String modSymbol = fields[0];
+            String[] modifications = fields[1].split(",");
+            modifierTable.put(modSymbol, modifications);
+        }
+
+        br.close();
     }
 
     public int[] get(String key) {
+        /*
         int[] result = featureTable.get(key);
         if (result == null) {
             if (key.contains("̥")) return handleVoicelessDiacritic(key);
         }
-        return result;
+        return result;*/
+        return handleDiacritic(key);
     }
 
     /**
@@ -73,6 +95,40 @@ public class IpaFeatureTable {
         voicelessVector[8] = -1;
         featureTable.put(symbolWithvoicelessDiacritic, voicelessVector);
         return voicelessVector;
+    }
+
+    public int[] handleDiacritic(String symbolWithDiacritic) {
+        if (featureTable.containsKey(symbolWithDiacritic)) {
+            return featureTable.get(symbolWithDiacritic);
+        } else {
+            // split off last char, try to handle it as a modifier
+            int lastCharIdx = symbolWithDiacritic.length() - 1;
+            String modifier = symbolWithDiacritic.substring(lastCharIdx);
+            String remainingSymbol = symbolWithDiacritic.substring(0, lastCharIdx);
+
+            int[] featureVector = handleDiacritic(remainingSymbol);
+            String[] modifications = modifierTable.get(modifier);
+
+            if (featureVector == null || modifications == null) {
+                return null;
+            }
+
+            for (String mod : modifications) {
+                String modifiedFeature = mod.substring(1);
+                int featureIdx = features.indexOf(modifiedFeature);
+                if (mod.charAt(0) == '+') {
+                    featureVector[featureIdx] = 1;
+                } else if (mod.charAt(0) == '-') {
+                    featureVector[featureIdx] = -1;
+                } else {
+                    System.err.println("ERROR: File for sound modifications is malformed. Rule " + mod +
+                            " cannot be applied to " + symbolWithDiacritic + ".");
+                    return null;
+                }
+            }
+
+            return featureVector;
+        }
     }
     
     public boolean contains(String key) {
