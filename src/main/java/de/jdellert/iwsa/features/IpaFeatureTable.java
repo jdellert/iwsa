@@ -7,14 +7,14 @@ import java.util.zip.DataFormatException;
 public class IpaFeatureTable {
     private final Map<String, int[]> featureTable;
     private ArrayList<String> features;
-    private Map<String, String[]> modifierTable;
+    private final Map<String, String[]> modifierTable;
 
     public IpaFeatureTable() throws DataFormatException, IOException {
         this("iwsa/src/main/resources/de/jdellert/iwsa/features/all_ipa_symbols.csv");
     }
 
     public IpaFeatureTable(String filepath) throws DataFormatException, IOException {
-        this(filepath, "iwsa/src/test/resources/de/jdellert/iwsa/features/dummy_modifier_rules.csv");
+        this(filepath, "iwsa/src/main/resources/de/jdellert/iwsa/features/diacritic_rules.csv");
     }
 
     public IpaFeatureTable(String filepath, String modifierFilepath) throws DataFormatException, IOException {
@@ -65,8 +65,13 @@ public class IpaFeatureTable {
         while ((line = br.readLine()) != null) {
             String[] fields = line.split("\\s+");
             String modSymbol = fields[0];
-            String[] modifications = fields[1].split(",");
-            modifierTable.put(modSymbol, modifications);
+            try {
+                String[] modifications = fields[1].split(",");
+                modifierTable.put(modSymbol, modifications);
+            } catch (ArrayIndexOutOfBoundsException e) {
+                // add empty array for symbols that don't change any feature
+                modifierTable.put(modSymbol, new String[]{""});
+            }
         }
 
         br.close();
@@ -106,14 +111,31 @@ public class IpaFeatureTable {
             String modifier = symbolWithDiacritic.substring(lastCharIdx);
             String remainingSymbol = symbolWithDiacritic.substring(0, lastCharIdx);
 
-            int[] featureVector = handleDiacritic(remainingSymbol);
             String[] modifications = modifierTable.get(modifier);
 
-            if (featureVector == null || modifications == null) {
+            // if last char is not a valid modifier, try first char (e.g. for pre-aspiration)
+            if (modifications == null) {
+                modifier = symbolWithDiacritic.substring(0, 1);
+                remainingSymbol = symbolWithDiacritic.substring(1);
+                modifications = modifierTable.get(modifier);
+
+                if (modifications == null) {
+                    return null;
+                }
+            }
+
+            int[] featureVector = handleDiacritic(remainingSymbol);
+
+            if (featureVector == null) {
                 return null;
             }
 
+            featureVector = Arrays.copyOf(featureVector, featureVector.length);
+
             for (String mod : modifications) {
+                if (mod.equals("")) {
+                    continue;
+                }
                 String modifiedFeature = mod.substring(1);
                 int featureIdx = features.indexOf(modifiedFeature);
                 if (mod.charAt(0) == '+') {
