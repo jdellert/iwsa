@@ -102,6 +102,13 @@ public class IpaFeatureTable {
         return voicelessVector;
     }
 
+    /**
+     * Strips trailing or leading diacritic from key and modifies respective feature(s).
+     * Recursion allows for handling multiple diacritics in arbitrary order.
+     * Result is cached for more efficient lookup the next time.
+     * @param symbolWithDiacritic key for lookup
+     * @return the modified feature vector
+     */
     public int[] handleDiacritic(String symbolWithDiacritic) {
         if (featureTable.containsKey(symbolWithDiacritic)) {
             return featureTable.get(symbolWithDiacritic);
@@ -149,6 +156,7 @@ public class IpaFeatureTable {
                 }
             }
 
+            featureTable.put(remainingSymbol, featureVector);
             return featureVector;
         }
     }
