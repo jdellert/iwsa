@@ -113,6 +113,10 @@ public class IpaFeatureTable {
         if (featureTable.containsKey(symbolWithDiacritic)) {
             return featureTable.get(symbolWithDiacritic);
         } else {
+        	if (symbolWithDiacritic.length() == 1) {
+        		return null;
+        	}
+        	
             // split off last char, try to handle it as a modifier
             int lastCharIdx = symbolWithDiacritic.length() - 1;
             String modifier = symbolWithDiacritic.substring(lastCharIdx);
