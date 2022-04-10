@@ -8,6 +8,7 @@ public class IpaFeatureTable {
     private final Map<String, int[]> featureTable;
     private ArrayList<String> features;
     private final Map<String, String[]> modifierTable;
+    private final Map<String, double[]> vowelDimensions;
 
     public IpaFeatureTable() throws DataFormatException, IOException {
         this("iwsa/src/main/resources/de/jdellert/iwsa/features/all_ipa_symbols.csv");
@@ -75,6 +76,24 @@ public class IpaFeatureTable {
         }
 
         br.close();
+
+        br = new BufferedReader(new FileReader("iwsa/src/main/resources/de/jdellert/iwsa/features/vowel_dimensions.csv"));
+        vowelDimensions = new HashMap<>();
+
+        while ((line = br.readLine()) != null) {
+            String[] fields = line.split("\\s+");
+            String vowel = fields[0];
+            String[] dimensionsAsString = fields[1].split(",");
+            double[] dimensions = new double[dimensionsAsString.length];
+
+            for (int i = 0; i < dimensionsAsString.length; i++) {
+                dimensions[i] = Double.parseDouble(dimensionsAsString[i]);
+            }
+
+            vowelDimensions.put(vowel, dimensions);
+        }
+
+        br.close();
     }
 
     public int[] get(String key) {
@@ -84,6 +103,14 @@ public class IpaFeatureTable {
             if (key.contains("̥")) return handleVoicelessDiacritic(key);
         }
         return result;*/
+        if (getVowelCount(key) > 1) {
+            String reorderedPolyphthong = handlePolyphthong(key);
+            if (reorderedPolyphthong == null) {
+                System.err.println("ERROR: Tried to encode " + key + " as polyphthong and failed.");
+                return null;
+            }
+            key = reorderedPolyphthong;
+        }
         return handleDiacritic(key);
     }
 
@@ -109,7 +136,7 @@ public class IpaFeatureTable {
      * @param symbolWithDiacritic key for lookup
      * @return the modified feature vector
      */
-    public int[] handleDiacritic(String symbolWithDiacritic) {
+    private int[] handleDiacritic(String symbolWithDiacritic) {
         if (featureTable.containsKey(symbolWithDiacritic)) {
             return featureTable.get(symbolWithDiacritic);
         } else {
@@ -135,13 +162,13 @@ public class IpaFeatureTable {
                 }
             }
 
-            int[] featureVector = handleDiacritic(remainingSymbol);
+            int[] baseFeatureVector = handleDiacritic(remainingSymbol);
 
-            if (featureVector == null) {
+            if (baseFeatureVector == null) {
                 return null;
             }
 
-            featureVector = Arrays.copyOf(featureVector, featureVector.length);
+            int[] featureVector = Arrays.copyOf(baseFeatureVector, baseFeatureVector.length);
 
             for (String mod : modifications) {
                 if (mod.equals("")) {
@@ -160,9 +187,224 @@ public class IpaFeatureTable {
                 }
             }
 
-            featureTable.put(remainingSymbol, featureVector);
+            featureTable.put(symbolWithDiacritic, featureVector);
             return featureVector;
         }
+    }
+
+    /**
+     * Encodes diphthongs by adding / modifying relevant features.
+     * The resulting feature vector is stored for more efficient lookup.
+     * @param diphthong the diphthong in its clean form (ONLY the two vowels, no diacritics etc.)
+     * @return the resulting feature vector
+     */
+    private int[] encodeDiphthong(String diphthong) {
+        if (diphthong.length() != 2) {
+            System.err.println("Unable to encode " + diphthong + " as diphthong!");
+            return null;
+        }
+
+        /*
+        relevant features with indices:
+        backshift: 24
+        frontshift: 25
+        opening: 26
+        centering: 27
+        closing: 28
+        longdistance: 29
+        secondrounded: 30
+         */
+
+        String firstVowel = diphthong.substring(0, 1);
+        String secondVowel = diphthong.substring(1);
+        double[] firstVowelDimensions = vowelDimensions.get(firstVowel);
+        double[] secondVowelDimensions = vowelDimensions.get(secondVowel);
+        // vowel dimension are ordered triplets indicating the horizontal [0] and vertical [1] position
+        // of the vowel in the mouth, as well as its roundedness [2].
+        // a low first value indicates a front vowel, a low second value indicates a closed vowel.
+        // roundedness is encoded with 1 (rounded) or 0 (unrounded).
+
+        int[] baseFeatureVector = featureTable.get(firstVowel);
+
+        if (firstVowelDimensions == null || secondVowelDimensions == null || baseFeatureVector == null) {
+            System.err.println("Unable to encode " + diphthong + " as diphthong!");
+            return null;
+        }
+
+        int[] featureVector = Arrays.copyOf(baseFeatureVector, baseFeatureVector.length);
+
+        // backshift / frontshift?
+        if (secondVowelDimensions[0] > firstVowelDimensions[0]) { // backshift
+            featureVector[24] = 1;
+            featureVector[25] = -1;
+        } else if (secondVowelDimensions[0] < firstVowelDimensions[0]) { // frontshift
+            featureVector[24] = 1;
+            featureVector[25] = -1;
+        } else {
+            featureVector[24] = -1;
+            featureVector[25] = -1;
+        }
+
+        // opening / closing?
+        if (Math.abs(firstVowelDimensions[1] - secondVowelDimensions[1]) > 0.8) {
+            if (secondVowelDimensions[1] > firstVowelDimensions[1]) { // opening
+                featureVector[26] = 1;
+                featureVector[28] = -1;
+            } else { // closing
+                featureVector[26] = -1;
+                featureVector[28] = 1;
+            }
+        } else {
+            featureVector[26] = -1;
+            featureVector[28] = -1;
+        }
+
+        // centering?
+        if ((secondVowelDimensions[0] == 2 && 2 <= secondVowelDimensions[1] && secondVowelDimensions[1] <= 3) ||
+                (secondVowelDimensions[1] == 1.5 && firstVowelDimensions[1] != 1.5) ||
+                (secondVowelDimensions[1] == 3.5 && firstVowelDimensions[1] != 3.5) ||
+                (secondVowelDimensions[1] == 2 && firstVowelDimensions[1] < 2) ||
+                (secondVowelDimensions[1] == 3 && firstVowelDimensions[1] > 3)) {
+            featureVector[27] = 1;
+        } else {
+            featureVector[27] = -1;
+        }
+
+        // longdistance?
+        if (2 <= firstVowelDimensions[1] && firstVowelDimensions[1] <= 3) {
+            if (Math.abs(firstVowelDimensions[1] - secondVowelDimensions[1]) == 2) {
+                featureVector[29] = 1;
+            } else {
+                featureVector[29] = -1;
+            }
+        } else {
+            if (Math.abs(firstVowelDimensions[1] - secondVowelDimensions[1]) > 2) {
+                featureVector[29] = 1;
+            } else {
+                featureVector[29] = -1;
+            }
+        }
+
+        // secondrounded?
+        if (secondVowelDimensions[2] == 1) {
+            featureVector[30] = 1;
+        } else {
+            featureVector[30] = -1;
+        }
+
+        featureTable.put(diphthong, featureVector);
+
+        return featureVector;
+    }
+
+    /**
+     * Encodes triphthongs by adding / modifying relevant features.
+     * The resulting feature vector is stored for more efficient lookup.
+     * @param triphthong the triphthong in its clean form (ONLY the two vowels, no diacritics etc.)
+     * @return the resulting feature vector
+     */
+    private int[] encodeTriphthong(String triphthong) {
+        if (triphthong.length() != 3) {
+            System.err.println("Unable to encode " + triphthong + " as triphthong!");
+            return null;
+        }
+
+        String leadingDiphthong = triphthong.substring(0, 2);
+        int[] diphthongFeatures = encodeDiphthong(leadingDiphthong);
+
+        double[] firstVowelDimensions = vowelDimensions.get(triphthong.substring(0, 1));
+        double[] secondVowelDimensions = vowelDimensions.get(triphthong.substring(1, 2));
+        double[] thirdVowelDimensions = vowelDimensions.get(triphthong.substring(2));
+
+        if (diphthongFeatures == null || firstVowelDimensions == null ||
+                secondVowelDimensions == null || thirdVowelDimensions == null) {
+            System.err.println("Unable to encode " + triphthong + " as triphthong!");
+            return null;
+        }
+
+        int[] featureVector = Arrays.copyOf(diphthongFeatures, diphthongFeatures.length);
+
+        /*
+        relevant features with indices:
+        backshift: 24
+        frontshift: 25
+        opening: 26
+        closing: 28
+         */
+
+        // horizontal bow trajectory?
+        if ((secondVowelDimensions[0] < firstVowelDimensions[0] && secondVowelDimensions[0] < thirdVowelDimensions[0]) ||
+                (secondVowelDimensions[0] > firstVowelDimensions[0] && secondVowelDimensions[0] > thirdVowelDimensions[0])) {
+            featureVector[24] = 1;
+            featureVector[25] = 1;
+        }
+
+        // vertical bow trajectory?
+        if ((secondVowelDimensions[1] < firstVowelDimensions[1] && secondVowelDimensions[1] < thirdVowelDimensions[1]) ||
+                (secondVowelDimensions[1] > firstVowelDimensions[1] && secondVowelDimensions[1] > thirdVowelDimensions[1])) {
+            featureVector[26] = 1;
+            featureVector[28] = 1;
+        }
+
+        featureTable.put(triphthong, featureVector);
+
+        return featureVector;
+    }
+
+    /**
+     * Cleans up a polyphthong to enable its encoding. Strips off tying bows and non-syllability markers and
+     * relocates potential diacritics to the end, so they can be handled properly.
+     * @param polyphthong the polyphthong in question
+     * @return the cleaned up and reordered polyphthong
+     */
+    private String handlePolyphthong(String polyphthong) {
+        StringBuilder polyphthongWithoutDiacriticsBuilder = new StringBuilder();
+        StringBuilder diacriticsBuilder = new StringBuilder();
+
+        for (char c : polyphthong.toCharArray()) {
+            // ignore tying bows and non-syllabicity markers
+            if (c == '͡' || c == '̯') {
+                continue;
+            }
+
+            String character = String.valueOf(c);
+
+            // ignore duplicate diacritics for memory efficiency
+            if (diacriticsBuilder.indexOf(character) != -1) {
+                continue;
+            }
+
+            if (vowelDimensions.containsKey(character)) {
+                polyphthongWithoutDiacriticsBuilder.append(character);
+            } else {
+                diacriticsBuilder.append(character);
+            }
+        }
+
+        String polyphthongWithoutDiacritics = polyphthongWithoutDiacriticsBuilder.toString();
+        String diacritics = diacriticsBuilder.toString();
+
+        if (polyphthongWithoutDiacritics.length() == 3) {
+            encodeTriphthong(polyphthongWithoutDiacritics);
+        } else if (polyphthongWithoutDiacritics.length() == 2) {
+            encodeDiphthong(polyphthongWithoutDiacritics);
+        } else {
+            return null;
+        }
+
+        return polyphthongWithoutDiacritics + diacritics;
+    }
+
+    private int getVowelCount(String sound) {
+        int vowelCount = 0;
+
+        for (char c : sound.toCharArray()) {
+            if (vowelDimensions.containsKey(String.valueOf(c))) {
+                vowelCount++;
+            }
+        }
+
+        return vowelCount;
     }
     
     public boolean contains(String key) {
@@ -174,7 +416,7 @@ public class IpaFeatureTable {
         int[] sound2Features = get(sound2);
 
         if (sound1Features == null) {
-           System.err.println("ERROR: IPA Symbol " + sound1 + " was not defined in feature table");
+            System.err.println("ERROR: IPA Symbol " + sound1 + " was not defined in feature table");
             return null;
         }
         else if (sound2Features == null) {

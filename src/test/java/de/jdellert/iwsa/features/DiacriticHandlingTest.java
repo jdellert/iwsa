@@ -11,7 +11,8 @@ public class DiacriticHandlingTest {
                     "iwsa/src/test/resources/de/jdellert/iwsa/features/dummy_modifier_rules.csv"
             );
 
-            String[] testSounds = {"kʼ", "kʰː", "kːʰ", "ⁿkːʰ", "kʰ", "k̝", "k"};
+            String[] testSounds = {"kʼ", "kʰː", "kːʰ", "ⁿk̝ːʰ", "kʰ", "k̝", "k",
+                                    "aui", "auːi", "aːui", "auiː", "aũi", "ãũĩ", "ã͡ũĩ"};
 
             for (String s : testSounds) {
                 System.out.println("Sound: " + s);
@@ -19,6 +20,7 @@ public class DiacriticHandlingTest {
                 System.out.println(Arrays.toString(dummyFeatureTable.get(s)));
                 System.out.println(Arrays.toString(goldFeatureTable.get(s)));
             }
+
 
         } catch (Exception e) {
             e.printStackTrace();
