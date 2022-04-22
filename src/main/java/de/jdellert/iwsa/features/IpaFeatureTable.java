@@ -5,8 +5,9 @@ import java.util.*;
 import java.util.zip.DataFormatException;
 
 public class IpaFeatureTable {
-    private final Map<String, int[]> featureTable;
-    private ArrayList<String> features;
+    // private final Map<String, int[]> featureTable;
+    public Map<String, int[]> featureTable;
+    public ArrayList<String> features;
     private final Map<String, String[]> modifierTable;
     private final Map<String, double[]> vowelDimensions;
 
@@ -238,8 +239,8 @@ public class IpaFeatureTable {
             featureVector[24] = 1;
             featureVector[25] = -1;
         } else if (secondVowelDimensions[0] < firstVowelDimensions[0]) { // frontshift
-            featureVector[24] = 1;
-            featureVector[25] = -1;
+            featureVector[24] = -1;
+            featureVector[25] = 1;
         } else {
             featureVector[24] = -1;
             featureVector[25] = -1;
