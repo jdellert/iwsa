@@ -1,21 +1,28 @@
 package de.jdellert.iwsa.features;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.zip.DataFormatException;
 
 public class IpaFeatureTable {
     private Map<String, int[]> featureTable;
 
     public IpaFeatureTable() throws DataFormatException, IOException {
-        this("iwsa/src/main/resources/de/jdellert/iwsa/features/all_ipa_symbols.csv");
+        this("de/jdellert/iwsa/features/all_ipa_symbols.csv");
     }
 
     public IpaFeatureTable(String filepath) throws DataFormatException, IOException {
         featureTable = new HashMap<>();
-        BufferedReader br = new BufferedReader(new FileReader(filepath));
+        InputStream rawInputStream = getClass().getResourceAsStream(filepath);
+        if (rawInputStream == null) {
+            String[] ary = filepath.split("/");
+            rawInputStream = ClassLoader.getSystemResourceAsStream(ary[ary.length-1]);
+        }
+        BufferedReader br = new BufferedReader(new InputStreamReader(Objects.requireNonNull(rawInputStream,"File "+filepath+" not found!"), StandardCharsets.UTF_8));
         String line;
         while ((line = br.readLine()) != null) {
             String[] fields = line.split(",");

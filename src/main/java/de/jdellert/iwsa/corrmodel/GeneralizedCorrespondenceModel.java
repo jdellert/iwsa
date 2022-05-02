@@ -3,11 +3,17 @@ package de.jdellert.iwsa.corrmodel;
 import de.jdellert.iwsa.corrmodel.neuralmodel.PmiScoreModel;
 import de.jdellert.iwsa.features.IpaFeatureTable;
 import de.jdellert.iwsa.sequence.GeneralizedPhoneticSymbolTable;
-import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
-import de.tuebingen.sfs.eie.shared.util.RankingEntry;
+import de.jdellert.iwsa.util.ranking.RankingEntry;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.zip.DataFormatException;
 
 /**
@@ -31,7 +37,7 @@ public class GeneralizedCorrespondenceModel extends CorrespondenceModel {
         pairwiseSimilarityModel = PmiScoreModel.loadPairwiseNeuralModel();
         gapModel = PmiScoreModel.loadGapModel();
         featureTable = new IpaFeatureTable();
-        directlyEstimatedScores = CorrespondenceModelStorage.readGlobalModelFromFile("src/test/resources/northeuralex-0.9/global-nw-retokenized.corr");
+        directlyEstimatedScores = CorrespondenceModelStorage.readGlobalModelFromFile("/de/jdellert/iwsa/corrmodel/global-nw-retokenized.corr");
         symbolsEncountered = directlyEstimatedScores.symbolTable.getDefinedSymbols();
     }
 

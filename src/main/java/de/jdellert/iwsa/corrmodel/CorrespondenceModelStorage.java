@@ -7,7 +7,6 @@ import de.jdellert.iwsa.util.io.IOUtils;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -18,6 +17,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 
 public class CorrespondenceModelStorage {
@@ -44,8 +44,8 @@ public class CorrespondenceModelStorage {
     public static CorrespondenceModel readGlobalModelFromFile(String fileName) {
         List<String> symbols = new ArrayList<>();
         Map<Long, Double> scores = new HashMap<>();
-
-        try (BufferedInputStream in = new BufferedInputStream(new FileInputStream(new File(fileName)))) {
+        try (BufferedInputStream in = new BufferedInputStream(Objects.requireNonNull(
+                CorrespondenceModelStorage.class.getResourceAsStream(fileName),"File "+fileName+" not found!"))) {
             BufferedByteReader reader = new BufferedByteReader(in);
 
             while (!reader.startsWithNewline())
