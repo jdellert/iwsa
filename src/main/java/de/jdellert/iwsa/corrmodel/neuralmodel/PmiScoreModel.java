@@ -16,20 +16,20 @@ public class PmiScoreModel {
 
         try {
             for (int i = 0; i < numHiddenLayers; i++) {
-                String layerWeightsDir = weightsDir + "-layer" + (i+1);
+                String layerWeightsDir = weightsDir + "/layer" + (i+1);
                 // need to specify inputDim only for first hidden layer
                 if (i == 0) {
-                    layers.add(new GeLULayer(hiddenSize, inputDim, layerWeightsDir + "-weights.txt",
-                            layerWeightsDir + "-biases.txt"));
+                    layers.add(new GeLULayer(hiddenSize, inputDim, layerWeightsDir + "/weights.txt",
+                            layerWeightsDir + "/biases.txt"));
                 } else {
-                    layers.add(new GeLULayer(hiddenSize, layerWeightsDir + "-weights.txt",
-                            layerWeightsDir + "-biases.txt"));
+                    layers.add(new GeLULayer(hiddenSize, layerWeightsDir + "/weights.txt",
+                            layerWeightsDir + "/biases.txt"));
                 }
             }
             // add final layer
-            String lastLayerDir = weightsDir + "-layer" + (numHiddenLayers+1);
-            layers.add(new Layer(1, 128, lastLayerDir + "-weights.txt",
-                    lastLayerDir + "-biases.txt"));
+            String lastLayerDir = weightsDir + "/layer" + (numHiddenLayers+1);
+            layers.add(new Layer(1, 128, lastLayerDir + "/weights.txt",
+                    lastLayerDir + "/biases.txt"));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -47,11 +47,11 @@ public class PmiScoreModel {
     }
 
     public static PmiScoreModel loadPairwiseNeuralModel() {
-        return new PmiScoreModel("neuralmodel-corrmodel-weights", 3, 128, 34);
+        return new PmiScoreModel("/de/jdellert/iwsa/neuralmodel/corrmodel/weights", 3, 128, 34);
     }
 
     public static PmiScoreModel loadGapModel() {
-        return new PmiScoreModel("neuralmodel-corrmodel-weights", 3, 128, 34);
+        return new PmiScoreModel("/de/jdellert/iwsa/neuralmodel/corrmodel/weights", 3, 128, 34);
     }
 
     public static void main(String[] args) {

@@ -17,7 +17,7 @@ public class GeneralizedPhoneticSymbolTable extends PhoneticSymbolTable {
 
     private Map<Integer, List<Integer>> combinedSymbols;
     private Map<Integer, Set<Integer>> metasymbols;
-    private static final String IPA_FILE_PATH = "features-all_ipa_symbols.csv";
+    private static final String IPA_FILE_PATH = "/de/jdellert/iwsa/features/all_ipa_symbols.csv";
 
     public GeneralizedPhoneticSymbolTable() {
         super();
@@ -29,7 +29,7 @@ public class GeneralizedPhoneticSymbolTable extends PhoneticSymbolTable {
 
     private List<String> loadDefaultSymbolList() {
         List<String> symbols = new ArrayList<>();
-        try(InputStream rawInputStream = ClassLoader.getSystemResourceAsStream(IPA_FILE_PATH);
+        try(InputStream rawInputStream = getClass().getResourceAsStream(IPA_FILE_PATH);
             BufferedReader reader = new BufferedReader(new InputStreamReader(Objects.requireNonNull(rawInputStream,"File "+IPA_FILE_PATH+" not found!"), StandardCharsets.UTF_8))) {
             for(String line; (line = reader.readLine()) != null;) {
                 String[] fields = line.split(",");

@@ -12,17 +12,12 @@ public class IpaFeatureTable {
     private Map<String, int[]> featureTable;
 
     public IpaFeatureTable() throws DataFormatException, IOException {
-        this("de/jdellert/iwsa/features/all_ipa_symbols.csv");
+        this("/de/jdellert/iwsa/features/all_ipa_symbols.csv");
     }
 
     public IpaFeatureTable(String filepath) throws DataFormatException, IOException {
         featureTable = new HashMap<>();
-        InputStream rawInputStream = getClass().getResourceAsStream(filepath);
-        if (rawInputStream == null) {
-            String[] ary = filepath.split("/");
-            rawInputStream = ClassLoader.getSystemResourceAsStream(ary[ary.length-1]);
-        }
-        BufferedReader br = new BufferedReader(new InputStreamReader(Objects.requireNonNull(rawInputStream,"File "+filepath+" not found!"), StandardCharsets.UTF_8));
+        BufferedReader br = new BufferedReader(new InputStreamReader(Objects.requireNonNull(getClass().getResourceAsStream(filepath),"File "+filepath+" not found!"), StandardCharsets.UTF_8));
         String line;
         while ((line = br.readLine()) != null) {
             String[] fields = line.split(",");

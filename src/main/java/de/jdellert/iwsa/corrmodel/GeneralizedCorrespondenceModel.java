@@ -21,7 +21,7 @@ import java.util.zip.DataFormatException;
  * Result is modifiable by calling setScore(..), this will be placed in the cache and therefore override lookup in the neural model
  */
 public class GeneralizedCorrespondenceModel extends CorrespondenceModel {
-    public static boolean VERBOSE = false;
+    public static boolean VERBOSE = true;
 
     CorrespondenceModel directlyEstimatedScores;
     PmiScoreModel pairwiseSimilarityModel;
@@ -37,7 +37,7 @@ public class GeneralizedCorrespondenceModel extends CorrespondenceModel {
         pairwiseSimilarityModel = PmiScoreModel.loadPairwiseNeuralModel();
         gapModel = PmiScoreModel.loadGapModel();
         featureTable = new IpaFeatureTable();
-        directlyEstimatedScores = CorrespondenceModelStorage.readGlobalModelFromFile("corrmodel-global-nw-retokenized.corr");
+        directlyEstimatedScores = CorrespondenceModelStorage.readGlobalModelFromFile("/de/jdellert/iwsa/neuralmodel/corrmodel/global-nw-retokenized.corr");
         symbolsEncountered = directlyEstimatedScores.symbolTable.getDefinedSymbols();
     }
 

@@ -61,7 +61,6 @@ public class CorrespondenceModelStorage {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
         CorrespondenceModel corrModel = new CorrespondenceModel(new PhoneticSymbolTable(symbols));
         corrModel.scores = scores;
         return corrModel;

@@ -31,7 +31,7 @@ public class IpaSymbolInformation {
 		symbolDescriptions = new TreeMap<>();
 		ipaToTipa = new TreeMap<>();
 
-		try(InputStream inStream = ClassLoader.getSystemResourceAsStream(IPA_FILE1);
+		try(InputStream inStream = IpaSymbolInformation.class.getResourceAsStream(IPA_FILE1);
 			BufferedReader in = new BufferedReader(new InputStreamReader(Objects.requireNonNull(inStream, "File "+IPA_FILE1+" not found!"), StandardCharsets.UTF_8))) {
 			for(String line; (line = in.readLine()) != null;) {
 				String[] symbolAndDescription = line.split("\t");
@@ -44,7 +44,7 @@ public class IpaSymbolInformation {
 			e.printStackTrace();
 		}
 
-		try(InputStream rawInputStream = ClassLoader.getSystemResourceAsStream(IPA_FILE2);
+		try(InputStream rawInputStream = IpaSymbolInformation.class.getResourceAsStream(IPA_FILE2);
 			BufferedReader in = new BufferedReader(new InputStreamReader(Objects.requireNonNull(rawInputStream,"File "+IPA_FILE2+" not found!"), StandardCharsets.UTF_8))) {
 			for(String line; (line = in.readLine()) != null;) {
 				String[] ipaAndTipa = line.split("\t");
