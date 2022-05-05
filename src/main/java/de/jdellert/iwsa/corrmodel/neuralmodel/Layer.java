@@ -30,7 +30,7 @@ public class Layer {
     }
 
     public void loadWeights (String filepath) throws IOException, NumberFormatException {
-        InputStream rawInputStream = Layer.class.getResourceAsStream(filepath);
+        InputStream rawInputStream = getClass().getResourceAsStream(filepath);
         BufferedReader br = new BufferedReader(new InputStreamReader(Objects.requireNonNull(rawInputStream,"File "+ filepath +" not found!"), StandardCharsets.UTF_8));
         String line;
         int i = 0;
@@ -59,7 +59,7 @@ public class Layer {
     }
 
     public void loadBiases(String filepath) throws IOException, NumberFormatException {
-        InputStream rawInputStream = Layer.class.getResourceAsStream(filepath);
+        InputStream rawInputStream = getClass().getResourceAsStream(filepath);
         BufferedReader br = new BufferedReader(new InputStreamReader(Objects.requireNonNull(rawInputStream,"File "+ filepath +" not found!"), StandardCharsets.UTF_8));
         String line;
         int i = 0;

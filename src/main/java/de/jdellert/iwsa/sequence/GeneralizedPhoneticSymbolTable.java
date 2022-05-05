@@ -17,9 +17,7 @@ public class GeneralizedPhoneticSymbolTable extends PhoneticSymbolTable {
 
     private Map<Integer, List<Integer>> combinedSymbols;
     private Map<Integer, Set<Integer>> metasymbols;
-    //TODO: originally was located at de/jdellert/iwsa/features/, but for convenience
-//    private static final String IPA_FILE_PATH = "de/jdellert/iwsa/features/all_ipa_symbols.csv";
-    private static final String IPA_FILE_PATH = "all_ipa_symbols.csv";
+    private static final String IPA_FILE_PATH = "features-all_ipa_symbols.csv";
 
     public GeneralizedPhoneticSymbolTable() {
         super();

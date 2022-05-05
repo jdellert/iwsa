@@ -37,7 +37,7 @@ public class GeneralizedCorrespondenceModel extends CorrespondenceModel {
         pairwiseSimilarityModel = PmiScoreModel.loadPairwiseNeuralModel();
         gapModel = PmiScoreModel.loadGapModel();
         featureTable = new IpaFeatureTable();
-        directlyEstimatedScores = CorrespondenceModelStorage.readGlobalModelFromFile("/de/jdellert/iwsa/corrmodel/global-nw-retokenized.corr");
+        directlyEstimatedScores = CorrespondenceModelStorage.readGlobalModelFromFile("corrmodel-global-nw-retokenized.corr");
         symbolsEncountered = directlyEstimatedScores.symbolTable.getDefinedSymbols();
     }
 
