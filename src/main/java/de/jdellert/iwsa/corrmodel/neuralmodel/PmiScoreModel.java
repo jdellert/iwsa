@@ -2,9 +2,6 @@ package de.jdellert.iwsa.corrmodel.neuralmodel;
 
 import de.jdellert.iwsa.features.IpaFeatureTable;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,11 +47,11 @@ public class PmiScoreModel {
     }
 
     public static PmiScoreModel loadPairwiseNeuralModel() {
-        return new PmiScoreModel("iwsa/src/main/resources/de/jdellert/iwsa/neuralmodel/corrmodel/weights", 3, 128, 34);
+        return new PmiScoreModel("/de/jdellert/iwsa/neuralmodel/corrmodel/weights", 3, 128, 34);
     }
 
     public static PmiScoreModel loadGapModel() {
-        return new PmiScoreModel("iwsa/src/main/resources/de/jdellert/iwsa/neuralmodel/gapmodel/weights", 3, 128, 34);
+        return new PmiScoreModel("/de/jdellert/iwsa/neuralmodel/corrmodel/weights", 3, 128, 34);
     }
 
     public static void main(String[] args) {

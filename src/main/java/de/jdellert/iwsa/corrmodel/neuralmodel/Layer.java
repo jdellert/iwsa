@@ -1,9 +1,12 @@
 package de.jdellert.iwsa.corrmodel.neuralmodel;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.InputMismatchException;
+import java.util.Objects;
 
 public class Layer {
     private final double[] biases;
@@ -27,7 +30,8 @@ public class Layer {
     }
 
     public void loadWeights (String filepath) throws IOException, NumberFormatException {
-        BufferedReader br = new BufferedReader(new FileReader(filepath));
+        InputStream rawInputStream = getClass().getResourceAsStream(filepath);
+        BufferedReader br = new BufferedReader(new InputStreamReader(Objects.requireNonNull(rawInputStream,"File "+ filepath +" not found!"), StandardCharsets.UTF_8));
         String line;
         int i = 0;
 
@@ -55,7 +59,8 @@ public class Layer {
     }
 
     public void loadBiases(String filepath) throws IOException, NumberFormatException {
-        BufferedReader br = new BufferedReader(new FileReader(filepath));
+        InputStream rawInputStream = getClass().getResourceAsStream(filepath);
+        BufferedReader br = new BufferedReader(new InputStreamReader(Objects.requireNonNull(rawInputStream,"File "+ filepath +" not found!"), StandardCharsets.UTF_8));
         String line;
         int i = 0;
 

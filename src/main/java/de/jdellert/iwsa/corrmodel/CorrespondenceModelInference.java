@@ -1,13 +1,5 @@
 package de.jdellert.iwsa.corrmodel;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import de.jdellert.iwsa.ConceptLevelWeightedEditDistanceOutput;
 import de.jdellert.iwsa.align.InformationWeightedSequenceAlignment;
 import de.jdellert.iwsa.align.LevenshteinAlignmentAlgorithm;
@@ -21,6 +13,14 @@ import de.jdellert.iwsa.stat.CategoricalDistribution;
 import de.jdellert.iwsa.util.io.Formatting;
 import de.tuebingen.sfs.cldfjava.data.CLDFForm;
 import de.tuebingen.sfs.cldfjava.data.CLDFWordlistDatabase;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class CorrespondenceModelInference {
 	public static boolean VERBOSE = false;

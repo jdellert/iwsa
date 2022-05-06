@@ -2,7 +2,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>de.jdellert</groupId>
+    <groupId>de.jdellert.iwsa</groupId>
     <artifactId>iwsa</artifactId>
     <version>0.0.1-beta</version>
     <packaging>jar</packaging>
@@ -12,26 +12,32 @@
     </properties>
 
     <build>
-        <resources>
-            <resource>
-                <directory>src/main/java</directory>
-            </resource>
-        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.0</version>
+                <version>3.8.1</version>
                 <configuration>
                     <source>16</source>
                     <target>16</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                <archive>
+                    <manifestEntries>
+                        <Automatic-Module-Name>org.apache.spark</Automatic-Module-Name>
+                    </manifestEntries>
+                </archive>
                 </configuration>
             </plugin>
         </plugins>
     </build>
     <dependencies>
         <dependency>
-            <groupId>de.tuebingen.sfs</groupId>
+            <groupId>de.tuebingen.sfs.cldfjava</groupId>
             <artifactId>cldf-java</artifactId>
             <version>1.0.0-beta</version>
         </dependency>

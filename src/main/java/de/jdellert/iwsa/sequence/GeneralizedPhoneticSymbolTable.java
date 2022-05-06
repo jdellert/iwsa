@@ -1,15 +1,23 @@
 package de.jdellert.iwsa.sequence;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.*;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 public class GeneralizedPhoneticSymbolTable extends PhoneticSymbolTable {
 
     private Map<Integer, List<Integer>> combinedSymbols;
     private Map<Integer, Set<Integer>> metasymbols;
+    private static final String IPA_FILE_PATH = "/de/jdellert/iwsa/features/all_ipa_symbols.csv";
 
     public GeneralizedPhoneticSymbolTable() {
         super();
@@ -20,22 +28,19 @@ public class GeneralizedPhoneticSymbolTable extends PhoneticSymbolTable {
     }
 
     private List<String> loadDefaultSymbolList() {
-        List<String> symbols = new ArrayList<String>();
-        try {
-            BufferedReader br = new BufferedReader(new InputStreamReader(
-                    this.getClass().getResourceAsStream("/de/jdellert/iwsa/features/all_ipa_symbols.csv")));
-            String line;
-            while ((line = br.readLine()) != null) {
+        List<String> symbols = new ArrayList<>();
+        try(InputStream rawInputStream = getClass().getResourceAsStream(IPA_FILE_PATH);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(Objects.requireNonNull(rawInputStream,"File "+IPA_FILE_PATH+" not found!"), StandardCharsets.UTF_8))) {
+            for(String line; (line = reader.readLine()) != null;) {
                 String[] fields = line.split(",");
                 if (fields[0].equals("")) {
                     continue;
                 }
                 symbols.add(fields[0]);
             }
-            br.close();
-        }
-        catch (IOException e) {
-            System.err.println("ERROR: IO exception while reading in from all_ipa_symbols.csv");
+        } catch (IOException e) {
+            System.err.println("ERROR: IO exception while reading in from " + IPA_FILE_PATH);
+            e.printStackTrace();
         }
         return symbols;
     }

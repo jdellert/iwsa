@@ -1,7 +1,12 @@
 package de.jdellert.iwsa.features;
 
 import java.io.*;
-import java.util.*;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.ArrayList;
 import java.util.zip.DataFormatException;
 
 public class IpaFeatureTable {
@@ -12,16 +17,16 @@ public class IpaFeatureTable {
     private final Map<String, double[]> vowelDimensions;
 
     public IpaFeatureTable() throws DataFormatException, IOException {
-        this("iwsa/src/main/resources/de/jdellert/iwsa/features/all_ipa_symbols.csv");
+        this("/de/jdellert/iwsa/features/all_ipa_symbols.csv");
     }
 
     public IpaFeatureTable(String filepath) throws DataFormatException, IOException {
-        this(filepath, "iwsa/src/main/resources/de/jdellert/iwsa/features/diacritic_rules.csv");
+        this(filepath, "/de/jdellert/iwsa/features/diacritic_rules.csv");
     }
 
     public IpaFeatureTable(String filepath, String modifierFilepath) throws DataFormatException, IOException {
         featureTable = new HashMap<>();
-        BufferedReader br = new BufferedReader(new FileReader(filepath));
+        BufferedReader br = new BufferedReader(new InputStreamReader(Objects.requireNonNull(getClass().getResourceAsStream(filepath),"File "+filepath+" not found!"), StandardCharsets.UTF_8));
         String line;
         boolean firstLine = true;
         while ((line = br.readLine()) != null) {
@@ -61,7 +66,7 @@ public class IpaFeatureTable {
         }
         br.close();
 
-        br = new BufferedReader(new FileReader(modifierFilepath));
+        br = new BufferedReader(new InputStreamReader(Objects.requireNonNull(getClass().getResourceAsStream(modifierFilepath),"File "+modifierFilepath+" not found!"), StandardCharsets.UTF_8));
         modifierTable = new HashMap<>();
 
         while ((line = br.readLine()) != null) {
@@ -78,7 +83,8 @@ public class IpaFeatureTable {
 
         br.close();
 
-        br = new BufferedReader(new FileReader("iwsa/src/main/resources/de/jdellert/iwsa/features/vowel_dimensions.csv"));
+        String vowelDimFile = "/de/jdellert/iwsa/features/vowel_dimensions.csv";
+        br = new BufferedReader(new InputStreamReader(Objects.requireNonNull(getClass().getResourceAsStream(vowelDimFile),"File "+vowelDimFile+" not found!"), StandardCharsets.UTF_8));
         vowelDimensions = new HashMap<>();
 
         while ((line = br.readLine()) != null) {
@@ -144,7 +150,7 @@ public class IpaFeatureTable {
         	if (symbolWithDiacritic.length() == 1) {
         		return null;
         	}
-        	
+
             // split off last char, try to handle it as a modifier
             int lastCharIdx = symbolWithDiacritic.length() - 1;
             String modifier = symbolWithDiacritic.substring(lastCharIdx);
@@ -407,7 +413,7 @@ public class IpaFeatureTable {
 
         return vowelCount;
     }
-    
+
     public boolean contains(String key) {
     	return get(key) != null;
     }
