@@ -66,7 +66,7 @@ public class IpaFeatureTable {
         }
         br.close();
 
-        br = new BufferedReader(new FileReader(modifierFilepath));
+        br = new BufferedReader(new InputStreamReader(Objects.requireNonNull(getClass().getResourceAsStream(modifierFilepath),"File "+modifierFilepath+" not found!"), StandardCharsets.UTF_8));
         modifierTable = new HashMap<>();
 
         while ((line = br.readLine()) != null) {
@@ -83,7 +83,8 @@ public class IpaFeatureTable {
 
         br.close();
 
-        br = new BufferedReader(new FileReader("iwsa/src/main/resources/de/jdellert/iwsa/features/vowel_dimensions.csv"));
+        String vowelDimFile = "/de/jdellert/iwsa/features/vowel_dimensions.csv";
+        br = new BufferedReader(new InputStreamReader(Objects.requireNonNull(getClass().getResourceAsStream(vowelDimFile),"File "+vowelDimFile+" not found!"), StandardCharsets.UTF_8));
         vowelDimensions = new HashMap<>();
 
         while ((line = br.readLine()) != null) {
