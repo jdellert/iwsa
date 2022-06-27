@@ -192,6 +192,9 @@ public class CorrespondenceModelInference {
 		int numRandomPairs = database.getConceptMap().size() * database.getLanguageMap().size() *
 				database.getLanguageMap().size();
 		numRandomPairs = Math.min(numRandomPairs, 20000000); // set maximum iterations to 20 million random pairs
+		if (numRandomPairs < 0) {
+			numRandomPairs = 20000000; // prevent integer overflow
+		}
 		System.err.print("  Step 1: Simulating non-cognates by means of " + numRandomPairs + " random alignments ...");
 		ExecutorService executor = Executors.newFixedThreadPool(NUM_THREADS);
 		RandomAlignmentsWorker[] workers = new RandomAlignmentsWorker[NUM_THREADS];

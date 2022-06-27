@@ -317,40 +317,31 @@ public class IpaFeatureTable {
         }
 
         String leadingDiphthong = triphthong.substring(0, 2);
-        int[] diphthongFeatures = encodeDiphthong(leadingDiphthong);
+        int[] leadingDiphthongFeatures = encodeDiphthong(leadingDiphthong);
+        String closingDiphthong = triphthong.substring(1);
+        int[] closingDiphthongFeatures = encodeDiphthong(closingDiphthong);
 
-        double[] firstVowelDimensions = vowelDimensions.get(triphthong.substring(0, 1));
-        double[] secondVowelDimensions = vowelDimensions.get(triphthong.substring(1, 2));
-        double[] thirdVowelDimensions = vowelDimensions.get(triphthong.substring(2));
-
-        if (diphthongFeatures == null || firstVowelDimensions == null ||
-                secondVowelDimensions == null || thirdVowelDimensions == null) {
+        if (leadingDiphthongFeatures == null || closingDiphthongFeatures == null) {
             System.err.println("Unable to encode " + triphthong + " as triphthong!");
             return null;
         }
 
-        int[] featureVector = Arrays.copyOf(diphthongFeatures, diphthongFeatures.length);
+        int[] featureVector = Arrays.copyOf(leadingDiphthongFeatures, leadingDiphthongFeatures.length);
 
-        /*
-        relevant features with indices:
-        backshift: 24
-        frontshift: 25
-        opening: 26
-        closing: 28
-         */
-
-        // horizontal bow trajectory?
-        if ((secondVowelDimensions[0] < firstVowelDimensions[0] && secondVowelDimensions[0] < thirdVowelDimensions[0]) ||
-                (secondVowelDimensions[0] > firstVowelDimensions[0] && secondVowelDimensions[0] > thirdVowelDimensions[0])) {
-            featureVector[24] = 1;
-            featureVector[25] = 1;
+        // all diphthong-specific features are present in the triphthong if they are present in one of the
+        // underlying diphthongs.
+        for (int i = 24; i < 30; i++) {
+            if (closingDiphthongFeatures[i] == 1) {
+                featureVector[i] = 1;
+            }
         }
 
-        // vertical bow trajectory?
-        if ((secondVowelDimensions[1] < firstVowelDimensions[1] && secondVowelDimensions[1] < thirdVowelDimensions[1]) ||
-                (secondVowelDimensions[1] > firstVowelDimensions[1] && secondVowelDimensions[1] > thirdVowelDimensions[1])) {
-            featureVector[26] = 1;
-            featureVector[28] = 1;
+        // special case rounding: secondrounded should only be present if the triphthong ends in a rounded vowel.
+        // feature round is used to encode for rounding of the first or second vowel.
+        featureVector[30] = closingDiphthongFeatures[30];
+
+        if (closingDiphthongFeatures[18] == 1) {
+            featureVector[18] = 1;
         }
 
         featureTable.put(triphthong, featureVector);
