@@ -1,4 +1,4 @@
-package de.jdellert.iwsa.corrmodel.neuralmodel;
+package de.jdellert.iwsa.util.neural;
 
 import java.io.BufferedReader;
 import java.io.IOException;

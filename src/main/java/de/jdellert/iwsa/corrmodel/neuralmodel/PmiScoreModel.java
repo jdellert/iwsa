@@ -1,6 +1,7 @@
 package de.jdellert.iwsa.corrmodel.neuralmodel;
 
 import de.jdellert.iwsa.features.IpaFeatureTable;
+import de.jdellert.iwsa.util.neural.NeuralModel;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -8,42 +9,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.zip.DataFormatException;
 
-public class PmiScoreModel {
-    private List<Layer> layers;
-
+public class PmiScoreModel extends NeuralModel {
     public PmiScoreModel(String weightsDir, int numHiddenLayers, int hiddenSize, int inputDim) {
-        layers = new ArrayList<>();
-
-        try {
-            for (int i = 0; i < numHiddenLayers; i++) {
-                String layerWeightsDir = weightsDir + "/layer" + (i+1);
-                // need to specify inputDim only for first hidden layer
-                if (i == 0) {
-                    layers.add(new GeLULayer(hiddenSize, inputDim, layerWeightsDir + "/weights.txt",
-                            layerWeightsDir + "/biases.txt"));
-                } else {
-                    layers.add(new GeLULayer(hiddenSize, layerWeightsDir + "/weights.txt",
-                            layerWeightsDir + "/biases.txt"));
-                }
-            }
-            // add final layer
-            String lastLayerDir = weightsDir + "/layer" + (numHiddenLayers+1);
-            layers.add(new Layer(1, 128, lastLayerDir + "/weights.txt",
-                    lastLayerDir + "/biases.txt"));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public double[] predict(double[][] x) {
-        for (Layer layer : layers) {
-            x = layer.forward(x);
-        }
-        double[] results = new double[x.length];
-        for (int i = 0; i < x.length; i++) {
-            results[i] = x[i][0];
-        }
-        return results;
+        super(weightsDir, numHiddenLayers, hiddenSize, inputDim);
     }
 
     public static PmiScoreModel loadPairwiseNeuralModel() {
@@ -51,7 +19,7 @@ public class PmiScoreModel {
     }
 
     public static PmiScoreModel loadGapModel() {
-        return new PmiScoreModel("/de/jdellert/iwsa/neuralmodel/corrmodel/weights", 3, 128, 34);
+        return new PmiScoreModel("/de/jdellert/iwsa/neuralmodel/gapmodel/weights", 3, 128, 34);
     }
 
     public static void main(String[] args) {
@@ -78,9 +46,7 @@ public class PmiScoreModel {
                     System.err.println(sound1 + "\t" + sound2 + "\t" + predictions[idx++]);
                 }
             }
-        } catch (DataFormatException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch (DataFormatException | IOException e) {
             e.printStackTrace();
         }
 

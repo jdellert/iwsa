@@ -103,6 +103,15 @@ public class IpaFeatureTable {
         br.close();
     }
 
+    public static IpaFeatureTable createFeatureTable() {
+        try {
+            return new IpaFeatureTable();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     public int[] get(String key) {
         /*
         int[] result = featureTable.get(key);
@@ -435,6 +444,27 @@ public class IpaFeatureTable {
         }
 
         return soundPairFeatures;
+    }
+
+    public double[] encodeDirectedPair(String sound1, String sound2) {
+        int[] sound1Features = get(sound1);
+        int[] sound2Features = get(sound2);
+
+        if (sound1Features == null) {
+            System.err.println("ERROR: IPA Symbol " + sound1 + " was not defined in feature table");
+            return null;
+        }
+        else if (sound2Features == null) {
+            System.err.println("ERROR: IPA Symbol " + sound2 + " was not defined in feature table");
+            return null;
+        }
+
+        int[] soundPairFeatures = new int[features.size() * 2];
+        System.arraycopy(sound1Features, 0, soundPairFeatures, 0, features.size());
+        System.arraycopy(sound2Features, 0, soundPairFeatures, features.size(), features.size());
+
+        // converts int array to double array
+        return Arrays.stream(soundPairFeatures).asDoubleStream().toArray();
     }
 
     public Map<String, int[]> getFeatureTable() {
