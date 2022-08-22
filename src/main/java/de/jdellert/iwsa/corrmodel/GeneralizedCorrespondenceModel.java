@@ -134,6 +134,9 @@ public class GeneralizedCorrespondenceModel extends CorrespondenceModel {
             if (symbol1.equals(symbol2)) {
                 score = getSelfSimilarityScoreFromNeuralModel(symbol1);
             }
+            else if (symbol1.equals("#") || symbol2.equals("#")) {
+                return -5.0;
+            }
             else if (symbol1.equals("-")) {
                 score = getScoreFromNeuralGapModel(symbol2);
             }

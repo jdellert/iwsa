@@ -10,5 +10,6 @@ module de.jdellert.iwsa {
     exports de.jdellert.iwsa.features;
     exports de.jdellert.iwsa.util.ranking;
     exports de.jdellert.iwsa.cluster;
+    exports de.jdellert.iwsa.changemodel;
     requires de.tuebingen.sfs.cldfjava;
 }
