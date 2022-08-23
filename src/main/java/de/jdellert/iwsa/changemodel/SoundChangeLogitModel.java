@@ -14,8 +14,12 @@ public class SoundChangeLogitModel extends NeuralModel {
         super(weightsDir, numHiddenLayers, hiddenSize, inputDim);
     }
 
+    public static SoundChangeLogitModel loadSoundChangeModel(String weightsDir) {
+        return new SoundChangeLogitModel(weightsDir, 3, 128, 68);
+    }
+
     public static SoundChangeLogitModel loadSoundChangeModel() {
-        return new SoundChangeLogitModel("/de/jdellert/iwsa/neuralmodel/changemodel/weights", 3, 128, 68);
+        return loadSoundChangeModel("/de/jdellert/iwsa/neuralmodel/changemodel/weights");
     }
 
     public static void main(String[] args) {

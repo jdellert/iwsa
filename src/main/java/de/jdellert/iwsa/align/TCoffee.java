@@ -5,6 +5,8 @@ import de.jdellert.iwsa.corrmodel.CorrespondenceModelStorage;
 import de.jdellert.iwsa.sequence.PhoneticString;
 import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
 
+import java.io.FileInputStream;
+import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -20,6 +22,7 @@ public class TCoffee {
     private List<PhoneticString> sequences;
     private Map<String, Integer> lang2ID;
     private ArrayList<String> languageOrder;
+    private List<String> originalLanguages;
     private PhoneticSymbolTable symbols;
     private CorrespondenceModel corrModel;
     private GuideTree guideTree;
@@ -30,6 +33,7 @@ public class TCoffee {
         this.sequences = sequences;
         this.symbols = corrModel.getSymbolTable();
         this.corrModel = corrModel;
+        this.originalLanguages = languages;
 
         this.lang2ID = new HashMap<>();
         languageOrder = new ArrayList<>();
@@ -127,18 +131,35 @@ public class TCoffee {
     }
 
     public static void main(String[] args) {
-        CorrespondenceModel corrModel = CorrespondenceModelStorage.readGlobalModelFromFile(
-                "src/test/resources/northeuralex-0.9/global-nw-retokenized.corr");
+        //CorrespondenceModel corrModel = CorrespondenceModelStorage.readGlobalModelFromFile(
+        //        "/src/test/resources/northeuralex-0.9/global-nw.corr");
+        CorrespondenceModel corrModel = null;
+
+        try {
+            corrModel = CorrespondenceModelStorage.deserializeCorrespondenceModel(
+                    new ObjectInputStream(new FileInputStream("/home/arne/HiWi/etinen-full/src/test/resources/northeuralex-0.9/global-nw.corr")));
+        } catch (Exception e) {
+            System.exit(1);
+            e.printStackTrace();
+        }
+
         PhoneticSymbolTable symTable = corrModel.getSymbolTable();
 
         List<PhoneticString> sequences = new ArrayList<>();
+        /*
         sequences.add(new PhoneticString(symTable.encode(new String[]{"m", "ʊ", "l", "d", "ʊ"})));
         sequences.add(new PhoneticString(symTable.encode(new String[]{"m", "ɔ", "l", "l", "d", "ɛ"})));
         sequences.add(new PhoneticString(symTable.encode(new String[]{"m", "ʉ", "ɛ", "l", "t", "i", "ɛ"})));
         sequences.add(new PhoneticString(symTable.encode(new String[]{"f", "ø", "l", "d"})));
         List<String> languages = Arrays.asList("olo", "smj", "sma", "hun");
+        */
 
-        System.err.println(corrModel);
+        sequences.add(new PhoneticString(symTable.encode(new String[]{"t", "a", "n", "i", "m", "b", "u", "k", "a"})));
+        sequences.add(new PhoneticString(symTable.encode(new String[]{"t", "a", "n", "i", "m", "u", "k", "a"})));
+        sequences.add(new PhoneticString(symTable.encode(new String[]{"t", "a", "n", "i", "m", "u", "k", "a"})));
+        List<String> languages = Arrays.asList("Tupinamba", "Omagua", "Kokama");
+
+        //System.err.println(corrModel);
 
         MultipleAlignment msa = TCoffee.align(sequences, languages, corrModel);
         msa.orderAndFill(languages);
@@ -242,6 +263,8 @@ public class TCoffee {
 
         for (String leaf : paths.keySet())
             guideTree.enlargeTreeByPath(paths.get(leaf), leaf);
+
+        System.err.println(guideTree.getChildrenOf("ROOT"));
     }
 
     private MultipleAlignment align() {

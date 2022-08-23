@@ -4,13 +4,7 @@ import de.jdellert.iwsa.corrmodel.CorrespondenceModel;
 import de.jdellert.iwsa.sequence.PhoneticString;
 import de.jdellert.iwsa.sequence.PhoneticSymbolTable;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class MultipleAlignment {
@@ -126,6 +120,10 @@ public class MultipleAlignment {
 
     public void setLangs(List<String> languages) {
         this.langs = languages.toArray(new String[0]);
+    }
+
+    public void setSymbolTable(PhoneticSymbolTable symbolTable) {
+        this.symbolTable = symbolTable;
     }
 
     public List<Integer> getFormIds() {
@@ -281,6 +279,24 @@ public class MultipleAlignment {
         for (int i = 0; i < langs.length; i++)
             col[i] = msa[i][c];
         return col;
+    }
+
+    public boolean containsLanguage(String language) {
+        for (String l : langs) {
+            if (l.equals(language)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean containsAllLanguages(Collection<String> languages) {
+        for (String language : languages) {
+            if (!containsLanguage(language)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
