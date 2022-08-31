@@ -313,6 +313,8 @@ public class TCoffee {
                     }
                 }
 
+                //System.out.println("MATCH: " + match + ", INSERT: " + insert + ", DELETE: " + delete);
+
                 int argmax = argmax(match, insert, delete);
                 dp[i][j] = (argmax == 0) ? match : ((argmax == 1) ? insert : delete);
                 pointers[i][j] = argmax;
@@ -409,7 +411,7 @@ public class TCoffee {
                             else {
                                 matrix[k][l] = 1;
                                 comparisons++;
-                                if (inSym == outSym)
+                                if (inSym != outSym)
                                     hammingDist++;
                                 k++;
                                 l++;
