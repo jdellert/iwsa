@@ -127,7 +127,7 @@ public class SoundChangeModel {
         return softmax(logits);
     }
 
-    private Map<String,Double> changeProbabilities(String key, Collection<String> targets, boolean forward) {
+    public Map<String,Double> changeProbabilities(String key, Collection<String> targets, boolean forward) {
         List<String> orderedTargets = new ArrayList<>(targets);
         int[] targetIds = new int[targets.size()];
 
