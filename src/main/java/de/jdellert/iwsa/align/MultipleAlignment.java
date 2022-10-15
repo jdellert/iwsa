@@ -189,6 +189,24 @@ public class MultipleAlignment {
         msa=msaList.toArray(int[][]::new);
     }
 
+    public String[] getEntry(int idx) {
+        int[] segments = msa[idx];
+        String[] decodedSegments = new String[segments.length];
+        for (int i = 0; i < segments.length; i++) {
+            decodedSegments[i] = decode(segments[i]);
+        }
+        return decodedSegments;
+    }
+
+    public String[] getEntryByLanguage(String lang) {
+        for (int i = 0; i < langs.length; i++) {
+            if (langs[i].equals(lang)) {
+                return getEntry(i);
+            }
+        }
+        return null;
+    }
+
     public void setAlignments(List<String[]> alignments) {
         msa = new int[alignments.size()][];
         for (int i = 0; i < alignments.size(); i++) {
