@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<Configuration status="INFO">
+<Configuration status="INFO" monitorInterval="10">
     <Appenders>
         <Console name="ConsoleIwsa" target="SYSTEM_OUT">
             <ThresholdFilter level="info" onMatch="DENY" onMismatch="ACCEPT"/>
