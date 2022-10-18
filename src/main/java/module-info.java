@@ -12,4 +12,6 @@ module de.jdellert.iwsa {
     exports de.jdellert.iwsa.cluster;
     exports de.jdellert.iwsa.changemodel;
     requires de.tuebingen.sfs.cldfjava;
+    requires org.apache.logging.log4j;
+    requires org.apache.logging.log4j.core;
 }

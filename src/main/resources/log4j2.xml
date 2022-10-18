@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Configuration status="INFO">
+    <Appenders>
+        <Console name="ConsoleIwsa" target="SYSTEM_OUT">
+            <ThresholdFilter level="info" onMatch="DENY" onMismatch="ACCEPT"/>
+            <PatternLayout>
+                <LevelPatternSelector defaultPattern="%highlight{%m%n}">
+                    <PatternMatch key="DEBUG" pattern="%highlight{[%logger{1}] %m%n}{DEBUG=magenta}" />
+                    <PatternMatch key="TRACE" pattern="%highlight{[iwsa:%logger{1}] %d{yyy-MM-dd HH:mm:ss} %m%n}{TRACE=cyan}" />
+                </LevelPatternSelector>
+            </PatternLayout>
+        </Console>
+    </Appenders>
+
+    <Loggers>
+        <Logger additivity="false" level="trace" name="de.jdellert.iwsa">
+            <AppenderRef level="info" ref="Console"/>
+            <AppenderRef level="trace" ref="ConsoleIwsa" />
+            <AppenderRef level="trace" ref="FileOut" />
+        </Logger>
+    </Loggers>
+</Configuration>
