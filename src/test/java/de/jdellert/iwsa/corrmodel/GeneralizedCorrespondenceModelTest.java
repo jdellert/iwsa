@@ -13,7 +13,7 @@ public class GeneralizedCorrespondenceModelTest {
 
     public static void main(String[] args) {
         try {
-            GeneralizedCorrespondenceModel.VERBOSE = false;
+//            GeneralizedCorrespondenceModel.VERBOSE = false;
             GeneralizedCorrespondenceModel corrModel = new GeneralizedCorrespondenceModel();
             GeneralizedPhoneticSymbolTable symbolTable = (GeneralizedPhoneticSymbolTable) corrModel.getSymbolTable();
             symbolTable.declareCombinedSymbol("kn", "k", "n");
