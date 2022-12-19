@@ -82,6 +82,24 @@ public class MultipleAlignment {
         }
     }
 
+    public MultipleAlignment getAlignmentForLangs(List<String> languages) {
+        int[][] tmpAlignment = new int[msa.length][msa[0].length];
+        String[] tmpLangs = new String[msa.length];
+        int i = 0; // counting variable for current alignment...
+        int idx = 0; // ...and for the new alignment
+        for (String lang : langs) {
+            if (languages.contains(lang)) {
+                tmpAlignment[idx] = msa[i];
+                tmpLangs[idx] = lang;
+                idx++;
+            }
+            i++;
+        }
+        int[][] alignment = Arrays.copyOfRange(tmpAlignment, 0, idx);
+        String[] newLangs = Arrays.copyOfRange(tmpLangs, 0, idx);
+        return new MultipleAlignment(newLangs, alignment, symbolTable);
+    }
+
     public void orderAndFill(List<String> languages) {
         //TODO: refactor
         Map<String, Integer> lang2idx = new HashMap<>();
@@ -267,6 +285,10 @@ public class MultipleAlignment {
         return (i >= 0 && i < langs.length) ? langs[i] : "???";
     }
 
+    public String[] getLanguages() {
+        return langs;
+    }
+
     public int getSymbolID(int word, int position) {
         return msa[word][position];
     }
@@ -300,6 +322,7 @@ public class MultipleAlignment {
     }
 
     public boolean containsLanguage(String language) {
+        if (langs == null) return false;
         for (String l : langs) {
             if (l.equals(language)) {
                 return true;
@@ -346,6 +369,10 @@ public class MultipleAlignment {
         return sb.toString();
     }
 
+    public boolean isEmpty() {
+        return this.forms.isEmpty();
+    }
+
     private class AlignmentRowIterator implements Iterator<String[]> {
 
         private int i;
@@ -364,6 +391,7 @@ public class MultipleAlignment {
 
         @Override
         public boolean hasNext() {
+            if (msa == null) return false;
             return i < msa.length;
         }
 
@@ -412,11 +440,13 @@ public class MultipleAlignment {
         @Override
         public String[] next() {
             String[] algn = new String[lang2idx.size()];
+            // String[] algn = new String[msa.length];
             Arrays.fill(algn, PhoneticSymbolTable.UNKNOWN_SYMBOL);
             for (int i = 0; i < msa.length; i++) {
                 Integer l = lang2idx.get(langs[i]);
                 if (l != null)
                     algn[l] = decode(msa[i][j]);
+                // algn[i] = decode(msa[i][j]);
             }
             j++;
             return algn;

@@ -7,6 +7,8 @@ import java.util.*;
 
 public class SoundChangeModel {
     public static double BIAS_FOR_SAME_SYMBOL = 2.0;
+    public static double BIAS_FOR_GAP_TO_VOWEL = -4.0;
+    public static double BIAS_FOR_GAP_TO_CONSONANT = -1.0;
     private final SoundChangeLogitModel logitModel;
     private PhoneticSymbolTable symbolTable;
     private IpaFeatureTable featureTable;
@@ -79,6 +81,8 @@ public class SoundChangeModel {
 
         List<double[]> encodedPairs = new ArrayList<>();
         List<Integer> illegalIndices = new ArrayList<>();
+        List<Integer> gapToVowelIndices = new ArrayList<>();
+        List<Integer> gapToConsonantIndices = new ArrayList<>();
 
         // store the index where target sound is the same symbol as the key to add bias
         int indexOfKeyInTargets = -1;
@@ -92,8 +96,16 @@ public class SoundChangeModel {
             if (featureTable.contains(target)) {
                 if (forward) {
                     encodedPairs.add(featureTable.encodeDirectedPair(key, target));
+                    if (key.equals(PhoneticSymbolTable.EMPTY_SYMBOL)) {
+                        if (featureTable.isVowel(target)) gapToVowelIndices.add(i);
+                        else if (featureTable.isConsonant(target)) gapToConsonantIndices.add(i);
+                    }
                 } else {
                     encodedPairs.add(featureTable.encodeDirectedPair(target, key));
+                    if (target.equals(PhoneticSymbolTable.EMPTY_SYMBOL)) {
+                        if (featureTable.isVowel(key)) gapToVowelIndices.add(i);
+                        else if (featureTable.isConsonant(key)) gapToConsonantIndices.add(i);
+                    }
                 }
             } else {
                 if (forward) {
@@ -114,9 +126,15 @@ public class SoundChangeModel {
         double[][] inputs = encodedPairs.toArray(new double[encodedPairs.size()][]);
         double[] logits = logitModel.predict(inputs);
 
-        // add bias
+        // add biases
         if (indexOfKeyInTargets >= 0) {
             logits[indexOfKeyInTargets] += BIAS_FOR_SAME_SYMBOL;
+        }
+        for (int idx : gapToVowelIndices) {
+            logits[idx] += BIAS_FOR_GAP_TO_VOWEL;
+        }
+        for (int idx : gapToConsonantIndices) {
+            logits[idx] += BIAS_FOR_GAP_TO_CONSONANT;
         }
 
         // assign 0 probability to sounds that can not be encoded
@@ -166,6 +184,22 @@ public class SoundChangeModel {
 
     public Map<String,Double> changeProbabilitiesIntoSound(String outputSound, Collection<String> inputSounds) {
         return changeProbabilities(outputSound, inputSounds, false);
+    }
+
+    public double changeProbability(String sound1, String sound2) {
+        if (!(featureTable.contains(sound1) && featureTable.contains(sound2))) {
+            System.err.println("WARNING: Can't infer transition probabilities from [" + sound1 + "] to [" + sound2 + "].");
+            return 0.0001;
+        }
+
+        double[] featureVector = featureTable.encodeDirectedPair(sound1, sound2);
+        double logit = logitModel.predict(featureVector);
+
+        if (sound1.equals(sound2)) logit += BIAS_FOR_SAME_SYMBOL;
+        if (sound1.equals(PhoneticSymbolTable.EMPTY_SYMBOL) && featureTable.isVowel(sound2)) logit += BIAS_FOR_GAP_TO_VOWEL;
+
+        // return the sigmoid of the logit
+        return 1 / (1 + Math.exp(-logit));
     }
 
     public static void main(String[] args) {

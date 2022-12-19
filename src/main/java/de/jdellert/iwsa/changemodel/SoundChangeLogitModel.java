@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.zip.DataFormatException;
 
 public class SoundChangeLogitModel extends NeuralModel {
+    private static String DEFAULT_WEIGHTS_DIR = "/de/jdellert/iwsa/neuralmodel/changemodel/alt-cl3/weights";
     public SoundChangeLogitModel(String weightsDir, int numHiddenLayers, int hiddenSize, int inputDim) {
         super(weightsDir, numHiddenLayers, hiddenSize, inputDim);
     }
@@ -19,7 +20,7 @@ public class SoundChangeLogitModel extends NeuralModel {
     }
 
     public static SoundChangeLogitModel loadSoundChangeModel() {
-        return loadSoundChangeModel("/de/jdellert/iwsa/neuralmodel/changemodel/weights");
+        return loadSoundChangeModel(DEFAULT_WEIGHTS_DIR);
     }
 
     public static void main(String[] args) {

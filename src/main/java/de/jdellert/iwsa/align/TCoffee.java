@@ -83,6 +83,7 @@ public class TCoffee {
 
     private static double[][] transpose(double[][] M, boolean inPlace) {
         int m = M.length;
+        if (m < 1) return M;
         int n = M[0].length;
         double[][] T = (inPlace) ? M : new double[n][m];
         for (int i = 0; i < m; i++) {
@@ -401,6 +402,9 @@ public class TCoffee {
                         int comparisons = 0;
                         int k = 0;
                         int l = 0;
+                        if (align.getLength() == 0) {
+                            System.out.println("WARNING: Alignment of length 0 between" + seq1.toUntokenizedString(symbols) + " and " + seq2.toUntokenizedString(symbols));
+                        }
                         for (int a = 0; a < align.getLength(); a++) {
                             int inSym = align.getSymbol1IDAtPos(a);
                             int outSym = align.getSymbol2IDAtPos(a);
@@ -418,7 +422,8 @@ public class TCoffee {
                             }
                         }
                         matrices[i][j] = matrix;
-                        scores[i][j] = 1.0 - (hammingDist / comparisons);
+                        scores[i][j] = 1.0;
+                        if (comparisons > 0) scores[i][j] -= (hammingDist / comparisons);
                     }
                 }
             }
