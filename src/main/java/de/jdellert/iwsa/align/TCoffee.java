@@ -40,7 +40,7 @@ public class TCoffee {
         for (int i = 0; i < languages.size(); i++) {
             String language = languages.get(i);
             if (lang2ID.containsKey(language)) {
-                language += i;
+                language += "_" + i;
             }
             languageOrder.add(language);
             this.lang2ID.put(language, i);

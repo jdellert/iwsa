@@ -33,6 +33,14 @@ public class SoundChangeModel {
         this.logitModel = SoundChangeLogitModel.loadSoundChangeModel(weightsDir);
     }
 
+    public PhoneticSymbolTable getSymbolTable() {
+        return symbolTable;
+    }
+
+    public void setSymbolTable(PhoneticSymbolTable symbolTable) {
+        this.symbolTable = symbolTable;
+    }
+
     private double[] softmax(double[] logits) {
         if (logits == null) {
             return null;

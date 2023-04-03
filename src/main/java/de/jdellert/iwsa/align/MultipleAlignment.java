@@ -34,6 +34,14 @@ public class MultipleAlignment {
         this.symbolTable = symbolTable;
     }
 
+    public MultipleAlignment(String[] langs, int[][] msa, List<Integer> forms, PhoneticSymbolTable symbolTable) {
+        this.langs = langs;
+        this.msa = msa;
+        this.forms = forms;
+        this.hasUnattested = false;
+        this.symbolTable = symbolTable;
+    }
+
     public MultipleAlignment(PhoneticString root, List<PhoneticString> other, List<String> languages,
                              PhoneticSymbolTable symbols, CorrespondenceModel corrModel) {
         langs = languages.toArray(new String[0]);
@@ -82,22 +90,35 @@ public class MultipleAlignment {
         }
     }
 
+    public void fixLangs(Map<Integer, String> formIdsToLangs) {
+        List<String> seenLangs = new ArrayList<>();
+        for (int i = 0; i < forms.size(); i++) {
+            int formId = forms.get(i);
+            String lang = formIdsToLangs.get(formId);
+            if (seenLangs.contains(lang)) lang += "_" + i;
+            seenLangs.add(lang);
+        }
+        langs = seenLangs.toArray(new String[0]);
+    }
+
     public MultipleAlignment getAlignmentForLangs(List<String> languages) {
         int[][] tmpAlignment = new int[msa.length][msa[0].length];
         String[] tmpLangs = new String[msa.length];
+        List<Integer> newForms = new ArrayList<>(msa.length);
         int i = 0; // counting variable for current alignment...
         int idx = 0; // ...and for the new alignment
         for (String lang : langs) {
             if (languages.contains(lang)) {
                 tmpAlignment[idx] = msa[i];
                 tmpLangs[idx] = lang;
+                newForms.add(forms.get(i));
                 idx++;
             }
             i++;
         }
         int[][] alignment = Arrays.copyOfRange(tmpAlignment, 0, idx);
         String[] newLangs = Arrays.copyOfRange(tmpLangs, 0, idx);
-        return new MultipleAlignment(newLangs, alignment, symbolTable);
+        return new MultipleAlignment(newLangs, alignment, newForms, symbolTable);
     }
 
     public void orderAndFill(List<String> languages) {
@@ -255,6 +276,13 @@ public class MultipleAlignment {
 
     public int nOfLanguages() {
         return langs.length;
+    }
+
+    public int size() {
+        if (msa == null)
+            return 0;
+        else
+            return msa.length;
     }
 
     public int stringLength() {
