@@ -289,6 +289,54 @@ public class MultipleAlignment {
         return msa[0].length;
     }
 
+    private int getLangIdx(String lang) {
+        int langIdx = -1;
+        for (int i = 0; i < langs.length; i++) {
+            if (langs[i].equals(lang)) {
+                langIdx = i;
+                break;
+            }
+        }
+
+        return langIdx;
+    }
+
+    public int getIndexOfFirstSymbolForLang(String lang) {
+        int langIdx = getLangIdx(lang);
+
+        if (langIdx == -1) return -1;
+
+        int[] segmentsForLang = msa[langIdx];
+
+        int firstSymbolIdx = -1;
+        for (int i = 0; i < segmentsForLang.length; i++) {
+            if (segmentsForLang[i] != EMPTY_ID) {
+                firstSymbolIdx = i;
+                break;
+            }
+        }
+
+        return firstSymbolIdx;
+    }
+
+    public int getIndexOfLastSymbolForLang(String lang) {
+        int langIdx = getLangIdx(lang);
+
+        if (langIdx == -1) return -1;
+
+        int[] segmentsForLang = msa[langIdx];
+
+        int firstSymbolIdx = -1;
+        for (int i = segmentsForLang.length-1; i >= 0; i--) {
+            if (segmentsForLang[i] != EMPTY_ID) {
+                firstSymbolIdx = i;
+                break;
+            }
+        }
+
+        return firstSymbolIdx;
+    }
+
     public boolean hasUnattestedForms() {
         return hasUnattested;
     }
