@@ -418,6 +418,36 @@ public class IpaFeatureTable {
     	return get(key) != null;
     }
 
+    public boolean isVowel(String sound) {
+        int[] features = get(sound);
+
+        if (features == null) {
+            return false;
+        }
+
+        return features[2] == -1;
+    }
+
+    public boolean isConsonant(String sound) {
+        int[] features = get(sound);
+
+        if (features == null) {
+            return false;
+        }
+
+        return features[2] == 1;
+    }
+
+    public boolean isTone(String sound) {
+        int[] features = get(sound);
+
+        if (features == null) {
+            return false;
+        }
+
+        return features[2] == 0;
+    }
+
     public double[] encodePair(String sound1, String sound2) {
         int[] sound1Features = get(sound1);
         int[] sound2Features = get(sound2);

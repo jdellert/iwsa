@@ -34,6 +34,14 @@ public class MultipleAlignment {
         this.symbolTable = symbolTable;
     }
 
+    public MultipleAlignment(String[] langs, int[][] msa, List<Integer> forms, PhoneticSymbolTable symbolTable) {
+        this.langs = langs;
+        this.msa = msa;
+        this.forms = forms;
+        this.hasUnattested = false;
+        this.symbolTable = symbolTable;
+    }
+
     public MultipleAlignment(PhoneticString root, List<PhoneticString> other, List<String> languages,
                              PhoneticSymbolTable symbols, CorrespondenceModel corrModel) {
         langs = languages.toArray(new String[0]);
@@ -80,6 +88,37 @@ public class MultipleAlignment {
                 msa[i][j] = alignment.get(j);
             }
         }
+    }
+
+    public void fixLangs(Map<Integer, String> formIdsToLangs) {
+        List<String> seenLangs = new ArrayList<>();
+        for (int i = 0; i < forms.size(); i++) {
+            int formId = forms.get(i);
+            String lang = formIdsToLangs.get(formId);
+            if (seenLangs.contains(lang)) lang += "_" + i;
+            seenLangs.add(lang);
+        }
+        langs = seenLangs.toArray(new String[0]);
+    }
+
+    public MultipleAlignment getAlignmentForLangs(List<String> languages) {
+        int[][] tmpAlignment = new int[msa.length][msa[0].length];
+        String[] tmpLangs = new String[msa.length];
+        List<Integer> newForms = new ArrayList<>(msa.length);
+        int i = 0; // counting variable for current alignment...
+        int idx = 0; // ...and for the new alignment
+        for (String lang : langs) {
+            if (languages.contains(lang)) {
+                tmpAlignment[idx] = msa[i];
+                tmpLangs[idx] = lang;
+                newForms.add(forms.get(i));
+                idx++;
+            }
+            i++;
+        }
+        int[][] alignment = Arrays.copyOfRange(tmpAlignment, 0, idx);
+        String[] newLangs = Arrays.copyOfRange(tmpLangs, 0, idx);
+        return new MultipleAlignment(newLangs, alignment, newForms, symbolTable);
     }
 
     public void orderAndFill(List<String> languages) {
@@ -239,8 +278,63 @@ public class MultipleAlignment {
         return langs.length;
     }
 
+    public int size() {
+        if (msa == null)
+            return 0;
+        else
+            return msa.length;
+    }
+
     public int stringLength() {
         return msa[0].length;
+    }
+
+    private int getLangIdx(String lang) {
+        int langIdx = -1;
+        for (int i = 0; i < langs.length; i++) {
+            if (langs[i].equals(lang)) {
+                langIdx = i;
+                break;
+            }
+        }
+
+        return langIdx;
+    }
+
+    public int getIndexOfFirstSymbolForLang(String lang) {
+        int langIdx = getLangIdx(lang);
+
+        if (langIdx == -1) return -1;
+
+        int[] segmentsForLang = msa[langIdx];
+
+        int firstSymbolIdx = -1;
+        for (int i = 0; i < segmentsForLang.length; i++) {
+            if (segmentsForLang[i] != EMPTY_ID) {
+                firstSymbolIdx = i;
+                break;
+            }
+        }
+
+        return firstSymbolIdx;
+    }
+
+    public int getIndexOfLastSymbolForLang(String lang) {
+        int langIdx = getLangIdx(lang);
+
+        if (langIdx == -1) return -1;
+
+        int[] segmentsForLang = msa[langIdx];
+
+        int firstSymbolIdx = -1;
+        for (int i = segmentsForLang.length-1; i >= 0; i--) {
+            if (segmentsForLang[i] != EMPTY_ID) {
+                firstSymbolIdx = i;
+                break;
+            }
+        }
+
+        return firstSymbolIdx;
     }
 
     public boolean hasUnattestedForms() {
@@ -265,6 +359,10 @@ public class MultipleAlignment {
 
     public String getLanguage(int i) {
         return (i >= 0 && i < langs.length) ? langs[i] : "???";
+    }
+
+    public String[] getLanguages() {
+        return langs;
     }
 
     public int getSymbolID(int word, int position) {
@@ -300,6 +398,7 @@ public class MultipleAlignment {
     }
 
     public boolean containsLanguage(String language) {
+        if (langs == null) return false;
         for (String l : langs) {
             if (l.equals(language)) {
                 return true;
@@ -346,6 +445,10 @@ public class MultipleAlignment {
         return sb.toString();
     }
 
+    public boolean isEmpty() {
+        return this.forms.isEmpty();
+    }
+
     private class AlignmentRowIterator implements Iterator<String[]> {
 
         private int i;
@@ -364,6 +467,7 @@ public class MultipleAlignment {
 
         @Override
         public boolean hasNext() {
+            if (msa == null) return false;
             return i < msa.length;
         }
 
@@ -412,11 +516,13 @@ public class MultipleAlignment {
         @Override
         public String[] next() {
             String[] algn = new String[lang2idx.size()];
+            // String[] algn = new String[msa.length];
             Arrays.fill(algn, PhoneticSymbolTable.UNKNOWN_SYMBOL);
             for (int i = 0; i < msa.length; i++) {
                 Integer l = lang2idx.get(langs[i]);
                 if (l != null)
                     algn[l] = decode(msa[i][j]);
+                // algn[i] = decode(msa[i][j]);
             }
             j++;
             return algn;

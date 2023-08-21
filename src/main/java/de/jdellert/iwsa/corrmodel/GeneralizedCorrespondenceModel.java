@@ -233,4 +233,10 @@ public class GeneralizedCorrespondenceModel extends CorrespondenceModel {
 		// accordingly
 		return featureTable.contains(phoneme);
 	}
+
+
+
+    public String toString() {
+        return "Neural generalized sound correspondence model.";
+    }
 }
