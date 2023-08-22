@@ -2,17 +2,14 @@ package de.jdellert.iwsa.features;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.zip.DataFormatException;
 
 public class IpaFeatureTable {
     // private final Map<String, int[]> featureTable;
     public Map<String, int[]> featureTable;
     public ArrayList<String> features;
+    private ArrayList<String> metasymbols;
     private final Map<String, String[]> modifierTable;
     private final Map<String, double[]> vowelDimensions;
 
@@ -26,6 +23,7 @@ public class IpaFeatureTable {
 
     public IpaFeatureTable(String filepath, String modifierFilepath) throws DataFormatException, IOException {
         featureTable = new HashMap<>();
+        metasymbols = new ArrayList<>();
         BufferedReader br = new BufferedReader(new InputStreamReader(Objects.requireNonNull(getClass().getResourceAsStream(filepath),"File "+filepath+" not found!"), StandardCharsets.UTF_8));
         String line;
         boolean firstLine = true;
@@ -438,6 +436,72 @@ public class IpaFeatureTable {
         return features[2] == 1;
     }
 
+    public boolean isMetasymbol(String sound) {
+        return metasymbols.contains(sound);
+    }
+
+    public boolean defineMetasymbol(String metasymbol, int[] features) {
+        // TODO proper logging?
+        // metasymbol can't be defined if string representation is already defined as symbol (IPA or metasymbol)
+        // OR if feature vector is malformatted
+        if (this.contains(metasymbol) || features.length != this.features.size()) return false;
+
+        this.metasymbols.add(metasymbol);
+        this.featureTable.put(metasymbol, features);
+
+        return true;
+    }
+
+    public boolean defineMetasymbol(String metasymbol, String featureString) {
+        featureString = featureString.replace(" ", "").
+                replace("[", "").replace("]", "");
+        String[] features = featureString.split(",");
+        int[] featureVector = new int[this.features.size()];
+
+        for (String feature : features) {
+            char value = feature.charAt(0);
+            String featureName = feature.substring(1);
+            int featureIdx = this.features.indexOf(featureName);
+
+            if (value == '+') {
+                featureVector[featureIdx] = 1;
+            } else if (value == '-') {
+                featureVector[featureIdx] = -1;
+            } else {
+                return false;
+            }
+        }
+
+        return defineMetasymbol(metasymbol, featureVector);
+    }
+
+    public Set<String> filterEligibleSoundsForMetasymbol(String metasymbol, Collection<String> sounds) {
+        if (!this.isMetasymbol(metasymbol)) return null;
+
+        Set<String> eligibleSounds = new HashSet<>(sounds);
+        int[] definedFeatures = this.get(metasymbol);
+
+        for (String candidateSound : sounds) {
+            if (!this.contains(candidateSound)) {
+                eligibleSounds.remove(candidateSound);
+                continue;
+            }
+            int[] candidateFeatures = this.get(candidateSound);
+
+            for (int featIdx = 0; featIdx < definedFeatures.length; featIdx++) {
+                int featValue = definedFeatures[featIdx];
+                if (featValue == 0) continue;
+
+                if (candidateFeatures[featIdx] != featValue) {
+                    eligibleSounds.remove(candidateSound);
+                    break;
+                }
+            }
+        }
+
+        return eligibleSounds;
+    }
+
     public boolean isTone(String sound) {
         int[] features = get(sound);
 
@@ -499,5 +563,9 @@ public class IpaFeatureTable {
 
     public Map<String, int[]> getFeatureTable() {
         return featureTable;
+    }
+
+    public List<String> getFeatureNames() {
+        return features;
     }
 }
