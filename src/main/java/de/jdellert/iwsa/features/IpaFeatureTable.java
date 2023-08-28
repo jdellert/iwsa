@@ -568,4 +568,14 @@ public class IpaFeatureTable {
     public List<String> getFeatureNames() {
         return features;
     }
+
+    public boolean removeMetasymbol(String symbol) {
+        if (metasymbols.contains(symbol)) {
+            featureTable.remove(symbol);
+            metasymbols.remove(symbol);
+            return true;
+        }
+
+        return false;
+    }
 }
