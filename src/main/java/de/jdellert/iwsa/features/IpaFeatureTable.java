@@ -7,24 +7,39 @@ import java.util.zip.DataFormatException;
 
 public class IpaFeatureTable {
     // private final Map<String, int[]> featureTable;
-    public Map<String, int[]> featureTable;
-    public ArrayList<String> features;
+    public static String FILEPATH = "/de/jdellert/iwsa/features/base_ipa_symbols.csv";
+    public static String VOWEL_DIM_FILE = "/de/jdellert/iwsa/features/vowel_dimensions.csv";
+    public static String MODIFIER_FILE = "/de/jdellert/iwsa/features/diacritic_rules.csv";
+    private static IpaFeatureTable INSTANCE;
+    private Map<String, int[]> featureTable;
+    private ArrayList<String> features;
     private ArrayList<String> metasymbols;
     private final Map<String, String[]> modifierTable;
     private final Map<String, double[]> vowelDimensions;
 
-    public IpaFeatureTable() throws DataFormatException, IOException {
-        this("/de/jdellert/iwsa/features/all_ipa_symbols.csv");
-    }
-
-    public IpaFeatureTable(String filepath) throws DataFormatException, IOException {
-        this(filepath, "/de/jdellert/iwsa/features/diacritic_rules.csv");
-    }
-
-    public IpaFeatureTable(String filepath, String modifierFilepath) throws DataFormatException, IOException {
+    private IpaFeatureTable() {
         featureTable = new HashMap<>();
         metasymbols = new ArrayList<>();
-        BufferedReader br = new BufferedReader(new InputStreamReader(Objects.requireNonNull(getClass().getResourceAsStream(filepath),"File "+filepath+" not found!"), StandardCharsets.UTF_8));
+        modifierTable = new HashMap<>();
+        vowelDimensions = new HashMap<>();
+    }
+
+    private static IpaFeatureTable initialize() {
+        IpaFeatureTable featureTable = new IpaFeatureTable();
+        try {
+            featureTable.readContentFromFiles();
+        } catch (DataFormatException dfe) {
+            System.err.println("ERROR: Can't read phonological features from file \"" + FILEPATH + "\" due to illegal feature encoding.");
+            dfe.printStackTrace();
+        } catch (IOException ioe) {
+            System.err.println("ERROR: Unable to initialize IpaFeatureTable from given files.");
+            ioe.printStackTrace();
+        }
+        return featureTable;
+    }
+
+    private void readContentFromFiles() throws DataFormatException, IOException {
+        BufferedReader br = new BufferedReader(new InputStreamReader(Objects.requireNonNull(getClass().getResourceAsStream(FILEPATH),"File "+FILEPATH+" not found!"), StandardCharsets.UTF_8));
         String line;
         boolean firstLine = true;
         while ((line = br.readLine()) != null) {
@@ -64,8 +79,7 @@ public class IpaFeatureTable {
         }
         br.close();
 
-        br = new BufferedReader(new InputStreamReader(Objects.requireNonNull(getClass().getResourceAsStream(modifierFilepath),"File "+modifierFilepath+" not found!"), StandardCharsets.UTF_8));
-        modifierTable = new HashMap<>();
+        br = new BufferedReader(new InputStreamReader(Objects.requireNonNull(getClass().getResourceAsStream(MODIFIER_FILE),"File "+MODIFIER_FILE+" not found!"), StandardCharsets.UTF_8));
 
         while ((line = br.readLine()) != null) {
             String[] fields = line.split("\\s+");
@@ -81,9 +95,7 @@ public class IpaFeatureTable {
 
         br.close();
 
-        String vowelDimFile = "/de/jdellert/iwsa/features/vowel_dimensions.csv";
-        br = new BufferedReader(new InputStreamReader(Objects.requireNonNull(getClass().getResourceAsStream(vowelDimFile),"File "+vowelDimFile+" not found!"), StandardCharsets.UTF_8));
-        vowelDimensions = new HashMap<>();
+        br = new BufferedReader(new InputStreamReader(Objects.requireNonNull(getClass().getResourceAsStream(VOWEL_DIM_FILE),"File "+VOWEL_DIM_FILE+" not found!"), StandardCharsets.UTF_8));
 
         while ((line = br.readLine()) != null) {
             String[] fields = line.split("\\s+");
@@ -101,13 +113,11 @@ public class IpaFeatureTable {
         br.close();
     }
 
-    public static IpaFeatureTable createFeatureTable() {
-        try {
-            return new IpaFeatureTable();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+    public static IpaFeatureTable getInstance() {
+        if (INSTANCE == null) {
+            INSTANCE = initialize();
         }
+        return INSTANCE;
     }
 
     public int[] get(String key) {
@@ -585,5 +595,50 @@ public class IpaFeatureTable {
 
     public boolean isFeature(String featureName) {
         return features.contains(featureName);
+    }
+
+    public static void main(String[] args) {
+        try {
+            IpaFeatureTable largeFeatureTable = new IpaFeatureTable();
+            FILEPATH = "/de/jdellert/iwsa/features/base_ipa_symbols.csv";
+            IpaFeatureTable smolFeatureTable = new IpaFeatureTable();
+            Set<String> allSymbols = new HashSet<>(largeFeatureTable.getFeatureTable().keySet());
+            int errors = 0;
+            int nonTriphthongErrors = 0;
+            int numSymbols = allSymbols.size();
+            Set<Character> problemSymbols = new HashSet<>();
+            Set<String> problemFeatures = new HashSet<>();
+
+            for (String s : allSymbols) {
+                int[] vec1 = largeFeatureTable.get(s);
+                int[] vec2 = smolFeatureTable.get(s);
+
+                if (!Arrays.equals(vec1, vec2)) {
+                    errors++;
+                    if (largeFeatureTable.getVowelCount(s) < 2) {
+                        nonTriphthongErrors++;
+                        // System.err.println(s);
+                    } else {
+                        for (int i = 0; i < vec1.length; i++) {
+                            if (vec1[i] != vec2[i]) {
+                                String featureName = largeFeatureTable.getFeatureNames().get(i);
+                                problemFeatures.add(featureName);
+                            }
+                        }
+                    }
+                    for (char c : s.toCharArray()) {
+                        problemSymbols.add(c);
+                    }
+                }
+            }
+
+            System.out.println(errors + " errors in " + numSymbols + " symbols, " + nonTriphthongErrors + " of which " +
+                    "are not related to polyphtongs or [ɞ].");
+            System.err.println(problemSymbols);
+            System.err.println(problemSymbols.size());
+            System.err.println(problemFeatures);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

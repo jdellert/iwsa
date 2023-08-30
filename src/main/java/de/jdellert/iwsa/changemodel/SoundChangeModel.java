@@ -14,11 +14,11 @@ public class SoundChangeModel {
     private IpaFeatureTable featureTable;
 
     public SoundChangeModel(PhoneticSymbolTable symbolTable) {
-        this(symbolTable, IpaFeatureTable.createFeatureTable());
+        this(symbolTable, IpaFeatureTable.getInstance());
     }
 
     public SoundChangeModel(PhoneticSymbolTable symbolTable, String weightsDir) {
-        this(symbolTable, IpaFeatureTable.createFeatureTable(), weightsDir);
+        this(symbolTable, IpaFeatureTable.getInstance(), weightsDir);
     }
 
     public SoundChangeModel(PhoneticSymbolTable symbolTable, IpaFeatureTable featureTable) {

@@ -23,31 +23,27 @@ public class PmiScoreModel extends NeuralModel {
     }
 
     public static void main(String[] args) {
-        try {
-            IpaFeatureTable featureTable = new IpaFeatureTable();
-            PmiScoreModel model = loadPairwiseNeuralModel();
-            int[] encodedA = featureTable.get("a");
-            int[] encodedE = featureTable.get("e");
-            System.out.println("encodedA: " + Arrays.toString(encodedA));
-            System.out.println("encodedE: " + Arrays.toString(encodedE));
-            String[] sounds = new String[] {"p", "t", "k", "a", "e", "i", "o", "u", "aː", "eː", "iː", "oː", "uː","au", "ai", "ə", "-"};
-            List<double[]> encodedPairs = new ArrayList<double[]>(sounds.length * sounds.length);
-            for (String sound1 : sounds) {
-                for (String sound2: sounds) {
-                    double[] encodedPair = featureTable.encodePair(sound1, sound2);
-                    encodedPairs.add(encodedPair);
-                }
+        IpaFeatureTable featureTable = IpaFeatureTable.getInstance();
+        PmiScoreModel model = loadPairwiseNeuralModel();
+        int[] encodedA = featureTable.get("a");
+        int[] encodedE = featureTable.get("e");
+        System.out.println("encodedA: " + Arrays.toString(encodedA));
+        System.out.println("encodedE: " + Arrays.toString(encodedE));
+        String[] sounds = new String[] {"p", "t", "k", "a", "e", "i", "o", "u", "aː", "eː", "iː", "oː", "uː","au", "ai", "ə", "-"};
+        List<double[]> encodedPairs = new ArrayList<double[]>(sounds.length * sounds.length);
+        for (String sound1 : sounds) {
+            for (String sound2: sounds) {
+                double[] encodedPair = featureTable.encodePair(sound1, sound2);
+                encodedPairs.add(encodedPair);
             }
-            double[][] inputs = encodedPairs.toArray(new double[encodedPairs.size()][]);
-            double[] predictions = model.predict(inputs);
-            int idx = 0;
-            for (String sound1 : sounds) {
-                for (String sound2 : sounds) {
-                    System.err.println(sound1 + "\t" + sound2 + "\t" + predictions[idx++]);
-                }
+        }
+        double[][] inputs = encodedPairs.toArray(new double[encodedPairs.size()][]);
+        double[] predictions = model.predict(inputs);
+        int idx = 0;
+        for (String sound1 : sounds) {
+            for (String sound2 : sounds) {
+                System.err.println(sound1 + "\t" + sound2 + "\t" + predictions[idx++]);
             }
-        } catch (DataFormatException | IOException e) {
-            e.printStackTrace();
         }
 
 

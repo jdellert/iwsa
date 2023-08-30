@@ -39,7 +39,7 @@ public class GeneralizedCorrespondenceModel extends CorrespondenceModel {
         generalizedSymbolTable = (GeneralizedPhoneticSymbolTable) getSymbolTable();
         pairwiseSimilarityModel = PmiScoreModel.loadPairwiseNeuralModel();
         gapModel = PmiScoreModel.loadGapModel();
-        featureTable = new IpaFeatureTable();
+        featureTable = IpaFeatureTable.getInstance();
         directlyEstimatedScores = CorrespondenceModelStorage.readGlobalModelFromFile("/de/jdellert/iwsa/neuralmodel/corrmodel/global-nw-retokenized.corr");
         symbolsEncountered = directlyEstimatedScores.symbolTable.getDefinedSymbols();
     }

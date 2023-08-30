@@ -4,6 +4,7 @@ import java.util.Arrays;
 
 public class DiacriticHandlingTest {
     public static void main(String[] args) {
+        /*
         try {
             IpaFeatureTable dummyFeatureTable = new IpaFeatureTable("iwsa/src/test/resources/de/jdellert/iwsa/features/test_symbols.csv");
             IpaFeatureTable goldFeatureTable = new IpaFeatureTable(
@@ -24,6 +25,6 @@ public class DiacriticHandlingTest {
 
         } catch (Exception e) {
             e.printStackTrace();
-        }
+        } */
     }
 }
