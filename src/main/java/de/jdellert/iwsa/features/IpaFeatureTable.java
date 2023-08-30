@@ -456,16 +456,20 @@ public class IpaFeatureTable {
         featureString = featureString.replace(" ", "").
                 replace("[", "").replace("]", "");
         String[] features = featureString.split(",");
+        return defineMetasymbol(metasymbol, features);
+    }
+
+    public boolean defineMetasymbol(String metasymbol, String[] features) {
         int[] featureVector = new int[this.features.size()];
 
         for (String feature : features) {
-            char value = feature.charAt(0);
+            char sign = feature.charAt(0);
             String featureName = feature.substring(1);
             int featureIdx = this.features.indexOf(featureName);
 
-            if (value == '+') {
+            if (sign == '+') {
                 featureVector[featureIdx] = 1;
-            } else if (value == '-') {
+            } else if (sign == '-') {
                 featureVector[featureIdx] = -1;
             } else {
                 return false;
@@ -577,5 +581,9 @@ public class IpaFeatureTable {
         }
 
         return false;
+    }
+
+    public boolean isFeature(String featureName) {
+        return features.contains(featureName);
     }
 }
