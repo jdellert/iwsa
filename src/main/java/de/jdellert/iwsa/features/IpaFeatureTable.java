@@ -7,7 +7,7 @@ import java.util.zip.DataFormatException;
 
 public class IpaFeatureTable {
     // private final Map<String, int[]> featureTable;
-    public static String FILEPATH = "/de/jdellert/iwsa/features/base_ipa_symbols.csv";
+    public static String FILEPATH = "/de/jdellert/iwsa/features/all_ipa_symbols.csv";
     public static String VOWEL_DIM_FILE = "/de/jdellert/iwsa/features/vowel_dimensions.csv";
     public static String MODIFIER_FILE = "/de/jdellert/iwsa/features/diacritic_rules.csv";
     private static IpaFeatureTable INSTANCE;
@@ -581,6 +581,16 @@ public class IpaFeatureTable {
 
     public List<String> getFeatureNames() {
         return features;
+    }
+
+    public List<String> getFeatureNamesWithSigns() {
+        List<String> namesWithSigns = new ArrayList<>(2 * features.size());
+        for (String feature : features) {
+            namesWithSigns.add("+" + feature);
+            namesWithSigns.add("-" + feature);
+        }
+
+        return namesWithSigns;
     }
 
     public boolean removeMetasymbol(String symbol) {
