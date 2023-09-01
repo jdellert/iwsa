@@ -583,16 +583,6 @@ public class IpaFeatureTable {
         return features;
     }
 
-    public List<String> getFeatureNamesWithSigns() {
-        List<String> namesWithSigns = new ArrayList<>(2 * features.size());
-        for (String feature : features) {
-            namesWithSigns.add("+" + feature);
-            namesWithSigns.add("-" + feature);
-        }
-
-        return namesWithSigns;
-    }
-
     public boolean removeMetasymbol(String symbol) {
         if (metasymbols.contains(symbol)) {
             featureTable.remove(symbol);
