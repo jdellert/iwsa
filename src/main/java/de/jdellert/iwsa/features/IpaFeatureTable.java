@@ -599,9 +599,14 @@ public class IpaFeatureTable {
 
     public static void main(String[] args) {
         try {
-            IpaFeatureTable largeFeatureTable = new IpaFeatureTable();
+            IpaFeatureTable largeFeatureTable = getInstance();
+
+            System.out.println(Arrays.toString(largeFeatureTable.encodeDirectedPair("aː", "a")));
+
+
             FILEPATH = "/de/jdellert/iwsa/features/base_ipa_symbols.csv";
-            IpaFeatureTable smolFeatureTable = new IpaFeatureTable();
+            IpaFeatureTable smolFeatureTable = getInstance();
+
             Set<String> allSymbols = new HashSet<>(largeFeatureTable.getFeatureTable().keySet());
             int errors = 0;
             int nonTriphthongErrors = 0;

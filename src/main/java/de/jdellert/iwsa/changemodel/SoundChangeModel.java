@@ -154,6 +154,10 @@ public class SoundChangeModel {
     }
 
     public Map<String,Double> changeProbabilities(String key, Collection<String> targets, boolean forward) {
+        if (targets == null || targets.isEmpty()) {
+            return new HashMap<>();
+        }
+
         List<String> orderedTargets = new ArrayList<>(targets);
         int[] targetIds = new int[targets.size()];
 
